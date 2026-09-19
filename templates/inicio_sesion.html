@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>COTEL RL - Inicio de Sesión</title>
+ 
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet">
+ 
+<style>
+  :root{
+    --navy-950:#2B0E05; --navy-800:#5C1D0A; --navy-700:#8A2E0E;
+    --teal:#FF8A3D;     --teal-dim:#C2410C; --teal-glow:rgba(255,138,61,.35);
+    --ink:#0B1220;      --slate-600:#5B6B79; --slate-400:#94A3AF;
+    --cloud:#F5F8FA;    --white:#FFFFFF;    --line:#E4E9EC;
+    --danger:#E5484D;   --danger-bg:#FDECEC;
+    --success:#12B76A;  --success-bg:#E9F9F1;
+    --warning:#F5A524;  --warning-bg:#FEF6E7;
+    --info:#2E90FA;     --info-bg:#EAF3FF;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0; background:var(--cloud); color:var(--ink);
+    font-family:'Inter',system-ui,-apple-system,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.display{font-family:'Sora',system-ui,sans-serif;}
+  .mono{font-family:'JetBrains Mono',ui-monospace,monospace; letter-spacing:.25em; text-align:center;}
+ 
+  /* ============ SHELL ============ */
+  .shell{min-height:100vh; display:grid; grid-template-columns:44% 56%;}
+  @media (max-width:920px){ .shell{grid-template-columns:1fr;} }
+ 
+  /* ============ BRAND PANEL ============ */
+  .brand{
+    position:relative; background:radial-gradient(120% 140% at 15% 0%, var(--navy-700) 0%, var(--navy-950) 62%);
+    color:#fff; padding:52px 48px; display:flex; flex-direction:column; justify-content:space-between;
+    overflow:hidden; min-height:340px;
+  }
+  .brand::before{
+    content:''; position:absolute; inset:0; opacity:.35; pointer-events:none;
+    background-image:radial-gradient(rgba(255,255,255,.09) 1px, transparent 1px);
+    background-size:26px 26px;
+  }
+  .brand-top{position:relative; z-index:2;}
+  .wordmark{display:flex; align-items:center; gap:14px; margin-bottom:56px;}
+ 
+  .logo-cotel{
+      width:58px; height:58px; object-fit:contain; background:#fff;
+      border-radius:12px; padding:4px; box-shadow:0 4px 12px rgba(0,0,0,.20);
+  }
+  .wordmark-text{display:flex; flex-direction:column;}
+  .wordmark-text span:first-child{font-weight:700; font-size:1.15rem; letter-spacing:.02em;}
+  .wordmark-text .tag{font-size:.66rem; letter-spacing:.14em; color:var(--teal); font-weight:600; text-transform:uppercase;}
+  .brand h1{font-size:2.15rem; line-height:1.18; font-weight:700; max-width:420px; margin:0 0 18px;}
+  .brand h1 em{font-style:normal; color:var(--teal);}
+  .brand p.lede{font-size:.95rem; color:#B9CBD3; max-width:380px; line-height:1.6; margin:0;}
+ 
+  .fiber{position:relative; z-index:2; height:110px; margin:34px 0 8px;}
+  .fiber svg{width:100%; height:100%; display:block;}
+  .fiber-path{fill:none; stroke:rgba(255,255,255,.16); stroke-width:2;}
+  .pulse{fill:var(--teal); filter:drop-shadow(0 0 6px var(--teal-glow));}
+  .pulse.p1{ offset-path:path('M0,70 C 80,10 160,110 240,55 S 400,20 520,60 S 640,95 720,50'); animation:travel 3.2s linear infinite; }
+  .pulse.p2{ offset-path:path('M0,70 C 80,10 160,110 240,55 S 400,20 520,60 S 640,95 720,50'); animation:travel 3.2s linear infinite 1.05s; }
+  .pulse.p3{ offset-path:path('M0,70 C 80,10 160,110 240,55 S 400,20 520,60 S 640,95 720,50'); animation:travel 3.2s linear infinite 2.1s; }
+  @keyframes travel{
+    0%{ offset-distance:0%; opacity:0; }
+    8%{ opacity:1; }
+    92%{ opacity:1; }
+    100%{ offset-distance:100%; opacity:0; }
+  }
+  @media (prefers-reduced-motion:reduce){ .pulse{ animation:none !important; opacity:.85; } }
+ 
+  .brand-bottom{position:relative; z-index:2; display:flex; gap:28px; font-size:.78rem; color:#9FB4BD;}
+  .brand-bottom strong{display:block; color:#fff; font-size:1.05rem; font-family:'Sora',sans-serif;}
+ 
+  @media (max-width:920px){
+    .brand{padding:34px 28px; min-height:auto;}
+    .brand h1{font-size:1.6rem;}
+    .fiber{height:70px; margin:20px 0 4px;}
+    .brand-bottom{display:none;}
+  }
+ 
+  /* ============ FORM PANEL ============ */
+  .panel{display:flex; align-items:center; justify-content:center; padding:48px 32px; position:relative;}
+  .back-home{
+    position:absolute; top:24px; right:32px; font-size:.8rem; color:var(--slate-600);
+    text-decoration:none; display:flex; align-items:center; gap:6px;
+  }
+  .back-home:hover{color:var(--navy-800);}
+ 
+  .authcard{width:100%; max-width:420px;}
+ 
+  .switcher{display:flex; background:#EDF1F3; border-radius:999px; padding:4px; margin-bottom:32px;}
+  .switcher button{
+    flex:1; border:none; background:none; padding:10px 0; border-radius:999px; font-size:.85rem;
+    font-weight:600; color:var(--slate-600); cursor:pointer; transition:.2s; font-family:inherit;
+  }
+  .switcher button.active{background:var(--navy-950); color:#fff; box-shadow:0 4px 12px rgba(7,27,38,.25);}
+ 
+  .view{display:none;}
+  .view.active{display:block; animation:fadeUp .35s ease;}
+  @keyframes fadeUp{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
+ 
+  .authcard h2{font-size:1.5rem; margin:0 0 6px;}
+  .authcard .sub{color:var(--slate-600); font-size:.88rem; margin:0 0 26px;}
+ 
+  .field{margin-bottom:16px;}
+  .field label{display:block; font-size:.78rem; font-weight:600; color:var(--slate-600); margin-bottom:6px;}
+  .input, select.input{
+    width:100%; padding:12px 14px; border:1.5px solid var(--line); border-radius:10px;
+    font-size:.9rem; font-family:inherit; color:var(--ink); background:#fff; transition:.15s;
+  }
+  .input:focus, select.input:focus{
+    outline:none; border-color:var(--teal-dim); box-shadow:0 0 0 3px var(--teal-glow);
+  }
+  .row2{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+ 
+  .pwd-wrap{position:relative;}
+  .pwd-wrap .input{padding-right:44px;}
+  .pwd-toggle{
+    position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none;
+    cursor:pointer; font-size:1rem; color:var(--slate-400); padding:4px;
+  }
+ 
+  .forgot{display:block; text-align:right; font-size:.8rem; color:var(--teal-dim); text-decoration:none; margin:-4px 0 18px;}
+  .forgot:hover{text-decoration:underline;}
+ 
+  .btn-submit{
+    width:100%; padding:13px; border:none; border-radius:10px; background:var(--navy-950); color:#fff;
+    font-size:.92rem; font-weight:700; cursor:pointer; font-family:inherit; transition:.15s;
+  }
+  .btn-submit:hover{background:#1F0A03;}
+  .btn-submit:disabled{background:var(--slate-400); cursor:not-allowed;}
+ 
+  .foot-link{text-align:center; margin-top:18px; font-size:.85rem; color:var(--slate-600);}
+  .foot-link a{color:var(--teal-dim); text-decoration:none; font-weight:600;}
+  .foot-link a:hover{text-decoration:underline;}
+ 
+  /* password checklist */
+  .checklist{display:grid; gap:5px; margin:-6px 0 16px; padding:12px 14px; background:var(--cloud); border-radius:10px;}
+  .checklist .item{display:flex; align-items:center; gap:8px; font-size:.76rem; color:var(--slate-600);}
+  .checklist .dot{
+    width:16px; height:16px; border-radius:50%; background:var(--line); flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; font-size:.6rem; color:#fff; transition:.15s;
+  }
+  .checklist .item.ok .dot{background:var(--success);}
+  .checklist .item.ok{color:var(--ink);}
+ 
+  /* ---- paso 1: selección de rol ---- */
+  .rol-step{
+    padding:16px 16px 4px; background:linear-gradient(180deg,#FFF8F2,#fff); border:1.5px solid var(--line);
+    border-radius:12px; margin-bottom:18px;
+  }
+  .rol-step label{font-size:.78rem; font-weight:700; color:var(--navy-800); text-transform:uppercase; letter-spacing:.04em; margin-bottom:8px; display:block;}
+ 
+  .rol-hint{
+    display:none; align-items:flex-start; gap:10px; font-size:.8rem; line-height:1.5; color:#8A5A0B;
+    background:var(--warning-bg); border:1px solid #F4D9A8; border-radius:10px; padding:10px 12px; margin:14px 0 20px;
+  }
+  .rol-hint .icon{flex-shrink:0; font-size:1rem; line-height:1;}
+ 
+  /* ---- resto del formulario, revelado tras elegir rol ---- */
+  #restoRegistro{display:none; animation:fadeUp .3s ease;}
+ 
+  @media (max-width:480px){
+    .row2{grid-template-columns:1fr;}
+    .panel{padding:34px 20px;}
+    .back-home{position:static; display:inline-flex; margin-bottom:18px;}
+  }
+ 
+  /* flash toasts */
+  .flashes{position:fixed; top:22px; right:22px; z-index:999; max-width:360px; display:grid; gap:10px;}
+  .alert{
+    padding:13px 16px; border-radius:10px; font-size:.85rem; position:relative; box-shadow:0 10px 30px rgba(0,0,0,.12);
+    animation:slideIn .4s ease-out; padding-right:34px;
+  }
+  .alert-success{background:var(--success-bg); color:#0B6B45; border-left:4px solid var(--success);}
+  .alert-danger, .alert-error{background:var(--danger-bg); color:#A32424; border-left:4px solid var(--danger);}
+  .alert-warning{background:var(--warning-bg); color:#8A5A0B; border-left:4px solid var(--warning);}
+  .alert-info{background:var(--info-bg); color:#1D4E8F; border-left:4px solid var(--info);}
+  .alert .close{position:absolute; top:8px; right:10px; background:none; border:none; font-size:16px; cursor:pointer; color:inherit; opacity:.6;}
+  .alert .close:hover{opacity:1;}
+  @keyframes slideIn{ from{opacity:0; transform:translateX(40px);} to{opacity:1; transform:translateX(0);} }
+</style>
+</head>
+<body>
+ 
+<div class="flashes">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">
+          {{ message }}
+          <button type="button" class="close" onclick="this.parentElement.style.display='none';">&times;</button>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+</div>
+ 
+<div class="shell">
+ 
+  <!-- ================= PANEL DE MARCA ================= -->
+  <aside class="brand">
+    <div class="brand-top">
+      <div class="wordmark">
+        <img src="{{ url_for('static', filename='imagenes/Logo1Cotel.png') }}" alt="Logo COTEL RL" class="logo-cotel">
+        <div class="wordmark-text">
+          <span>COTEL RL</span>
+          <span class="tag">La Paz</span>
+        </div>
+      </div>
+      <h1>Tu conexión, <em>sin cortes.</em></h1>
+      <p class="lede">Gestiona tus servicios, trámites y reclamos desde un solo lugar. Rápido, claro y siempre disponible.</p>
+    </div>
+ 
+    <div class="fiber" aria-hidden="true">
+      <svg viewBox="0 0 720 110" preserveAspectRatio="none">
+        <path class="fiber-path" d="M0,70 C 80,10 160,110 240,55 S 400,20 520,60 S 640,95 720,50"/>
+        <circle class="pulse p1" r="4"/>
+        <circle class="pulse p2" r="4"/>
+        <circle class="pulse p3" r="4"/>
+      </svg>
+    </div>
+ 
+    <div class="brand-bottom">
+      <div><strong>+30 años</strong>conectando hogares</div>
+      <div><strong>Fibra &amp; EoC</strong>cobertura en expansión</div>
+      <div><strong>101</strong>soporte técnico directo</div>
+    </div>
+  </aside>
+ 
+  <!-- ================= PANEL DE FORMULARIO ================= -->
+  <section class="panel">
+    <a href="{{ url_for('index') }}" class="back-home">&larr; Volver al inicio</a>
+ 
+    <div class="authcard">
+ 
+      <div class="switcher">
+        <button type="button" id="tabLogin" class="active" onclick="mostrarVista('login')">Iniciar sesión</button>
+        <button type="button" id="tabRegister" onclick="mostrarVista('register')">Registrarse</button>
+      </div>
+ 
+      <!-- ---------- LOGIN ---------- -->
+      <div class="view active" id="viewLogin">
+        <h2>Bienvenido de nuevo</h2>
+        <p class="sub">Ingresa con tu código de acceso y contraseña.</p>
+ 
+        <form action="{{ url_for('inicio_sesion') }}" method="POST" autocomplete="on">
+          <div class="field">
+            <label for="codigo_login">Código de acceso</label>
+            <input class="input mono" type="text" id="codigo_login" name="codigo_login"
+                   maxlength="10" placeholder="Tu código de registro" required
+                   autocomplete="off">
+            <div style="font-size:.74rem; color:var(--slate-600); margin-top:5px;">
+              Es el mismo código que usaste para crear tu cuenta.
+            </div>
+          </div>
+ 
+          <div class="field">
+            <label for="contraseña_login">Contraseña</label>
+            <div class="pwd-wrap">
+              <input class="input" type="password" id="contraseña_login" name="contraseña_login" placeholder="Ingresa tu contraseña" required>
+              <button type="button" class="pwd-toggle" onclick="togglePassword('contraseña_login', this)">👁️</button>
+            </div>
+          </div>
+ 
+          <a href="{{ url_for('recuperar_contraseña') }}" class="forgot">¿Olvidaste tu contraseña?</a>
+ 
+          <button type="submit" name="action" value="login" class="btn-submit">Entrar</button>
+        </form>
+ 
+        <div class="foot-link">¿No tienes cuenta? <a href="javascript:void(0)" onclick="mostrarVista('register')">Regístrate aquí</a></div>
+      </div>
+ 
+      <!-- ---------- REGISTRO ---------- -->
+      <div class="view" id="viewRegister">
+        <h2>Crea tu cuenta</h2>
+        <p class="sub">Primero cuéntanos qué tipo de cuenta necesitas.</p>
+ 
+        <form action="{{ url_for('inicio_sesion') }}" method="POST" id="formulario_registro" onsubmit="return validarFormulario()">
+ 
+          <!-- PASO 1: rol, siempre visible primero -->
+          <div class="rol-step">
+            <div class="field" style="margin-bottom:12px;">
+              <label for="rol">Tipo de cuenta</label>
+              <select class="input" name="rol" id="rol" required onchange="actualizarPorRol()">
+                <option value="" disabled selected>Selecciona una opción</option>
+                {% for rol in roles %}
+                  {% if rol[1]|lower not in ('jefe_primera_instancia', 'jefe_segunda_instancia') %}
+                  <option value="{{ rol[0] }}" data-rol="{{ rol[1]|lower }}">{{ rol[1]|replace('_',' ')|title }}</option>
+                  {% endif %}
+                {% endfor %}
+                <!-- Una sola opción de Jefe: el código de empleado que ingrese
+                     ya determina si es de 1ra o 2da instancia -->
+                <option value="JEFE" data-rol="jefe">Jefe de Instancia</option>
+              </select>
+            </div>
+ 
+            <div class="rol-hint" id="rolHint">
+              <span class="icon">ℹ️</span>
+              <span id="rolHintTexto"></span>
+            </div>
+          </div>
+ 
+          <!-- PASO 2: se revela según el rol elegido -->
+          <div id="restoRegistro">
+ 
+            <div class="field" id="campoCodigoCliente" style="display:none;">
+              <label for="codigo_cliente">Código de verificación de cliente</label>
+              <input class="input mono" type="text" id="codigo_cliente" name="codigo_cliente"
+                     maxlength="6" placeholder="Ej: A3F9K1">
+              <div style="font-size:.74rem; color:var(--slate-600); margin-top:5px;">
+                Este código llega a tu correo o WhatsApp registrado con tu contrato.
+              </div>
+            </div>
+ 
+            <div class="field" id="campoCodigoEmpleado" style="display:none;">
+              <label for="codigo_empleado">Código de verificación de empleado</label>
+              <input class="input mono" type="text" id="codigo_empleado" name="codigo_empleado"
+                     maxlength="4" inputmode="numeric" pattern="\d{4}" placeholder="4 dígitos">
+              <div style="font-size:.74rem; color:var(--slate-600); margin-top:5px;">
+                Te lo entrega RR.HH. al contratarte o asignarte el cargo. Es de un solo uso.
+              </div>
+            </div>
+ 
+            <div class="field" id="campoTipoTecnico" style="display:none;">
+              <label for="tipo_tecnico">Tipo de técnico</label>
+              <select class="input" id="tipo_tecnico" name="tipo_tecnico">
+                <option value="" disabled selected>Selecciona una opción</option>
+                <option value="RA">RA — Redes de Acceso</option>
+                <option value="RC">RC — Redes de Cableado</option>
+              </select>
+            </div>
+ 
+            <div class="row2">
+              <div class="field">
+                <label for="nombre">Nombres</label>
+                <input class="input" type="text" id="nombre" name="nombre" placeholder="Nombres" required>
+              </div>
+              <div class="field">
+                <label for="apellido">Apellidos</label>
+                <input class="input" type="text" id="apellido" name="apellido" placeholder="Apellidos" required>
+              </div>
+            </div>
+ 
+            <div class="field">
+              <label for="correo">Correo electrónico</label>
+              <input class="input" type="email" id="correo" name="correo" placeholder="tucorreo@ejemplo.com" required>
+            </div>
+ 
+            <div class="field">
+              <label for="telefono">Teléfono</label>
+              <input class="input" type="text" id="telefono" name="telefono" placeholder="Teléfono" required>
+            </div>
+ 
+            <div class="field">
+              <label for="contraseña">Contraseña</label>
+              <div class="pwd-wrap">
+                <input class="input" type="password" id="contraseña" name="contraseña" placeholder="coloca tu contraseña" required oninput="validarContraseña()">
+                <button type="button" class="pwd-toggle" onclick="togglePassword('contraseña', this)">👁️</button>
+              </div>
+            </div>
+ 
+            <div class="checklist" id="checklistContraseña">
+              <div class="item" data-req="len"><span class="dot"></span> Al menos 8 caracteres</div>
+              <div class="item" data-req="upper"><span class="dot"></span> Una letra mayúscula</div>
+              <div class="item" data-req="num"><span class="dot"></span> Un número</div>
+              <div class="item" data-req="sym"><span class="dot"></span> Un símbolo (!@#$%^&amp;*()_+)</div>
+            </div>
+ 
+            <div class="field">
+              <label for="confirmacion_contraseña">Confirmar contraseña</label>
+              <div class="pwd-wrap">
+                <input class="input" type="password" id="confirmacion_contraseña" name="confirmacion_contraseña" placeholder="confirma tu contraseña" required>
+                <button type="button" class="pwd-toggle" onclick="togglePassword('confirmacion_contraseña', this)">👁️</button>
+              </div>
+            </div>
+ 
+            <button type="submit" name="action" value="register" class="btn-submit">Crear cuenta</button>
+          </div>
+ 
+        </form>
+ 
+        <div class="foot-link">¿Ya tienes cuenta? <a href="javascript:void(0)" onclick="mostrarVista('login')">Inicia sesión</a></div>
+      </div>
+ 
+    </div>
+  </section>
+ 
+</div>
+ 
+<script>
+  // Todos los roles de EMPLEADO piden código de empleado (4 dígitos).
+  // El único rol que pide un código distinto es "cliente".
+  // "jefe" es una sola opción visual: el código que ingrese ya
+  // trae asociada la instancia (1ra o 2da) desde la base de datos.
+  const MENSAJES_ROL = {
+    cliente:                 'Ingresa el código de verificación que te llegó como cliente para confirmar tu identidad.',
+    help_desk:                'Necesitarás el código de empleado que te entregó Recursos Humanos.',
+    tecnico:                 'Necesitarás tu código de empleado y el tipo de técnico asignado (RA o RC).',
+    nodo_internet:           'Necesitarás el código de empleado que te entregó Recursos Humanos.',
+    calidad:                 'Necesitarás el código de empleado que te entregó Recursos Humanos.',
+    administrador:           'Necesitarás el código de empleado que te entregó Recursos Humanos.',
+    jefe:                    'Necesitarás el código de empleado que te entregó Recursos Humanos. Ese código ya determina si eres Jefe de 1ra o 2da Instancia.'
+  };
+ 
+  function actualizarPorRol(){
+    const select = document.getElementById('rol');
+    const opcion = select.options[select.selectedIndex];
+    const rolElegido = opcion ? opcion.dataset.rol : '';
+ 
+    const resto = document.getElementById('restoRegistro');
+    const hint = document.getElementById('rolHint');
+    const hintTexto = document.getElementById('rolHintTexto');
+ 
+    const campoCliente = document.getElementById('campoCodigoCliente');
+    const inputCliente = document.getElementById('codigo_cliente');
+    const campoEmpleado = document.getElementById('campoCodigoEmpleado');
+    const inputEmpleado = document.getElementById('codigo_empleado');
+    const campoTipo = document.getElementById('campoTipoTecnico');
+    const selectTipo = document.getElementById('tipo_tecnico');
+ 
+    if(!rolElegido){
+      resto.style.display = 'none';
+      hint.style.display = 'none';
+      return;
+    }
+ 
+    resto.style.display = 'block';
+ 
+    const esCliente = rolElegido === 'cliente';
+    // Todos los roles de empleado (todo menos "cliente") piden código de
+    // empleado — incluye "jefe" (una sola opción que cubre 1ra y 2da instancia).
+    const rolesConCodigoEmpleado = [
+      'help_desk', 'tecnico', 'nodo_internet', 'calidad', 'administrador', 'jefe'
+    ];
+    const necesitaCodigoEmpleado = rolesConCodigoEmpleado.includes(rolElegido);
+ 
+    campoCliente.style.display = esCliente ? 'block' : 'none';
+    inputCliente.required = esCliente;
+    if(!esCliente) inputCliente.value = '';
+ 
+    campoEmpleado.style.display = necesitaCodigoEmpleado ? 'block' : 'none';
+    inputEmpleado.required = necesitaCodigoEmpleado;
+    if(!necesitaCodigoEmpleado) inputEmpleado.value = '';
+ 
+    const esTecnico = rolElegido === 'tecnico';
+    campoTipo.style.display = esTecnico ? 'block' : 'none';
+    selectTipo.required = esTecnico;
+    if(!esTecnico) selectTipo.value = '';
+ 
+    if(MENSAJES_ROL[rolElegido]){
+      hintTexto.textContent = MENSAJES_ROL[rolElegido];
+      hint.style.display = 'flex';
+    } else {
+      hint.style.display = 'none';
+    }
+  }
+ 
+  function mostrarVista(vista){
+    document.getElementById('viewLogin').classList.toggle('active', vista === 'login');
+    document.getElementById('viewRegister').classList.toggle('active', vista === 'register');
+    document.getElementById('tabLogin').classList.toggle('active', vista === 'login');
+    document.getElementById('tabRegister').classList.toggle('active', vista === 'register');
+  }
+ 
+  function togglePassword(fieldId, btn){
+    const field = document.getElementById(fieldId);
+    if(field.type === 'password'){ field.type = 'text'; btn.textContent = '🙈'; }
+    else{ field.type = 'password'; btn.textContent = '👁️'; }
+  }
+ 
+  function validarContraseña(){
+    const v = document.getElementById('contraseña').value;
+    const checks = {
+      len:   v.length >= 8,
+      upper: /[A-Z]/.test(v),
+      num:   /\d/.test(v),
+      sym:   /[!@#$%^&*()_+]/.test(v),
+    };
+    Object.keys(checks).forEach(key => {
+      const el = document.querySelector(`#checklistContraseña .item[data-req="${key}"]`);
+      el.classList.toggle('ok', checks[key]);
+      el.querySelector('.dot').textContent = checks[key] ? '✓' : '';
+    });
+    return checks;
+  }
+ 
+  function validarFormulario(){
+    const contraseña = document.getElementById('contraseña').value;
+    const confirmacion = document.getElementById('confirmacion_contraseña').value;
+    const checks = validarContraseña();
+    let isValid = true;
+ 
+    if(!checks.len || !checks.upper || !checks.num || !checks.sym){
+      alert('La contraseña no cumple con los requisitos mínimos. Revisa la lista de requisitos.');
+      isValid = false;
+    }
+    if(contraseña !== confirmacion){
+      alert('Las contraseñas no coinciden.');
+      isValid = false;
+    }
+    return isValid;
+  }
+ 
+  document.addEventListener('DOMContentLoaded', function(){
+    setTimeout(function(){
+      document.querySelectorAll('.alert').forEach(a => a.style.display = 'none');
+    }, 6000);
+  });
+</script>
+ 
+</body>
+</html>

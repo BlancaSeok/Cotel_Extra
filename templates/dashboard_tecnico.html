@@ -1,0 +1,1479 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>COTEL RL — Panel Técnico</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* ═══ PALETA NARANJA CORPORATIVA ═══ */
+  /* Fondos */
+  --bg: #f5f6f8;
+  --surface: #ffffff;
+  --surface2: #fff7ed;
+  --surface3: #ffedd5;
+  /* Bordes */
+  --border: rgba(154, 82, 24, 0.12);
+  --border2: rgba(154, 82, 24, 0.22);
+  /* Naranja principal */
+  --accent: #d97706;
+  --accent2: #f59e0b;
+  --accent-dark: #9a3412;
+  --accent-light: #fff7ed;
+  --accent-dim: rgba(217, 119, 6, 0.10);
+  /* Colores de estados */
+  --green: #15803d;
+  --green-dim: rgba(21, 128, 61, 0.10);
+  --blue: #0369a1;
+  --blue-dim: rgba(3, 105, 161, 0.10);
+  --yellow: #b45309;
+  --yellow-dim: rgba(180, 83, 9, 0.12);
+  --red: #b91c1c;
+  --red-dim: rgba(185, 28, 28, 0.10);
+  --violet: #7c3aed;
+  /* Textos */
+  --text: #1f2937;
+  --muted: #9ca3af;
+  --muted2: #6b7280;
+  /* Fuentes */
+  --mono: 'Share Tech Mono', monospace;
+  --body: 'Barlow', sans-serif;
+  --cond: 'Barlow Condensed', sans-serif;
+  /* Bordes */
+  --r: 8px;
+  --rl: 14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--body);
+  font-size:15px;
+  line-height:1.6;
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+/* Franjas verticales de color en movimiento, como la imagen de referencia */
+body::before{
+  content:'';
+  position:fixed;inset:-10% -20%;
+  background:repeating-linear-gradient(
+    100deg,
+    var(--accent) 0%,
+    var(--accent2) 25%,
+    var(--accent) 50%,
+    var(--accent-dark) 75%,
+    var(--accent) 100%
+  );
+  background-size:220% 100%;
+  opacity:.035;
+  filter:blur(0px);
+  pointer-events:none;z-index:0;
+  animation:stripes-pan 48s linear infinite;
+  clip-path:polygon(0 0,100% 0,90% 100%,0% 100%);
+}
+@keyframes stripes-pan{
+  0%{ background-position:0% 0; }
+  100%{ background-position:220% 0; }
+}
+@media (prefers-reduced-motion: reduce){
+  body::before{ animation:none; }
+  .bg-anim span{ animation:none; opacity:.25; }
+}
+.bg-anim{ position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden; }
+.bg-anim span{
+  position:absolute; bottom:-10%; border-radius:50%;
+  background:radial-gradient(circle at 30% 30%, rgba(249,115,22,.45), rgba(234,88,12,.03));
+  animation:bg-float linear infinite;
+}
+@keyframes bg-float{
+  0%   { transform:translateY(0) translateX(0) scale(.8); opacity:0; }
+  10%  { opacity:.5; }
+  90%  { opacity:.28; }
+  100% { transform:translateY(-115vh) translateX(24px) scale(1.1); opacity:0; }
+}
+.nav{
+  position:sticky;top:0;z-index:200;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 28px;height:60px;
+  background:rgba(255,255,255,.85);
+  backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);
+}
+.nav-left{display:flex;align-items:center;gap:16px}
+.nav-badge{
+  font-family:var(--cond);font-size:1.3rem;font-weight:700;
+  letter-spacing:.1em;color:var(--text);
+  display:flex;align-items:center;gap:8px;
+}
+.nav-badge .dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--accent);
+  box-shadow:0 0 8px var(--accent);
+  animation:pulse-dot 2s ease-in-out infinite;
+}
+@keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.7)}}
+.nav-role{
+  font-family:var(--mono);font-size:.7rem;
+  color:var(--accent);letter-spacing:.12em;
+  background:var(--accent-dim);
+  border:1px solid rgba(249,115,22,.25);
+  padding:3px 10px;border-radius:4px;
+}
+.nav-right{display:flex;align-items:center;gap:10px}
+.nav-user{font-size:.83rem;color:var(--muted2)}
+.nav-user strong{color:var(--text)}
+.btn-nav{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 14px;border-radius:var(--r);
+  border:1px solid var(--border2);
+  background:transparent;color:var(--muted2);
+  font-family:var(--body);font-size:.8rem;
+  text-decoration:none;cursor:pointer;
+  transition:all .18s;
+}
+.btn-nav:hover{color:var(--text);border-color:var(--accent);background:var(--accent-dim)}
+.layout{
+  display:grid;
+  grid-template-columns:240px 1fr;
+  min-height:calc(100vh - 60px);
+  position:relative;z-index:1;
+}
+.sidebar{
+  background:rgba(255,255,255,.78);
+  backdrop-filter:blur(10px);
+  border-right:1px solid var(--border);
+  padding:24px 0;
+  position:sticky;top:60px;
+  height:calc(100vh - 60px);
+  overflow-y:auto;
+}
+.sidebar-section{padding:0 14px;margin-bottom:24px}
+.sidebar-label{
+  font-family:var(--mono);font-size:.65rem;letter-spacing:.15em;
+  color:var(--muted);text-transform:uppercase;
+  padding:0 8px;margin-bottom:8px;
+}
+.sidebar-link{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 12px;border-radius:var(--r);
+  font-size:.88rem;color:var(--muted2);
+  text-decoration:none;cursor:pointer;
+  transition:all .15s;margin-bottom:2px;
+  border:none;background:none;width:100%;text-align:left;
+}
+.sidebar-link:hover{background:var(--surface2);color:var(--text)}
+.sidebar-link.active{
+  background:var(--accent-dim);
+  color:var(--accent);
+  border:1px solid rgba(249,115,22,.2);
+}
+.sidebar-link .sl-icon{
+  font-size:16px;width:22px;text-align:center;flex-shrink:0;
+}
+.sidebar-badge{
+  margin-left:auto;
+  background:var(--accent);color:#fff;
+  font-family:var(--mono);font-size:.68rem;font-weight:700;
+  padding:1px 7px;border-radius:99px;
+}
+.sidebar-badge.green{background:var(--green);color:#fff}
+.sidebar-badge.red{background:var(--red);color:#fff}
+.sidebar-profile{
+  margin:0 14px 20px;
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:var(--rl);
+  padding:14px;
+  display:flex;align-items:center;gap:10px;
+}
+.profile-avatar{
+  width:40px;height:40px;border-radius:50%;
+  background:linear-gradient(135deg,var(--accent),var(--accent-dark));
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--cond);font-size:1.1rem;font-weight:700;color:#fff;
+  flex-shrink:0;
+}
+.profile-info{min-width:0}
+.profile-name{font-size:.86rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.profile-role{font-family:var(--mono);font-size:.65rem;color:var(--accent);margin-top:2px}
+.main{padding:28px 32px 48px;overflow-y:auto}
+.page-header{margin-bottom:28px}
+.page-greeting{
+  font-family:var(--mono);font-size:.72rem;
+  color:var(--accent);letter-spacing:.12em;
+  text-transform:uppercase;margin-bottom:6px;
+}
+.page-title{
+  font-family:var(--cond);font-size:2rem;font-weight:700;
+  letter-spacing:.02em;color:var(--text);line-height:1.1;
+  margin-bottom:6px;
+}
+.page-date{font-family:var(--mono);font-size:.75rem;color:var(--muted2)}
+.flash-container{margin-bottom:20px}
+.flash{
+  display:flex;align-items:center;gap:10px;
+  padding:11px 16px;border-radius:var(--r);
+  font-size:.86rem;margin-bottom:8px;
+}
+.flash.success{background:var(--green-dim);border:1px solid rgba(22,163,74,.3);color:var(--green)}
+.flash.danger {background:var(--red-dim);  border:1px solid rgba(220,38,38,.3);color:var(--red)}
+.flash.warning{background:var(--yellow-dim);border:1px solid rgba(180,83,9,.3);color:var(--yellow)}
+.flash.info   {background:var(--blue-dim); border:1px solid rgba(2,132,199,.3); color:var(--blue)}
+.stats-grid{
+  display:grid;
+  grid-template-columns:repeat(6,1fr);
+  gap:12px;
+  margin-bottom:28px;
+}
+.stat-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--rl);
+  padding:16px 18px;
+  position:relative;overflow:hidden;
+  box-shadow:0 2px 10px rgba(194,65,12,.06);
+  transition:border-color .18s,transform .18s,box-shadow .18s;
+}
+.stat-card:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:0 8px 20px rgba(194,65,12,.12)}
+.stat-card::before{
+  content:'';position:absolute;
+  top:0;left:0;right:0;height:2px;
+}
+.stat-card.orange::before{background:var(--accent)}
+.stat-card.green::before {background:var(--green)}
+.stat-card.blue::before  {background:var(--blue)}
+.stat-card.yellow::before{background:var(--yellow)}
+.stat-card.red::before   {background:var(--red)}
+.stat-card.violet::before{background:var(--violet)}
+.stat-label{
+  font-family:var(--mono);font-size:.67rem;letter-spacing:.1em;
+  color:var(--muted2);text-transform:uppercase;margin-bottom:8px;
+}
+.stat-value{
+  font-family:var(--mono);font-size:2rem;font-weight:400;
+  line-height:1;margin-bottom:4px;
+}
+.stat-value.orange{color:var(--accent)}
+.stat-value.green {color:var(--green)}
+.stat-value.blue  {color:var(--blue)}
+.stat-value.yellow{color:var(--yellow)}
+.stat-value.red   {color:var(--red)}
+.stat-value.violet{color:var(--violet)}
+.stat-sub{font-size:.72rem;color:var(--muted)}
+.section-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:16px;
+}
+.section-title{
+  font-family:var(--cond);font-size:1.1rem;font-weight:700;
+  letter-spacing:.06em;color:var(--text);
+  display:flex;align-items:center;gap:8px;
+}
+.section-title .stag{
+  font-family:var(--mono);font-size:.68rem;
+  background:var(--accent-dim);color:var(--accent);
+  border:1px solid rgba(249,115,22,.2);
+  padding:2px 8px;border-radius:4px;
+}
+.filter-tabs{display:flex;gap:6px;flex-wrap:wrap}
+.ftab{
+  padding:5px 12px;border-radius:6px;
+  border:1px solid var(--border2);
+  background:var(--surface);color:var(--muted2);
+  font-family:var(--body);font-size:.8rem;cursor:pointer;
+  transition:all .15s;
+}
+.ftab:hover{color:var(--text);border-color:var(--accent)}
+.ftab.active{
+  background:var(--accent-dim);color:var(--accent);
+  border-color:rgba(249,115,22,.3);
+}
+.ot-list{display:flex;flex-direction:column;gap:10px}
+.ot-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--rl);
+  overflow:hidden;
+  box-shadow:0 2px 8px rgba(194,65,12,.05);
+  transition:border-color .18s,box-shadow .18s;
+  border-left:3px solid transparent;
+}
+.ot-card:hover{
+  border-color:var(--border2);
+  box-shadow:0 6px 22px rgba(194,65,12,.14);
+}
+.ot-card.pendiente  {border-left-color:var(--yellow)}
+.ot-card.en_proceso {border-left-color:var(--accent)}
+.ot-card.completado {border-left-color:var(--green)}
+.ot-card.cancelado  {border-left-color:var(--muted)}
+.ot-card.critica .ot-head,
+.ot-card.alta    .ot-head{
+  background:rgba(220,38,38,.04);
+}
+.ot-head{
+  display:flex;align-items:flex-start;
+  justify-content:space-between;gap:12px;
+  padding:16px 18px;
+  cursor:pointer;
+  transition:background .15s;
+}
+.ot-head:hover{background:var(--surface2)}
+.ot-head-left{display:flex;align-items:flex-start;gap:12px;flex:1;min-width:0}
+.ot-num{
+  font-family:var(--mono);font-size:.75rem;
+  color:var(--accent);letter-spacing:.06em;
+  flex-shrink:0;margin-top:2px;
+}
+.ot-title-wrap{flex:1;min-width:0}
+.ot-title{
+  font-size:.95rem;font-weight:600;color:var(--text);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  margin-bottom:4px;
+}
+.ot-meta{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  font-size:.75rem;color:var(--muted2);
+}
+.ot-meta span{display:flex;align-items:center;gap:4px}
+
+/* ── Temporizador: tiempo desde que la OT llegó al técnico ── */
+.ot-timer{
+  display:inline-flex;align-items:center;gap:5px;
+  font-family:var(--mono);font-weight:700;font-size:.72rem;
+  padding:3px 10px;border-radius:99px;
+  color:var(--green);background:var(--green-dim);
+  border:1px solid rgba(22,163,74,.3);
+  transition:background-color .4s ease,color .4s ease,border-color .4s ease;
+}
+.ot-timer::before{
+  content:'';width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0;
+}
+.ot-timer.alerta{
+  color:var(--yellow);background:var(--yellow-dim);border-color:rgba(180,83,9,.4);
+}
+.ot-timer.urgente{
+  color:var(--red);background:var(--red-dim);border-color:rgba(220,38,38,.45);
+  animation:parpadeo-ot-timer 1.2s infinite;
+}
+.ot-timer.congelado{
+  color:var(--muted);background:var(--surface2);border-color:var(--border2);
+  animation:none;opacity:.8;
+}
+
+/* ── Vista Informe DPE ── */
+.dpe-wrap{margin-top:18px;}
+.dpe-title{font-family:var(--mono);font-size:.72rem;letter-spacing:.08em;color:var(--accent);margin-bottom:10px;text-transform:uppercase;}
+.dpe-scroll{overflow-x:auto; border:1px solid var(--border2); border-radius:10px;}
+.dpe-table{width:100%; border-collapse:collapse; font-size:.78rem; white-space:nowrap;}
+.dpe-table th{
+  text-align:left; padding:9px 12px; background:var(--surface2); color:var(--muted);
+  font-weight:600; font-size:.68rem; text-transform:uppercase; letter-spacing:.04em;
+  border-bottom:1px solid var(--border2); position:sticky; top:0;
+}
+.dpe-table td{padding:9px 12px; border-bottom:1px solid var(--border2);}
+.dpe-table tr:hover td{background:var(--surface2);}
+.dpe-muted{color:var(--muted);}
+.btn-dpe-informe{
+  border:1px solid var(--accent); background:transparent; color:var(--accent);
+  padding:4px 10px; border-radius:6px; font-size:.72rem; cursor:pointer; transition:.2s;
+}
+.btn-dpe-informe:hover{background:var(--accent); color:var(--text);}
+.dpe-timer{
+  display:inline-flex; align-items:center; gap:5px; font-family:var(--mono); font-weight:700;
+  font-size:.74rem; padding:4px 10px; border-radius:99px;
+  color:var(--green); background:var(--green-dim); border:1px solid rgba(22,163,74,.3);
+}
+.dpe-timer::before{content:''; width:6px; height:6px; border-radius:50%; background:currentColor;}
+.dpe-timer.alerta{color:var(--yellow); background:var(--yellow-dim); border-color:rgba(180,83,9,.4);}
+.dpe-timer.urgente{color:var(--red); background:var(--red-dim); border-color:rgba(220,38,38,.45);}
+.dpe-timer-total{font-weight:800;}
+@keyframes parpadeo-ot-timer{
+  0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,.4);}
+  50%{box-shadow:0 0 0 4px rgba(220,38,38,0);}
+}
+.ot-badges{display:flex;align-items:center;gap:7px;flex-shrink:0}
+.badge{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:3px 9px;border-radius:5px;
+  font-size:.7rem;font-weight:700;
+  font-family:var(--mono);letter-spacing:.04em;
+}
+.b-pendiente {background:var(--yellow-dim);color:var(--yellow);border:1px solid rgba(180,83,9,.3)}
+.b-en_proceso{background:var(--accent-dim);color:var(--accent);border:1px solid rgba(249,115,22,.25)}
+.b-completado{background:var(--green-dim); color:var(--green); border:1px solid rgba(22,163,74,.25)}
+.b-cancelado {background:rgba(154,74,31,.08);color:var(--muted2);border:1px solid rgba(154,74,31,.2)}
+.b-critica   {background:var(--red-dim);   color:var(--red);   border:1px solid rgba(220,38,38,.25)}
+.b-alta      {background:var(--red-dim);   color:var(--red);   border:1px solid rgba(220,38,38,.25)}
+.b-media     {background:var(--yellow-dim);color:var(--yellow);border:1px solid rgba(180,83,9,.3)}
+.b-baja      {background:var(--green-dim); color:var(--green); border:1px solid rgba(22,163,74,.25)}
+.ot-chevron{
+  color:var(--muted);font-size:.75rem;
+  transition:transform .2s;flex-shrink:0;margin-top:3px;
+}
+.ot-chevron.open{transform:rotate(180deg)}
+.ot-body{
+  display:none;
+  border-top:1px solid var(--border);
+  padding:16px 18px;
+}
+.ot-body.open{display:block}
+.ot-detail-grid{
+  display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;
+  margin-bottom:16px;
+}
+.od-item{display:flex;flex-direction:column;gap:3px}
+.od-label{
+  font-family:var(--mono);font-size:.65rem;letter-spacing:.1em;
+  color:var(--muted);text-transform:uppercase;
+}
+.od-val{font-size:.84rem;color:var(--text)}
+.od-val.accent{color:var(--accent)}
+.ot-desc-box{
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  padding:12px 14px;
+  font-size:.84rem;color:var(--muted2);
+  line-height:1.6;
+  margin-bottom:14px;
+}
+.ot-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn-ot{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:7px 14px;border-radius:var(--r);
+  border:1px solid transparent;
+  font-family:var(--body);font-size:.8rem;font-weight:600;
+  cursor:pointer;transition:all .18s;
+}
+.btn-ot:disabled{opacity:.4;cursor:not-allowed}
+.bo-iniciar  {background:var(--accent-dim);color:var(--accent);border-color:rgba(249,115,22,.3)}
+.bo-iniciar:hover:not(:disabled){background:var(--accent);color:#fff}
+.bo-completar{background:var(--green-dim); color:var(--green); border-color:rgba(22,163,74,.3)}
+.bo-completar:hover:not(:disabled){background:var(--green);color:#fff}
+.bo-nota     {background:var(--blue-dim);  color:var(--blue);  border-color:rgba(2,132,199,.3)}
+.bo-nota:hover:not(:disabled){background:var(--blue);color:#fff}
+.bo-ver      {background:var(--surface2);  color:var(--muted2);border-color:var(--border2)}
+.bo-ver:hover{color:var(--text);border-color:var(--accent2);background:var(--surface3)}
+.bo-escalar  {background:var(--red-dim);   color:var(--red);   border-color:rgba(220,38,38,.3)}
+.bo-escalar:hover:not(:disabled){background:var(--red);color:#fff}
+
+.escalar-form{
+  display:none;margin-top:12px;
+  background:var(--surface2);border:1px solid rgba(220,38,38,.25);
+  border-radius:var(--r);padding:14px;
+}
+.escalar-form.open{display:block}
+
+/* ═══════ MODAL: FINALIZAR FALLA ═══════ */
+.ff-overlay{
+  display:none; position:fixed; inset:0; z-index:200;
+  background:rgba(120,53,15,.35); backdrop-filter:blur(4px);
+  align-items:center; justify-content:center; padding:20px;
+}
+.ff-overlay.open{display:flex}
+.ff-modal{
+  width:100%; max-width:560px; max-height:90vh; overflow-y:auto;
+  background:var(--surface); border:1px solid var(--border2); border-radius:var(--rl);
+  padding:24px; box-shadow:0 20px 60px rgba(120,53,15,.25);
+}
+.ff-head{display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:18px}
+.ff-eyebrow{font-family:var(--mono); font-size:.65rem; color:var(--accent); letter-spacing:.12em; margin-bottom:4px}
+.ff-head h3{font-family:var(--cond); font-size:1.4rem; color:var(--text); margin:0}
+.ff-close{
+  background:var(--surface2); border:1px solid var(--border); color:var(--muted2);
+  width:32px; height:32px; border-radius:8px; cursor:pointer; font-size:.9rem;
+}
+.ff-close:hover{color:var(--text); border-color:var(--accent)}
+.ff-detail-grid{
+  display:grid; grid-template-columns:1fr 1fr; gap:12px 16px; margin-bottom:14px;
+}
+.ff-field{margin-top:14px}
+.ff-field label{
+  display:block; font-family:var(--mono); font-size:.68rem; color:var(--muted2);
+  letter-spacing:.06em; margin-bottom:6px;
+}
+.ff-input{
+  width:100%; background:var(--surface2); border:1px solid var(--border2); border-radius:var(--r);
+  color:var(--text); padding:10px 12px; font-family:var(--body); font-size:.9rem; resize:vertical;
+}
+.ff-input:focus{outline:none; border-color:var(--accent)}
+.escalar-opciones{display:flex;flex-direction:column;gap:8px}
+.escalar-radio{display:flex;align-items:center;gap:8px;font-size:.84rem;color:var(--muted2);cursor:pointer}
+.escalar-radio input{accent-color:var(--red)}
+.bs-escalar{background:var(--red);color:#fff}
+.nota-form{
+  display:none;margin-top:12px;
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:var(--r);padding:12px;
+}
+.nota-form.open{display:block}
+.nota-textarea{
+  width:100%;background:var(--surface3);
+  border:1px solid var(--border2);border-radius:6px;
+  padding:9px 11px;color:var(--text);
+  font-family:var(--body);font-size:.84rem;
+  resize:none;outline:none;
+  transition:border-color .15s;
+}
+.nota-textarea:focus{border-color:var(--accent)}
+.nota-btns{display:flex;gap:7px;justify-content:flex-end;margin-top:8px}
+.btn-sm{
+  padding:5px 12px;border-radius:6px;
+  font-size:.78rem;font-weight:600;
+  font-family:var(--body);cursor:pointer;
+  border:none;transition:opacity .18s;
+}
+.btn-sm:hover{opacity:.85}
+.bs-send{background:var(--accent);color:#fff}
+.bs-cancel{background:var(--surface3);color:var(--muted2);border:1px solid var(--border)}
+.empty-state{
+  text-align:center;padding:48px 24px;
+  color:var(--muted);
+}
+.empty-icon{font-size:3rem;margin-bottom:12px;opacity:.4}
+.empty-text{font-size:.9rem;line-height:1.6}
+.toast-container{
+  position:fixed;bottom:24px;right:24px;
+  z-index:9999;display:flex;flex-direction:column;gap:8px;
+  pointer-events:none;
+}
+.toast{
+  background:var(--surface);
+  border:1px solid var(--border2);
+  color:var(--text);
+  padding:11px 16px;border-radius:var(--rl);
+  font-size:.84rem;display:flex;align-items:center;gap:10px;
+  max-width:340px;
+  box-shadow:0 8px 32px rgba(120,53,15,.25);
+  animation:toast-in .3s ease;
+  pointer-events:all;
+}
+.toast.success{border-color:rgba(22,163,74,.4);color:var(--green)}
+.toast.error  {border-color:rgba(220,38,38,.4);color:var(--red)}
+.toast.info   {border-color:rgba(2,132,199,.4); color:var(--blue)}
+@keyframes toast-in{from{transform:translateX(120%);opacity:0}to{transform:translateX(0);opacity:1}}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px}
+@media(max-width:1100px){.stats-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:800px){
+  .layout{grid-template-columns:1fr}
+  .sidebar{display:none}
+  .main{padding:16px}
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .ot-detail-grid{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="bg-anim" id="bgAnim"></div>
+
+<nav class="nav">
+  <div class="nav-left">
+    <div class="nav-badge">
+      <img src="{{ url_for('static', filename='imagenes/Logo1Cotel.png') }}" alt="Logo" height="32" class="me-2" style="border-radius:6px;">
+      COTEL RL
+      <span class="dot"></span>
+    </div>
+    <span class="nav-role">TÉCNICO · {{ 'DRA (1RA INSTANCIA)' if (tecnico[7] if tecnico|length > 7 else 1) == 1 else 'DRC (2DA INSTANCIA)' }}</span>
+  </div>
+  <div class="nav-right">
+    <span class="nav-user">Bienvenido, <strong>{{ nombre_usuario }}</strong></span>
+    <a href="{{ url_for('cerrar_sesion') }}" class="btn-nav">⏻ Salir</a>
+  </div>
+</nav>
+
+<div class="layout">
+
+  <aside class="sidebar">
+    <div class="sidebar-profile">
+      <div class="profile-avatar">{{ nombre_usuario[0]|upper if nombre_usuario else 'T' }}</div>
+      <div class="profile-info">
+        <div class="profile-name">{{ nombre_usuario }}</div>
+        <div class="profile-role">{{ tecnico[1] or 'Técnico General' }}</div>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Panel</div>
+      <a class="sidebar-link active" href="{{ url_for('dashboard_tecnico') }}">
+        <span class="sl-icon">⊞</span> Dashboard
+        {% if stats.en_proceso > 0 %}
+        <span class="sidebar-badge">{{ stats.en_proceso }}</span>
+        {% endif %}
+      </a>
+      <a class="sidebar-link" href="{{ url_for('tecnico_ots') }}">
+        <span class="sl-icon">📋</span> Todas mis OT
+        {% if stats.pendientes > 0 %}
+        <span class="sidebar-badge">{{ stats.pendientes }}</span>
+        {% endif %}
+      </a>
+      <a class="sidebar-link" href="{{ url_for('tecnico_ots') }}?estado=pendiente">
+        <span class="sl-icon">⏳</span> Pendientes
+      </a>
+      <a class="sidebar-link" href="{{ url_for('tecnico_ots') }}?estado=en_proceso">
+        <span class="sl-icon">⚙</span> En Proceso
+      </a>
+      <a class="sidebar-link" href="{{ url_for('tecnico_ots') }}?estado=completado">
+        <span class="sl-icon">✓</span> Completadas
+      </a>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Info</div>
+      <div style="padding:8px 12px;font-size:.78rem;color:var(--muted2);line-height:1.6">
+        Zona: <strong style="color:var(--text)">{{ tecnico[2] or 'Sin asignar' }}</strong><br>
+        Especialidad: <strong style="color:var(--text)">{{ tecnico[1] or 'General' }}</strong>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flash-container">
+      {% for cat, msg in messages %}
+      <div class="flash {{ cat }}">{{ msg }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <div class="page-header">
+      <div class="page-greeting">// PANEL DE OPERACIONES</div>
+      <div class="page-title">Buenos días, {{ nombre_usuario.split()[0] if nombre_usuario else 'Técnico' }}</div>
+      <div class="page-date" id="live-date">{{ now.strftime('%A %d de %B, %Y — %H:%M') }}</div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card orange">
+        <div class="stat-label">Total OT</div>
+        <div class="stat-value orange">{{ stats.total }}</div>
+        <div class="stat-sub">asignadas</div>
+      </div>
+      <div class="stat-card yellow">
+        <div class="stat-label">Pendientes</div>
+        <div class="stat-value yellow">{{ stats.pendientes }}</div>
+        <div class="stat-sub">por iniciar</div>
+      </div>
+      <div class="stat-card blue">
+        <div class="stat-label">En Proceso</div>
+        <div class="stat-value blue">{{ stats.en_proceso }}</div>
+        <div class="stat-sub">activas ahora</div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-label">Completadas</div>
+        <div class="stat-value green">{{ stats.completadas }}</div>
+        <div class="stat-sub">total histórico</div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-label">Hoy</div>
+        <div class="stat-value green">{{ stats.hoy_completadas }}</div>
+        <div class="stat-sub">completadas hoy</div>
+      </div>
+      <div class="stat-card red">
+        <div class="stat-label">Urgentes</div>
+        <div class="stat-value red">{{ stats.urgentes }}</div>
+        <div class="stat-sub">alta/crítica activas</div>
+      </div>
+    </div>
+
+    <div class="section-header">
+      <div class="section-title">
+        Órdenes de Trabajo
+        <span class="stag">{{ ots|length }} mostradas</span>
+      </div>
+      <div class="filter-tabs" id="filter-tabs">
+        <button class="ftab active" onclick="filtrarOTs('todas',this)">Todas</button>
+        <button class="ftab" onclick="filtrarOTs('pendiente',this)">Pendientes</button>
+        <button class="ftab" onclick="filtrarOTs('en_proceso',this)">En proceso</button>
+        <button class="ftab" onclick="filtrarOTs('completado',this)">Completadas</button>
+      </div>
+      <button class="ftab" id="btn-vista-dpe" onclick="toggleVistaDPE()" style="margin-left:auto">📋 Vista informe DPE</button>
+    </div>
+
+    {% if ots %}
+    <div class="ot-list" id="ot-list">
+      {% for ot in ots %}
+      <div class="ot-card {{ ot[6] }} {{ ot[5] }}" id="otcard-{{ ot[0] }}" data-estado="{{ ot[6] }}">
+
+        <div class="ot-head" onclick="toggleOT({{ ot[0] }})">
+          <div class="ot-head-left">
+            <span class="ot-num">{{ ot[1] }}</span>
+            <div class="ot-title-wrap">
+              <div class="ot-title">{{ ot[2] }}</div>
+              <div class="ot-meta">
+                {% if ot[4] %}<span>🔧 {{ ot[4]|replace('_',' ')|title }}</span>{% endif %}
+                {% if ot[7] %}<span>📍 {{ ot[7][:40] }}{% if ot[7]|length > 40 %}…{% endif %}</span>{% endif %}
+                {% if ot[8] %}<span>📅 {{ ot[8].strftime('%d/%m/%Y %H:%M') }}</span>{% endif %}
+                {% if ot[13] %}<span>👤 {{ ot[13] }} {{ ot[14] or '' }}</span>{% endif %}
+                {% set ot_congelada = ot[6] in ('completado', 'cancelado') %}
+                <span class="ot-timer{% if ot_congelada %} congelado{% endif %}"
+                      data-inicio="{{ ot[12].strftime('%Y-%m-%dT%H:%M:%S') if ot[12] else '' }}"
+                      data-fin="{{ ot[10].strftime('%Y-%m-%dT%H:%M:%S') if (ot_congelada and ot[10]) else '' }}"
+                      data-congelado="{{ 'true' if ot_congelada else 'false' }}">--:--:--</span>
+              </div>
+            </div>
+          </div>
+          <div class="ot-badges">
+            <span class="badge b-{{ ot[5] }}">
+              {% if ot[5]=='critica' %}🔴 CRÍTICA
+              {% elif ot[5]=='alta'  %}🟠 ALTA
+              {% elif ot[5]=='media' %}🟡 MEDIA
+              {% else %}🟢 BAJA{% endif %}
+            </span>
+            <span class="badge b-{{ ot[6] }}" id="badge-estado-{{ ot[0] }}">
+              {% if ot[6]=='pendiente'  %}⏳ PENDIENTE
+              {% elif ot[6]=='en_proceso' %}⚙ EN PROCESO
+              {% elif ot[6]=='completado' %}✓ COMPLETADO
+              {% else %}✕ CANCELADO{% endif %}
+            </span>
+            <span class="ot-chevron" id="chev-{{ ot[0] }}">▾</span>
+          </div>
+        </div>
+
+        <div class="ot-body" id="otbody-{{ ot[0] }}">
+          <div class="ot-detail-grid">
+            <div class="od-item">
+              <span class="od-label">N° OT</span>
+              <span class="od-val accent">{{ ot[1] }}</span>
+            </div>
+            <div class="od-item">
+              <span class="od-label">Tipo de trabajo</span>
+              <span class="od-val">{{ ot[4]|replace('_',' ')|title if ot[4] else '—' }}</span>
+            </div>
+            <div class="od-item">
+              <span class="od-label">Prioridad</span>
+              <span class="od-val">{{ ot[5]|title if ot[5] else '—' }}</span>
+            </div>
+            <div class="od-item">
+              <span class="od-label">Cliente</span>
+              <span class="od-val">{{ (ot[13]|string + ' ' + (ot[14]|string or '')).strip() or '—' }}</span>
+            </div>
+            <div class="od-item">
+              <span class="od-label">Teléfono cliente</span>
+              <span class="od-val">{{ ot[15] or '—' }}</span>
+            </div>
+            <div class="od-item">
+              <span class="od-label">Fecha programada</span>
+              <span class="od-val">{{ ot[8].strftime('%d/%m/%Y %H:%M') if ot[8] else '—' }}</span>
+            </div>
+            <div class="od-item">
+              <span class="od-label">Dirección</span>
+              <span class="od-val">{{ ot[7] or '—' }}</span>
+            </div>
+            <div class="od-item">
+              <span class="od-label">Inicio trabajo</span>
+              <span class="od-val">{{ ot[9].strftime('%d/%m/%Y %H:%M') if ot[9] else '—' }}</span>
+            </div>
+            <div class="od-item">
+              <span class="od-label">Fecha fin</span>
+              <span class="od-val">{{ ot[10].strftime('%d/%m/%Y %H:%M') if ot[10] else '—' }}</span>
+            </div>
+          </div>
+
+          {% if ot[3] %}
+          <div class="ot-desc-box">
+            <div style="font-family:var(--mono);font-size:.65rem;color:var(--muted);letter-spacing:.1em;margin-bottom:6px">DESCRIPCIÓN</div>
+            {{ ot[3] }}
+          </div>
+          {% endif %}
+
+          {% if ot[11] %}
+          <div class="ot-desc-box" style="border-color:rgba(249,115,22,.2)">
+            <div style="font-family:var(--mono);font-size:.65rem;color:var(--accent);letter-spacing:.1em;margin-bottom:6px">OBSERVACIONES DEL JEFE</div>
+            {{ ot[11] }}
+          </div>
+          {% endif %}
+
+          <div class="ot-actions" id="actions-{{ ot[0] }}">
+            {% if ot[6] == 'pendiente' %}
+            <button class="btn-ot bo-iniciar"
+                    onclick="cambiarEstado({{ ot[0] }},'en_proceso')">
+              ▶ Iniciar OT
+            </button>
+            {% endif %}
+            {% if ot[6] == 'en_proceso' %}
+            <button class="btn-ot bo-completar"
+                    onclick="abrirFinalizarFalla({{ ot[0] }}, '{{ ot[1] }}', {{ (ot[13]|string + ' ' + (ot[14]|string or ''))|trim|tojson }}, {{ (ot[7] or '—')|tojson }}, {{ (ot[3] or ot[2] or '—')|tojson }}, {{ (ot[4] or '—')|tojson }})">
+              🏁 Finalizar falla
+            </button>
+            {% if (tecnico[7] if tecnico|length > 7 else 1) == 1 %}
+            <button class="btn-ot bo-escalar"
+                    onclick="toggleEscalar({{ ot[0] }})">
+              ⤴ No se pudo resolver
+            </button>
+            {% endif %}
+            {% endif %}
+            {% if ot[6] in ('pendiente','en_proceso') %}
+            <button class="btn-ot bo-nota"
+                    onclick="toggleNota({{ ot[0] }})">
+              📝 Agregar nota
+            </button>
+            {% endif %}
+            <a href="{{ url_for('tecnico_ver_ot', ot_id=ot[0]) }}" class="btn-ot bo-ver">
+              🔍 Ver detalle completo
+            </a>
+          </div>
+
+          <div class="nota-form" id="nota-{{ ot[0] }}">
+            <div style="font-family:var(--mono);font-size:.68rem;color:var(--blue);margin-bottom:8px;letter-spacing:.08em">
+              // AGREGAR NOTA DE AVANCE
+            </div>
+            <textarea class="nota-textarea" id="nota-txt-{{ ot[0] }}" rows="3"
+                      placeholder="Describe el avance, problema encontrado o acción realizada…"></textarea>
+            <div class="nota-btns">
+              <button class="btn-sm bs-cancel" onclick="toggleNota({{ ot[0] }})">Cancelar</button>
+              <button class="btn-sm bs-send" onclick="enviarNota({{ ot[0] }})">Enviar nota</button>
+            </div>
+          </div>
+
+          {% if (tecnico[7] if tecnico|length > 7 else 1) == 1 %}
+          <div class="escalar-form" id="escalar-{{ ot[0] }}">
+            <div style="font-family:var(--mono);font-size:.68rem;color:var(--red);margin-bottom:10px;letter-spacing:.08em">
+              // ESCALAR A 2DA INSTANCIA
+            </div>
+            <div style="font-size:.85rem;color:var(--text);margin-bottom:10px">
+              ¿La falla es de <strong>energía o refrigeración</strong>?
+            </div>
+            <div class="escalar-opciones">
+              <label class="escalar-radio">
+                <input type="radio" name="energia-{{ ot[0] }}" value="si">
+                <span>Sí — enviar a Responsable Transmisiones</span>
+              </label>
+              <label class="escalar-radio">
+                <input type="radio" name="energia-{{ ot[0] }}" value="no" checked>
+                <span>No — enviar a técnico de 2da instancia del mismo servicio</span>
+              </label>
+            </div>
+            <textarea class="nota-textarea" id="escalar-obs-{{ ot[0] }}" rows="2"
+                      placeholder="Observación para el Jefe de 2da Instancia (opcional)…" style="margin-top:10px"></textarea>
+            <div class="nota-btns">
+              <button class="btn-sm bs-cancel" onclick="toggleEscalar({{ ot[0] }})">Cancelar</button>
+              <button class="btn-sm bs-escalar" onclick="escalarInstancia({{ ot[0] }})">Confirmar escalación</button>
+            </div>
+          </div>
+          {% endif %}
+
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- ═══════ VISTA INFORME DPE — oculta por defecto, alterna con el botón de arriba ═══════ -->
+    <div class="dpe-wrap" id="dpe-wrap" style="display:none">
+      <div class="dpe-title">Reclamos pendientes de informe — 2da y 3ra instancia</div>
+      <div class="dpe-scroll">
+        <table class="dpe-table">
+          <thead>
+            <tr>
+              <th>Telf.</th><th>N° Reclamo</th><th>Contrato</th><th>Nombre</th>
+              <th>Dirección</th><th>Área / dato técnico</th><th>Fecha recepción</th>
+              <th>1er informe</th><th>Tiempo 1a instancia</th>
+              <th>2do informe</th><th>Tiempo 2a instancia</th><th>Tiempo total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for ot in ots %}
+            {% set contrato = ot[17] if ot|length > 17 else None %}
+            {% set area_tecnica = ot[18] if ot|length > 18 else None %}
+            {% set fecha_1er_informe = ot[19] if ot|length > 19 else None %}
+            {% set fecha_2do_informe = ot[20] if ot|length > 20 else None %}
+            <tr>
+              <td>{{ ot[15] or '—' }}</td>
+              <td>{{ ot[1] }}</td>
+              <td>{{ contrato or '—' }}</td>
+              <td>{{ (ot[13]|string + ' ' + (ot[14]|string or ''))|trim or '—' }}</td>
+              <td>{{ ot[7] or '—' }}</td>
+              <td>{{ area_tecnica or '—' }}</td>
+              <td>{{ ot[12].strftime('%d-%m-%Y %H:%M') if ot[12] else '—' }}</td>
+              <td>
+                {% if fecha_1er_informe %}
+                  {{ fecha_1er_informe.strftime('%d-%m-%Y %H:%M') }}
+                {% else %}
+                  <button class="btn-dpe-informe" onclick="abrirRegistrarInforme({{ ot[0] }}, 1)">Registrar</button>
+                {% endif %}
+              </td>
+              <td>
+                <span class="dpe-timer" data-inicio="{{ ot[12].strftime('%Y-%m-%dT%H:%M:%S') if ot[12] else '' }}"
+                      data-fin="{{ fecha_1er_informe.strftime('%Y-%m-%dT%H:%M:%S') if fecha_1er_informe else '' }}">--:--</span>
+              </td>
+              <td>
+                {% if fecha_2do_informe %}
+                  {{ fecha_2do_informe.strftime('%d-%m-%Y %H:%M') }}
+                {% elif fecha_1er_informe %}
+                  <button class="btn-dpe-informe" onclick="abrirRegistrarInforme({{ ot[0] }}, 2)">Registrar</button>
+                {% else %}
+                  <span class="dpe-muted">—</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if fecha_1er_informe %}
+                <span class="dpe-timer" data-inicio="{{ fecha_1er_informe.strftime('%Y-%m-%dT%H:%M:%S') }}"
+                      data-fin="{{ fecha_2do_informe.strftime('%Y-%m-%dT%H:%M:%S') if fecha_2do_informe else '' }}">--:--</span>
+                {% else %}<span class="dpe-muted">—</span>{% endif %}
+              </td>
+              <td>
+                <span class="dpe-timer dpe-timer-total" data-inicio="{{ ot[12].strftime('%Y-%m-%dT%H:%M:%S') if ot[12] else '' }}"
+                      data-fin="{{ fecha_2do_informe.strftime('%Y-%m-%dT%H:%M:%S') if fecha_2do_informe else '' }}">--:--</span>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <!-- ═══════ FIN VISTA INFORME DPE ═══════ -->
+
+    <div class="section-header" style="margin-top:28px">
+      <div class="section-title">
+        🗺️ Fallas por zona — todas las áreas
+      </div>
+    </div>
+    <div style="font-size:.78rem; color:var(--muted2); margin:-10px 0 14px;">
+      De tu propia zona ({{ mi_zona_nombre or 'sin zona asignada' }}) puedes ver el detalle. De las demás zonas, solo el conteo.
+    </div>
+    <div class="dpe-scroll">
+      <table class="dpe-table">
+        <thead>
+          <tr><th>Zona</th><th>Total de fallas</th><th>En proceso</th><th></th></tr>
+        </thead>
+        <tbody id="tabla-fallas-zona">
+          <tr><td colspan="4" class="dpe-muted">Cargando…</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="empty-state">
+      <div class="empty-icon">📋</div>
+      <div class="empty-text">
+        No tienes órdenes de trabajo asignadas aún.<br>
+        Tu supervisor te asignará trabajos próximamente.
+      </div>
+    </div>
+    {% endif %}
+
+  </main>
+</div>
+
+<!-- ═══════ MODAL: Detalle de fallas por zona (solo zona propia) ═══════ -->
+<div class="ff-overlay" id="dzOverlay" onclick="if(event.target===this) cerrarDetalleZona()">
+  <div class="ff-modal">
+    <div class="ff-head">
+      <div>
+        <div class="ff-eyebrow">// DETALLE DE FALLAS</div>
+        <h3 id="dz-zona-nombre">—</h3>
+      </div>
+      <button class="ff-close" onclick="cerrarDetalleZona()">✕</button>
+    </div>
+    <div id="dz-lista">Cargando…</div>
+    <div class="nota-btns" style="margin-top:14px">
+      <button class="btn-sm bs-cancel" onclick="cerrarDetalleZona()">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toast-container"></div>
+
+<!-- ═══════ MODAL: FINALIZAR FALLA ═══════ -->
+<div class="ff-overlay" id="ffOverlay" onclick="if(event.target===this) cerrarFinalizarFalla()">
+  <div class="ff-modal">
+    <div class="ff-head">
+      <div>
+        <div class="ff-eyebrow">// CERRAR ORDEN DE TRABAJO</div>
+        <h3>Finalizar falla</h3>
+      </div>
+      <button class="ff-close" onclick="cerrarFinalizarFalla()">✕</button>
+    </div>
+
+    <div class="ff-detail-grid">
+      <div class="od-item">
+        <span class="od-label">N° OT</span>
+        <span class="od-val accent" id="ff-ot-num">—</span>
+      </div>
+      <div class="od-item">
+        <span class="od-label">Código de falla / tipo</span>
+        <span class="od-val" id="ff-tipo">—</span>
+      </div>
+      <div class="od-item">
+        <span class="od-label">Cliente</span>
+        <span class="od-val" id="ff-cliente">—</span>
+      </div>
+      <div class="od-item">
+        <span class="od-label">Dirección</span>
+        <span class="od-val" id="ff-direccion">—</span>
+      </div>
+    </div>
+    <div class="ot-desc-box" style="margin-top:2px">
+      <div style="font-family:var(--mono);font-size:.65rem;color:var(--muted);letter-spacing:.1em;margin-bottom:6px">DETALLES DEL RECLAMO</div>
+      <span id="ff-detalles">—</span>
+    </div>
+
+    <div class="ff-field">
+      <label for="ff-codigo-solucion">Código de informe / solución aplicada <span style="color:var(--red)">*</span></label>
+      <select id="ff-codigo-solucion" class="ff-input">
+        <option value="">Selecciona la solución aplicada…</option>
+      </select>
+    </div>
+    <div class="ff-field">
+      <label for="ff-descripcion-cierre">Descripción de cierre <span style="color:var(--red)">*</span></label>
+      <textarea id="ff-descripcion-cierre" class="ff-input" rows="3" placeholder="Qué se hizo para resolver la falla…"></textarea>
+    </div>
+
+    <div class="nota-btns" style="margin-top:6px">
+      <button class="btn-sm bs-cancel" onclick="cerrarFinalizarFalla()">Cancelar</button>
+      <button class="btn-sm bs-send" id="ff-confirmar" onclick="confirmarFinalizarFalla()">✓ Confirmar cierre</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ MODAL: REGISTRAR INFORME (1er / 2do) — reporte DPE ═══════ -->
+<div class="ff-overlay" id="infOverlay" onclick="if(event.target===this) cerrarRegistrarInforme()">
+  <div class="ff-modal">
+    <div class="ff-head">
+      <div>
+        <div class="ff-eyebrow">// REPORTE DPE — 2DA Y 3RA INSTANCIA</div>
+        <h3 id="inf-titulo">Registrar 1er informe</h3>
+      </div>
+      <button class="ff-close" onclick="cerrarRegistrarInforme()">✕</button>
+    </div>
+    <div class="ff-field">
+      <label for="inf-detalle">Detalle del informe <span style="color:var(--red)">*</span></label>
+      <textarea id="inf-detalle" class="ff-input" rows="4" placeholder="Qué se verificó, coordinó o avanzó hasta este punto…"></textarea>
+    </div>
+    <div class="nota-btns" style="margin-top:6px">
+      <button class="btn-sm bs-cancel" onclick="cerrarRegistrarInforme()">Cancelar</button>
+      <button class="btn-sm bs-send" id="inf-confirmar" onclick="confirmarRegistrarInforme()">✓ Registrar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const cont = document.getElementById('bgAnim');
+  if(!cont) return;
+  for(let i=0;i<18;i++){
+    const s = document.createElement('span');
+    const size = 8 + Math.random()*26;
+    s.style.width = size+'px';
+    s.style.height = size+'px';
+    s.style.left = Math.random()*100+'%';
+    s.style.animationDuration = (16+Math.random()*18)+'s';
+    s.style.animationDelay = (Math.random()*12)+'s';
+    cont.appendChild(s);
+  }
+})();
+
+async function apiFetch(url, body) {
+  const resp = await fetch(url, {
+    method:      'POST',
+    credentials: 'same-origin',
+    headers:     { 'Content-Type': 'application/json' },
+    body:        JSON.stringify(body),
+  });
+  if (resp.status === 401) {
+    toast('Sesión expirada. Recarga la página.', 'error'); throw new Error('401');
+  }
+  return resp.json();
+}
+function toggleOT(id) {
+  const body = document.getElementById('otbody-' + id);
+  const chev = document.getElementById('chev-'   + id);
+  const open = body.classList.contains('open');
+  body.classList.toggle('open', !open);
+  chev.classList.toggle('open', !open);
+}
+function toggleNota(id) {
+  document.getElementById('nota-' + id).classList.toggle('open');
+}
+function toggleEscalar(id) {
+  document.getElementById('escalar-' + id).classList.toggle('open');
+}
+let _escalando = {};
+async function escalarInstancia(otId) {
+  if (_escalando[otId]) return;
+  const esEnergia = document.querySelector(`input[name="energia-${otId}"]:checked`).value === 'si';
+  const obs = document.getElementById('escalar-obs-' + otId).value.trim();
+  if (!confirm(esEnergia
+      ? '¿Confirmas escalar a Responsable Transmisiones por falla de energía/refrigeración?'
+      : '¿Confirmas escalar a un técnico de 2da instancia del mismo servicio?')) return;
+  _escalando[otId] = true;
+  try {
+    const data = await apiFetch('/api/tecnico/escalar_2da_instancia', {
+      ot_id: otId,
+      falla_energia_refrigeracion: esEnergia,
+      observacion: obs,
+    });
+    if (data.success) {
+      toast(data.message, 'success');
+      setTimeout(() => location.reload(), 1500);
+    } else {
+      toast('Error: ' + data.message, 'error');
+    }
+  } catch(e) {
+    if (!e.message.includes('401')) toast('Error de conexión.', 'error');
+  } finally {
+    _escalando[otId] = false;
+  }
+}
+let _cambiandoEstado = false;
+// ═══════ MODAL: FINALIZAR FALLA ═══════
+let _ffOtId = null;
+let _codigosSolucionCargados = false;
+
+async function cargarCodigosSolucion(){
+  if (_codigosSolucionCargados) return;
+  try {
+    const r = await fetch('/api/codigos_solucion');
+    const data = await r.json();
+    if (data.success){
+      const sel = document.getElementById('ff-codigo-solucion');
+      data.soluciones.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.id;
+        opt.textContent = `${s.codigo} — ${s.nombre}`;
+        sel.appendChild(opt);
+      });
+      _codigosSolucionCargados = true;
+    }
+  } catch(e){}
+}
+
+async function abrirFinalizarFalla(otId, numeroOt, cliente, direccion, detalles, tipo) {
+  _ffOtId = otId;
+  document.getElementById('ff-ot-num').textContent    = numeroOt || '—';
+  document.getElementById('ff-tipo').textContent      = tipo || '—';
+  document.getElementById('ff-cliente').textContent   = (cliente || '').trim() || '—';
+  document.getElementById('ff-direccion').textContent = direccion || '—';
+  document.getElementById('ff-detalles').textContent  = detalles || '—';
+  await cargarCodigosSolucion();
+  document.getElementById('ff-codigo-solucion').value    = '';
+  document.getElementById('ff-descripcion-cierre').value = '';
+  document.getElementById('ffOverlay').classList.add('open');
+}
+
+function cerrarFinalizarFalla() {
+  document.getElementById('ffOverlay').classList.remove('open');
+  _ffOtId = null;
+}
+
+async function confirmarFinalizarFalla() {
+  if (!_ffOtId) return;
+  const codigoSolucionId = document.getElementById('ff-codigo-solucion').value;
+  const descripcion      = document.getElementById('ff-descripcion-cierre').value.trim();
+
+  if (!codigoSolucionId) {
+    toast('Selecciona el código de informe / solución aplicada.', 'error');
+    return;
+  }
+  if (!descripcion) {
+    toast('La descripción de cierre es obligatoria.', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('ff-confirmar');
+  btn.disabled = true;
+  try {
+    const data = await apiFetch('/api/tecnico/cambiar_estado_ot', {
+      ot_id:              _ffOtId,
+      estado:             'completado',
+      observacion:        descripcion,
+      codigo_solucion_id: codigoSolucionId,
+    });
+    if (data.success) {
+      toast(data.message, 'success');
+      actualizarOTUI(_ffOtId, 'completado', data.fecha);
+      cerrarFinalizarFalla();
+      setTimeout(() => location.reload(), 1500);
+    } else {
+      toast('Error: ' + data.message, 'error');
+    }
+  } catch(e) {
+    if (!e.message.includes('401')) toast('Error de conexión.', 'error');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function cambiarEstado(otId, nuevoEstado) {
+  if (_cambiandoEstado) return;
+  const obs = nuevoEstado === 'completado' ? '' : null;
+  _cambiandoEstado = true;
+  try {
+    const data = await apiFetch('/api/tecnico/cambiar_estado_ot', {
+      ot_id:       otId,
+      estado:      nuevoEstado,
+      observacion: obs || '',
+    });
+    if (data.success) {
+      toast(data.message, 'success');
+      actualizarOTUI(otId, nuevoEstado, data.fecha);
+      setTimeout(() => location.reload(), 1800);
+    } else {
+      toast('Error: ' + data.message, 'error');
+    }
+  } catch(e) {
+    if (!e.message.includes('401')) toast('Error de conexión.', 'error');
+  } finally {
+    _cambiandoEstado = false;
+  }
+}
+function actualizarOTUI(otId, nuevoEstado, fecha) {
+  const card  = document.getElementById('otcard-' + otId);
+  const badge = document.getElementById('badge-estado-' + otId);
+  if (card) {
+    ['pendiente','en_proceso','completado','cancelado'].forEach(s => card.classList.remove(s));
+    card.classList.add(nuevoEstado);
+    card.dataset.estado = nuevoEstado;
+  }
+  const badgeMap = {
+    pendiente:  'b-pendiente ⏳ PENDIENTE',
+    en_proceso: 'b-en_proceso ⚙ EN PROCESO',
+    completado: 'b-completado ✓ COMPLETADO',
+  };
+  if (badge && badgeMap[nuevoEstado]) {
+    const [cls, ...txtParts] = badgeMap[nuevoEstado].split(' ');
+    badge.className = 'badge ' + cls;
+    badge.textContent = txtParts.join(' ');
+  }
+}
+let _enviandoNota = {};
+async function enviarNota(otId) {
+  if (_enviandoNota[otId]) return;
+  const textarea = document.getElementById('nota-txt-' + otId);
+  const texto    = textarea.value.trim();
+  if (!texto) { toast('Escribe algo en la nota primero.', 'error'); return; }
+  _enviandoNota[otId] = true;
+  try {
+    const data = await apiFetch('/api/tecnico/agregar_nota_ot', {
+      ot_id:       otId,
+      descripcion: texto,
+      tipo:        'avance',
+    });
+    if (data.success) {
+      toast('Nota registrada correctamente.', 'success');
+      textarea.value = '';
+      document.getElementById('nota-' + otId).classList.remove('open');
+    } else {
+      toast('Error: ' + data.message, 'error');
+    }
+  } catch(e) {
+    if (!e.message.includes('401')) toast('Error de conexión.', 'error');
+  } finally {
+    _enviandoNota[otId] = false;
+  }
+}
+function filtrarOTs(estado, btn) {
+  document.querySelectorAll('.ftab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.ot-card').forEach(card => {
+    const match = estado === 'todas' || card.dataset.estado === estado;
+    card.style.display = match ? '' : 'none';
+  });
+}
+function toast(msg, type='info') {
+  const icons = { success:'✓', error:'✕', info:'ℹ' };
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.textContent = `${icons[type]||'ℹ'} ${msg}`;
+  document.getElementById('toast-container').appendChild(t);
+  setTimeout(() => {
+    t.style.transition = 'opacity .4s';
+    t.style.opacity = '0';
+    setTimeout(() => t.remove(), 400);
+  }, 3800);
+}
+/* ── Temporizador: tiempo desde que la OT llegó al técnico ── */
+function formatDuracionOT(ms){
+  if (ms < 0) ms = 0;
+  const totalSec = Math.floor(ms/1000);
+  const dias = Math.floor(totalSec / 86400);
+  const horas = Math.floor((totalSec % 86400) / 3600);
+  const min = Math.floor((totalSec % 3600) / 60);
+  const seg = totalSec % 60;
+  const pad = n => String(n).padStart(2,'0');
+  return dias > 0
+      ? `${dias}d ${pad(horas)}:${pad(min)}:${pad(seg)}`
+      : `${pad(horas)}:${pad(min)}:${pad(seg)}`;
+}
+function actualizarTemporizadoresOT(){
+  const ahora = Date.now();
+  document.querySelectorAll('.ot-timer[data-inicio]').forEach(el => {
+    const inicio = el.getAttribute('data-inicio');
+    if (!inicio) { el.textContent = '—'; return; }
+    const t0 = new Date(inicio).getTime();
+
+    // Si la OT ya se completó/canceló, el temporizador se congela en ese momento.
+    const finAttr = el.getAttribute('data-fin');
+    const tFin = finAttr ? new Date(finAttr).getTime() : ahora;
+    const elapsed = tFin - t0;
+    const horas = elapsed / (60 * 60 * 1000);
+
+    el.textContent = formatDuracionOT(elapsed);
+    el.classList.toggle('alerta', horas >= 2 && horas < 4);
+    el.classList.toggle('urgente', horas >= 4);
+    el.classList.toggle('congelado', el.getAttribute('data-congelado') === 'true');
+  });
+}
+actualizarTemporizadoresOT();
+setInterval(actualizarTemporizadoresOT, 1000);
+
+/* ── Vista Informe DPE ── */
+function toggleVistaDPE(){
+  const otList = document.getElementById('ot-list');
+  const dpe = document.getElementById('dpe-wrap');
+  const btn = document.getElementById('btn-vista-dpe');
+  const enDPE = dpe.style.display !== 'none';
+  dpe.style.display = enDPE ? 'none' : 'block';
+  if (otList) otList.style.display = enDPE ? '' : 'none';
+  btn.textContent = enDPE ? '📋 Vista informe DPE' : '🗂 Vista tarjetas';
+  if (!enDPE) actualizarTimersDPE();
+}
+
+function formatDuracionDPE(ms){
+  if (ms < 0) ms = 0;
+  const totalMin = Math.floor(ms/60000);
+  const horas = Math.floor(totalMin/60);
+  const min = totalMin%60;
+  return `${horas}:${String(min).padStart(2,'0')}`;
+}
+function actualizarTimersDPE(){
+  const ahora = Date.now();
+  document.querySelectorAll('.dpe-timer[data-inicio]').forEach(el => {
+    const inicio = el.getAttribute('data-inicio');
+    if (!inicio) { el.textContent = '—'; return; }
+    const t0 = new Date(inicio).getTime();
+    const finAttr = el.getAttribute('data-fin');
+    const tFin = finAttr ? new Date(finAttr).getTime() : ahora;
+    const elapsed = tFin - t0;
+    const horas = elapsed / 3600000;
+    el.textContent = formatDuracionDPE(elapsed);
+    el.classList.toggle('alerta', horas >= 2 && horas < 4);
+    el.classList.toggle('urgente', horas >= 4);
+  });
+}
+setInterval(actualizarTimersDPE, 1000);
+
+/* ── Modal: Registrar 1er / 2do informe ── */
+let _infOtId = null;
+let _infTipo = null;
+function abrirRegistrarInforme(otId, tipo){
+  _infOtId = otId;
+  _infTipo = tipo;
+  document.getElementById('inf-titulo').textContent = tipo === 1 ? 'Registrar 1er informe' : 'Registrar 2do informe';
+  document.getElementById('inf-detalle').value = '';
+  document.getElementById('infOverlay').classList.add('open');
+}
+function cerrarRegistrarInforme(){
+  document.getElementById('infOverlay').classList.remove('open');
+  _infOtId = null; _infTipo = null;
+}
+async function confirmarRegistrarInforme(){
+  if (!_infOtId) return;
+  const detalle = document.getElementById('inf-detalle').value.trim();
+  if (!detalle){ toast('El detalle del informe es obligatorio.', 'error'); return; }
+  const btn = document.getElementById('inf-confirmar');
+  btn.disabled = true;
+  try {
+    const data = await apiFetch(`/api/tecnico/registrar_informe`, {
+      ot_id: _infOtId, tipo_informe: _infTipo, detalle
+    });
+    if (data.success){
+      toast(data.message, 'success');
+      cerrarRegistrarInforme();
+      setTimeout(() => location.reload(), 1200);
+    } else {
+      toast('Error: ' + data.message, 'error');
+    }
+  } catch(e){
+    if (!e.message.includes('401')) toast('Error de conexión.', 'error');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function actualizarReloj() {
+  const el = document.getElementById('live-date');
+  if (!el) return;
+  const now  = new Date();
+  const dias  = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  const h = String(now.getHours()).padStart(2,'0');
+  const m = String(now.getMinutes()).padStart(2,'0');
+  const s = String(now.getSeconds()).padStart(2,'0');
+  el.textContent = `${dias[now.getDay()]} ${now.getDate()} de ${meses[now.getMonth()]}, ${now.getFullYear()} — ${h}:${m}:${s}`;
+}
+setInterval(actualizarReloj, 1000);
+actualizarReloj();
+setTimeout(() => document.querySelectorAll('.flash').forEach(f => f.remove()), 5000);
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.ot-card.critica, .ot-card.alta').forEach(card => {
+    const id = card.id.replace('otcard-', '');
+    if (card.dataset.estado !== 'completado') {
+      document.getElementById('otbody-' + id)?.classList.add('open');
+      document.getElementById('chev-'   + id)?.classList.add('open');
+    }
+  });
+});
+
+/* ── Fallas por zona: detalle solo para la zona propia del técnico ── */
+const MI_ZONA_TECNICO = {{ (mi_zona_nombre or '')|tojson }};
+
+async function cargarFallasPorZona(){
+  const tbody = document.getElementById('tabla-fallas-zona');
+  if (!tbody) return;
+  try {
+    const r = await fetch('/api/soporte/fallas_por_zona');
+    const data = await r.json();
+    if (!data.success){ tbody.innerHTML = `<tr><td colspan="4" class="dpe-muted">${data.message || 'No se pudo cargar.'}</td></tr>`; return; }
+    const entradas = Object.entries(data.zonas || {});
+    if (!entradas.length){ tbody.innerHTML = '<tr><td colspan="4" class="dpe-muted">Sin datos por zona.</td></tr>'; return; }
+    tbody.innerHTML = entradas.map(([zona, info]) => {
+      const esMiZona = MI_ZONA_TECNICO && zona === MI_ZONA_TECNICO;
+      return `
+        <tr${esMiZona ? ' style="background:var(--accent-dim);"' : ''}>
+          <td>${zona}${esMiZona ? ' <span style="font-size:.65rem; color:var(--accent); border:1px solid var(--accent); border-radius:10px; padding:1px 7px; margin-left:4px;">tu zona</span>' : ''}</td>
+          <td>${info.total}</td>
+          <td>${info.en_proceso}</td>
+          <td>${esMiZona
+            ? `<button class="btn-dpe-informe" onclick="abrirDetalleZona('${zona.replace(/'/g,"\\'")}')">Ver detalle</button>`
+            : '<span class="dpe-muted" style="font-size:.72rem;">Solo conteo</span>'}
+          </td>
+        </tr>
+      `;
+    }).join('');
+  } catch(e){ tbody.innerHTML = '<tr><td colspan="4" class="dpe-muted">Error de conexión.</td></tr>'; }
+}
+cargarFallasPorZona();
+setInterval(cargarFallasPorZona, 30000);
+
+async function abrirDetalleZona(zona){
+  document.getElementById('dz-zona-nombre').textContent = zona;
+  document.getElementById('dz-lista').innerHTML = 'Cargando…';
+  document.getElementById('dzOverlay').classList.add('open');
+  try {
+    const r = await fetch(`/api/soporte/reclamos_por_zona/${encodeURIComponent(zona)}`);
+    const data = await r.json();
+    const cont = document.getElementById('dz-lista');
+    if (!data.success){ cont.innerHTML = `<div class="dpe-muted">${data.message || 'No se pudo cargar el detalle.'}</div>`; return; }
+    if (!data.reclamos.length){ cont.innerHTML = '<div class="dpe-muted">No hay reclamos en esta zona.</div>'; return; }
+    cont.innerHTML = data.reclamos.map(r => `
+      <div style="padding:10px 0; border-bottom:1px solid var(--border); font-size:.85rem;">
+        <strong>#${r.id}</strong> — ${r.cliente} — ${r.titulo}<br>
+        <span style="color:var(--muted2); font-size:.78rem;">${r.estado} · ${r.prioridad} · ${r.servicio} · ${r.fecha_creacion}</span>
+      </div>
+    `).join('');
+  } catch(e){ document.getElementById('dz-lista').innerHTML = '<div class="dpe-muted">Error de conexión.</div>'; }
+}
+function cerrarDetalleZona(){
+  document.getElementById('dzOverlay').classList.remove('open');
+}
+</script>
+</body>
+</html>

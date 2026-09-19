@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OT #{{ ot[1] }} — COTEL RL</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0c0f;--surface:#111418;--surface2:#181c22;--surface3:#1e242e;
+  --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.13);
+  --accent:#f97316;--accent2:#fb923c;--accent-dim:rgba(249,115,22,.12);
+  --green:#22c55e;--green-dim:rgba(34,197,94,.10);
+  --blue:#38bdf8;--blue-dim:rgba(56,189,248,.10);
+  --yellow:#facc15;--yellow-dim:rgba(250,204,21,.10);
+  --red:#f87171;--red-dim:rgba(248,113,113,.10);
+  --violet:#a78bfa;--text:#e2e8f0;--muted:#64748b;--muted2:#94a3b8;
+  --mono:'Share Tech Mono',monospace;--body:'Barlow',sans-serif;--cond:'Barlow Condensed',sans-serif;
+  --r:8px;--rl:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--body);font-size:15px;line-height:1.6;min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background-image:repeating-linear-gradient(0deg,transparent,transparent 47px,rgba(249,115,22,.03) 47px,rgba(249,115,22,.03) 48px),repeating-linear-gradient(90deg,transparent,transparent 47px,rgba(249,115,22,.03) 47px,rgba(249,115,22,.03) 48px);pointer-events:none;z-index:0}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:99px}
+
+.topnav{position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:0 28px;height:60px;background:rgba(10,12,15,.95);backdrop-filter:blur(16px);border-bottom:1px solid var(--border)}
+.nav-badge{font-family:var(--cond);font-size:1.3rem;font-weight:700;letter-spacing:.1em;color:#fff;display:flex;align-items:center;gap:8px}
+.nav-badge .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);animation:pulse-dot 2s ease-in-out infinite}
+@keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.7)}}
+.nav-role{font-family:var(--mono);font-size:.7rem;color:var(--accent);letter-spacing:.12em;background:var(--accent-dim);border:1px solid rgba(249,115,22,.25);padding:3px 10px;border-radius:4px}
+.nav-right{display:flex;align-items:center;gap:10px}
+.btn-nav{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:var(--r);border:1px solid var(--border2);background:transparent;color:var(--muted2);font-family:var(--body);font-size:.8rem;text-decoration:none;cursor:pointer;transition:all .18s}
+.btn-nav:hover{color:#fff;border-color:var(--accent);background:var(--accent-dim)}
+
+.main{position:relative;z-index:1;padding:28px 32px 48px;max-width:1100px;margin:0 auto}
+.back-link{display:inline-flex;align-items:center;gap:6px;color:var(--muted2);text-decoration:none;font-size:.84rem;margin-bottom:20px;transition:color .2s}
+.back-link:hover{color:var(--accent)}
+
+/* OT HEADER */
+.ot-header{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:22px 26px;margin-bottom:22px;border-left:4px solid var(--accent);position:relative;overflow:hidden}
+.ot-header::before{content:'';position:absolute;top:0;right:0;width:200px;height:100%;background:linear-gradient(270deg,var(--accent-dim),transparent);pointer-events:none}
+.ot-num-big{font-family:var(--mono);font-size:.8rem;color:var(--accent);letter-spacing:.12em;margin-bottom:6px}
+.ot-titulo{font-family:var(--cond);font-size:1.8rem;font-weight:700;color:#fff;letter-spacing:.02em;margin-bottom:10px;line-height:1.1}
+.ot-badges-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:5px;font-size:.72rem;font-weight:700;font-family:var(--mono);letter-spacing:.04em}
+.b-pendiente {background:var(--yellow-dim);color:var(--yellow);border:1px solid rgba(250,204,21,.25)}
+.b-en_proceso{background:var(--accent-dim);color:var(--accent);border:1px solid rgba(249,115,22,.25)}
+.b-completado{background:var(--green-dim); color:var(--green); border:1px solid rgba(34,197,94,.25)}
+.b-cancelado {background:rgba(100,116,139,.08);color:var(--muted2);border:1px solid rgba(100,116,139,.2)}
+.b-critica   {background:var(--red-dim);   color:var(--red);   border:1px solid rgba(248,113,113,.25)}
+.b-alta      {background:var(--red-dim);   color:var(--red);   border:1px solid rgba(248,113,113,.25)}
+.b-media     {background:var(--yellow-dim);color:var(--yellow);border:1px solid rgba(250,204,21,.25)}
+.b-baja      {background:var(--green-dim); color:var(--green); border:1px solid rgba(34,197,94,.25)}
+
+/* CONTENT GRID */
+.content-grid{display:grid;grid-template-columns:1fr 360px;gap:20px;align-items:start}
+@media(max-width:900px){.content-grid{grid-template-columns:1fr}}
+
+/* CARD */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);margin-bottom:18px;overflow:hidden}
+.card-head{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--border)}
+.card-title{font-family:var(--cond);font-size:.95rem;font-weight:700;letter-spacing:.08em;color:#fff}
+.card-body{padding:18px 20px}
+
+/* INFO GRID */
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.ii{display:flex;flex-direction:column;gap:3px}
+.ii-label{font-family:var(--mono);font-size:.65rem;letter-spacing:.1em;color:var(--muted);text-transform:uppercase}
+.ii-val{font-size:.86rem;color:var(--text)}
+.ii-val.accent{color:var(--accent)}
+.ii-val.green{color:var(--green)}
+
+/* DESCRIPCION */
+.desc-block{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;font-size:.85rem;color:var(--muted2);line-height:1.7;margin-top:14px}
+.desc-label{font-family:var(--mono);font-size:.65rem;letter-spacing:.1em;color:var(--muted);margin-bottom:6px}
+
+/* ACCIONES */
+.actions-block{display:flex;flex-direction:column;gap:9px}
+.btn-action{width:100%;padding:11px 16px;border-radius:var(--r);border:none;font-family:var(--body);font-size:.88rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:opacity .18s}
+.btn-action:hover:not(:disabled){opacity:.82}
+.btn-action:disabled{opacity:.4;cursor:not-allowed}
+.ba-iniciar  {background:linear-gradient(135deg,var(--accent),#c2410c);color:#000}
+.ba-completar{background:linear-gradient(135deg,var(--green),#15803d);color:#000}
+.ba-nota     {background:var(--blue-dim);color:var(--blue);border:1px solid rgba(56,189,248,.3)}
+
+/* NOTA FORM */
+.nota-form{margin-top:12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:14px}
+.nota-form label{font-family:var(--mono);font-size:.68rem;color:var(--blue);letter-spacing:.08em;display:block;margin-bottom:8px}
+.nota-textarea{width:100%;background:var(--surface3);border:1px solid var(--border2);border-radius:6px;padding:9px 11px;color:var(--text);font-family:var(--body);font-size:.84rem;resize:none;outline:none;transition:border-color .15s}
+.nota-textarea:focus{border-color:var(--accent)}
+.nota-btns{display:flex;gap:7px;justify-content:flex-end;margin-top:8px}
+.btn-sm{padding:6px 14px;border-radius:6px;font-size:.8rem;font-weight:600;font-family:var(--body);cursor:pointer;border:none;transition:opacity .18s}
+.btn-sm:hover{opacity:.82}
+.bs-send{background:var(--accent);color:#000}
+.bs-cancel{background:var(--surface3);color:var(--muted2);border:1px solid var(--border)}
+
+/* BITÁCORA */
+.bita-list{display:flex;flex-direction:column;gap:0}
+.bita-item{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);position:relative}
+.bita-item:last-child{border-bottom:none}
+.bita-line{display:flex;flex-direction:column;align-items:center;flex-shrink:0}
+.bita-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.bita-line-bar{width:1px;flex:1;background:var(--border);margin-top:4px}
+.bd-nota{background:var(--blue)}
+.bd-inicio{background:var(--accent)}
+.bd-avance{background:var(--violet)}
+.bd-completado{background:var(--green)}
+.bd-problema{background:var(--red)}
+.bita-content{flex:1}
+.bita-tipo{font-family:var(--mono);font-size:.65rem;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-bottom:3px}
+.bita-desc{font-size:.85rem;color:var(--text);line-height:1.5}
+.bita-meta{font-family:var(--mono);font-size:.68rem;color:var(--muted2);margin-top:4px}
+
+/* FLASH */
+.flash{display:flex;align-items:center;gap:10px;padding:11px 16px;border-radius:var(--r);font-size:.86rem;margin-bottom:12px}
+.flash.success{background:var(--green-dim);border:1px solid rgba(34,197,94,.3);color:var(--green)}
+.flash.danger{background:var(--red-dim);border:1px solid rgba(248,113,113,.3);color:var(--red)}
+.flash.warning{background:var(--yellow-dim);border:1px solid rgba(250,204,21,.3);color:var(--yellow)}
+
+/* TOAST */
+#toast-container{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{background:var(--surface);border:1px solid var(--border2);color:var(--text);padding:11px 16px;border-radius:var(--rl);font-size:.84rem;display:flex;align-items:center;gap:10px;max-width:340px;box-shadow:0 8px 32px rgba(0,0,0,.5);animation:toast-in .3s ease;pointer-events:all}
+.toast.success{border-color:rgba(34,197,94,.4);color:var(--green)}
+.toast.error  {border-color:rgba(248,113,113,.4);color:var(--red)}
+.toast.info   {border-color:rgba(56,189,248,.4);color:var(--blue)}
+@keyframes toast-in{from{transform:translateX(120%);opacity:0}to{transform:translateX(0);opacity:1}}
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <div style="display:flex;align-items:center;gap:12px">
+    <div class="nav-badge"><span class="dot"></span>COTEL RL</div>
+    <span class="nav-role">TÉCNICO</span>
+  </div>
+  <div class="nav-right">
+    <span style="font-size:.83rem;color:var(--muted2)">{{ nombre_usuario }}</span>
+    <a href="{{ url_for('dashboard_tecnico') }}" class="btn-nav">← Dashboard</a>
+    <a href="{{ url_for('cerrar_sesion') }}" class="btn-nav">⏻ Salir</a>
+  </div>
+</nav>
+
+<div class="main">
+  <a href="{{ url_for('dashboard_tecnico') }}" class="back-link">← Volver al dashboard</a>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}{% for cat,msg in messages %}
+  <div class="flash {{ cat }}">{{ msg }}</div>
+  {% endfor %}{% endif %}
+  {% endwith %}
+
+  <!-- OT HEADER -->
+  {#
+    ot[0] id   ot[1] numero_ot   ot[2] titulo      ot[3] desc
+    ot[4] tipo ot[5] prioridad   ot[6] estado       ot[7] direccion
+    ot[8] coord ot[9] fecha_prog ot[10] fecha_ini   ot[11] fecha_fin
+    ot[12] obs  ot[13] fecha_crea
+    ot[14] cliente_nombre  ot[15] cliente_apellido
+    ot[16] cliente_tel     ot[17] cliente_correo
+    ot[18] creado_nombre   ot[19] creado_apellido
+  #}
+  <div class="ot-header">
+    <div class="ot-num-big">// ORDEN DE TRABAJO {{ ot[1] }}</div>
+    <div class="ot-titulo">{{ ot[2] }}</div>
+    <div class="ot-badges-row">
+      <span class="badge b-{{ ot[6] }}" id="badge-estado-main">
+        {% if ot[6]=='pendiente'  %}⏳ PENDIENTE
+        {% elif ot[6]=='en_proceso' %}⚙ EN PROCESO
+        {% elif ot[6]=='completado' %}✓ COMPLETADO
+        {% else %}✕ {{ ot[6]|upper }}{% endif %}
+      </span>
+      <span class="badge b-{{ ot[5] }}">
+        {% if ot[5]=='critica' %}🔴 CRÍTICA
+        {% elif ot[5]=='alta'  %}🟠 ALTA
+        {% elif ot[5]=='media' %}🟡 MEDIA
+        {% else %}🟢 BAJA{% endif %}
+      </span>
+      {% if ot[4] %}
+      <span class="badge" style="background:var(--blue-dim);color:var(--blue);border:1px solid rgba(56,189,248,.25)">
+        🔧 {{ ot[4]|replace('_',' ')|title }}
+      </span>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="content-grid">
+    <!-- COLUMNA IZQUIERDA -->
+    <div>
+      <!-- DATOS GENERALES -->
+      <div class="card">
+        <div class="card-head"><span class="card-title">📋 DATOS DE LA OT</span></div>
+        <div class="card-body">
+          <div class="info-grid">
+            <div class="ii"><span class="ii-label">N° OT</span><span class="ii-val accent">{{ ot[1] }}</span></div>
+            <div class="ii"><span class="ii-label">Estado</span><span class="ii-val" id="estado-txt">{{ ot[6]|title }}</span></div>
+            <div class="ii"><span class="ii-label">Tipo de trabajo</span><span class="ii-val">{{ ot[4]|replace('_',' ')|title if ot[4] else '—' }}</span></div>
+            <div class="ii"><span class="ii-label">Prioridad</span><span class="ii-val">{{ ot[5]|title if ot[5] else '—' }}</span></div>
+            <div class="ii"><span class="ii-label">Fecha programada</span><span class="ii-val">{{ ot[9].strftime('%d/%m/%Y %H:%M') if ot[9] else '—' }}</span></div>
+            <div class="ii"><span class="ii-label">Fecha de inicio</span><span class="ii-val">{{ ot[10].strftime('%d/%m/%Y %H:%M') if ot[10] else '—' }}</span></div>
+            <div class="ii"><span class="ii-label">Fecha de cierre</span><span class="ii-val green">{{ ot[11].strftime('%d/%m/%Y %H:%M') if ot[11] else '—' }}</span></div>
+            <div class="ii"><span class="ii-label">Creada por</span><span class="ii-val">{{ (ot[18]|string + ' ' + (ot[19]|string or '')).strip() if ot[18] else '—' }}</span></div>
+            {% if ot[7] %}
+            <div class="ii" style="grid-column:span 2"><span class="ii-label">Dirección</span><span class="ii-val">{{ ot[7] }}</span></div>
+            {% endif %}
+          </div>
+
+          {% if ot[3] %}
+          <div class="desc-block">
+            <div class="desc-label">DESCRIPCIÓN DEL PROBLEMA</div>
+            {{ ot[3] }}
+          </div>
+          {% endif %}
+
+          {% if ot[12] %}
+          <div class="desc-block" style="border-color:rgba(249,115,22,.25);margin-top:10px">
+            <div class="desc-label" style="color:var(--accent)">OBSERVACIONES DEL SUPERVISOR</div>
+            {{ ot[12] }}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- DATOS DEL CLIENTE -->
+      {% if ot[14] %}
+      <div class="card">
+        <div class="card-head"><span class="card-title">👤 CLIENTE</span></div>
+        <div class="card-body">
+          <div class="info-grid">
+            <div class="ii"><span class="ii-label">Nombre</span><span class="ii-val">{{ ot[14] }} {{ ot[15] or '' }}</span></div>
+            <div class="ii"><span class="ii-label">Teléfono</span><span class="ii-val">{{ ot[16] or '—' }}</span></div>
+            {% if ot[17] %}
+            <div class="ii" style="grid-column:span 2"><span class="ii-label">Correo</span><span class="ii-val">{{ ot[17] }}</span></div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- BITÁCORA -->
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title">📝 BITÁCORA DE ACTIVIDADES</span>
+          <span style="font-family:var(--mono);font-size:.7rem;color:var(--muted2)">{{ actividades|length }} registros</span>
+        </div>
+        <div class="card-body">
+          {% if actividades %}
+          <div class="bita-list">
+            {% for act in actividades %}
+            {# act[0] id  act[1] desc  act[2] tipo  act[3] fecha  act[4] nombre  act[5] apellido #}
+            <div class="bita-item">
+              <div class="bita-line">
+                <span class="bita-dot bd-{{ act[2] or 'nota' }}"></span>
+                {% if not loop.last %}<div class="bita-line-bar"></div>{% endif %}
+              </div>
+              <div class="bita-content">
+                <div class="bita-tipo">{{ act[2]|upper if act[2] else 'NOTA' }}</div>
+                <div class="bita-desc">{{ act[1] }}</div>
+                <div class="bita-meta">{{ act[4] }} {{ act[5] or '' }} · {{ act[3].strftime('%d/%m/%Y %H:%M') if act[3] else '' }}</div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <div style="text-align:center;padding:24px 0;color:var(--muted);font-size:.85rem">
+            Sin actividades registradas aún.
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- COLUMNA DERECHA: acciones -->
+    <div>
+      <div class="card">
+        <div class="card-head"><span class="card-title">⚡ ACCIONES</span></div>
+        <div class="card-body">
+          <div class="actions-block">
+            {% if ot[6] == 'pendiente' %}
+            <button class="btn-action ba-iniciar" onclick="cambiarEstado({{ ot[0] }},'en_proceso')">
+              ▶ Iniciar esta OT
+            </button>
+            {% endif %}
+            {% if ot[6] == 'en_proceso' %}
+            <button class="btn-action ba-completar" onclick="cambiarEstado({{ ot[0] }},'completado')">
+              ✓ Marcar como completada
+            </button>
+            {% endif %}
+            {% if ot[6] in ('pendiente', 'en_proceso') %}
+            <button class="btn-action ba-nota" id="btn-nota" onclick="toggleNota()">
+              📝 Agregar nota / avance
+            </button>
+            {% endif %}
+          </div>
+
+          {% if ot[6] in ('pendiente', 'en_proceso') %}
+          <div class="nota-form" id="nota-form" style="display:none">
+            <label>// NOTA DE AVANCE</label>
+            <textarea class="nota-textarea" id="nota-txt" rows="4"
+                      placeholder="Describe el avance, problema encontrado, materiales usados…"></textarea>
+            <div class="nota-btns">
+              <button class="btn-sm bs-cancel" onclick="toggleNota()">Cancelar</button>
+              <button class="btn-sm bs-send" onclick="enviarNota({{ ot[0] }})">Enviar</button>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- INFO RÁPIDA -->
+      <div class="card">
+        <div class="card-head"><span class="card-title">ℹ RESUMEN</span></div>
+        <div class="card-body">
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div class="ii"><span class="ii-label">Estado actual</span><span class="ii-val accent" id="estado-val">{{ ot[6]|title }}</span></div>
+            <div class="ii"><span class="ii-label">Actividades</span><span class="ii-val">{{ actividades|length }} registradas</span></div>
+            <div class="ii"><span class="ii-label">Creada</span><span class="ii-val">{{ ot[13].strftime('%d/%m/%Y') if ot[13] else '—' }}</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+const OT_ID = {{ ot[0] }};
+
+async function apiFetch(url, body) {
+  const resp = await fetch(url, {
+    method:'POST', credentials:'same-origin',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(body),
+  });
+  if (resp.status === 401) { toast('Sesión expirada.','error'); throw new Error('401'); }
+  return resp.json();
+}
+
+function toggleNota() {
+  const f = document.getElementById('nota-form');
+  f.style.display = f.style.display === 'none' ? 'block' : 'none';
+}
+
+let _cambiando = false;
+async function cambiarEstado(otId, estado) {
+  if (_cambiando) return;
+  const obs = estado === 'completado' ? prompt('Observación final (opcional):') : null;
+  if (obs === null && estado === 'completado') return;
+  _cambiando = true;
+  try {
+    const data = await apiFetch('/api/tecnico/cambiar_estado_ot', {
+      ot_id: otId, estado, observacion: obs || ''
+    });
+    if (data.success) {
+      toast(data.message, 'success');
+      setTimeout(() => location.reload(), 1800);
+    } else { toast('Error: ' + data.message, 'error'); }
+  } catch(e) { if (!e.message.includes('401')) toast('Error de conexión.','error'); }
+  finally { _cambiando = false; }
+}
+
+let _enviando = false;
+async function enviarNota(otId) {
+  if (_enviando) return;
+  const texto = document.getElementById('nota-txt').value.trim();
+  if (!texto) { toast('Escribe algo en la nota.','error'); return; }
+  _enviando = true;
+  try {
+    const data = await apiFetch('/api/tecnico/agregar_nota_ot', {
+      ot_id: otId, descripcion: texto, tipo: 'avance'
+    });
+    if (data.success) {
+      toast('Nota registrada.','success');
+      setTimeout(() => location.reload(), 1200);
+    } else { toast('Error: ' + data.message,'error'); }
+  } catch(e) { if (!e.message.includes('401')) toast('Error de conexión.','error'); }
+  finally { _enviando = false; }
+}
+
+function toast(msg, type='info') {
+  const icons = {success:'✓',error:'✕',info:'ℹ'};
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.textContent = `${icons[type]||'ℹ'} ${msg}`;
+  document.getElementById('toast-container').appendChild(t);
+  setTimeout(() => { t.style.transition='opacity .4s'; t.style.opacity='0'; setTimeout(()=>t.remove(),400); }, 3800);
+}
+
+setTimeout(() => document.querySelectorAll('.flash').forEach(f=>f.remove()), 5000);
+</script>
+</body>
+</html>

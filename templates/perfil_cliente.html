@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Perfil - COTEL RL</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #d27300;
+            --secondary-color: #af5700;
+            --accent-color: #f69d00;
+            --light-color: #fff1e0;
+            --soft-color: #f1ba6a;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--light-color), #ffffff);
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            box-shadow: 0 2px 10px rgba(175, 87, 0, 0.3);
+        }
+
+        .card {
+            box-shadow: 0 5px 15px rgba(210, 115, 0, 0.1);
+            border: none;
+            border-radius: 14px;
+        }
+
+        .card:hover {
+            box-shadow: 0 8px 25px rgba(210, 115, 0, 0.2);
+        }
+
+        .text-primary { color: var(--primary-color) !important; }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-color), var(--primary-color));
+            border: none;
+            border-radius: 25px;
+            padding: 10px 25px;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        }
+
+        .perfil-header{
+            display:flex; align-items:center; gap:22px; flex-wrap:wrap;
+        }
+        .foto-wrap{position:relative; width:100px; height:100px; flex-shrink:0;}
+        .foto-perfil{
+            width:100px; height:100px; border-radius:50%; object-fit:cover;
+            border:3px solid var(--accent-color); background:#f5f5f5;
+        }
+        .foto-placeholder{
+            width:100px; height:100px; border-radius:50%; border:3px solid var(--accent-color);
+            background:linear-gradient(135deg, var(--accent-color), var(--primary-color));
+            display:flex; align-items:center; justify-content:center; font-size:2.3rem; font-weight:700; color:#fff;
+        }
+        .foto-btn{
+            position:absolute; bottom:-2px; right:-2px; width:34px; height:34px; border-radius:50%;
+            background:var(--secondary-color); border:2px solid #fff; color:#fff;
+            display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:.85rem;
+        }
+        .foto-btn:hover{background:var(--primary-color);}
+        .rol-badge{
+            display:inline-block; padding:4px 14px; border-radius:20px; font-size:.75rem;
+            background:rgba(210,115,0,.12); color:var(--primary-color); font-weight:700;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="{{ url_for('dashboard_cliente') }}">
+                <img src="{{ url_for('static', filename='imagenes/Logo1Cotel.png') }}" alt="Logo" height="40" class="me-2">
+                COTEL RL
+            </a>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text me-3">
+                    <i class="fas fa-user-circle me-1"></i>
+                    Bienvenido, {{ nombre_usuario }}
+                </span>
+                <a class="nav-link" href="{{ url_for('cerrar_sesion') }}">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Salir
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4 mb-5" style="max-width:720px;">
+        <div class="row mb-4">
+            <div class="col-12 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <h1 class="text-primary mb-0">
+                    <i class="fas fa-user-gear me-2"></i>Mi Perfil
+                </h1>
+                <a href="{{ url_for('dashboard_cliente') }}" class="btn btn-outline-secondary btn-sm rounded-pill">
+                    <i class="fas fa-arrow-left me-1"></i> Volver a mi panel
+                </a>
+            </div>
+        </div>
+
+        <!-- Encabezado con foto -->
+        <div class="card mb-4">
+            <div class="card-body perfil-header">
+                <div class="foto-wrap">
+                    {% if perfil.foto_perfil %}
+                    <img src="{{ url_for('static', filename=perfil.foto_perfil) }}" class="foto-perfil" id="fotoPreview">
+                    {% else %}
+                    <div class="foto-placeholder" id="fotoPreview">{{ perfil.nombre[0] | upper }}{{ perfil.apellido[0] | upper if perfil.apellido else '' }}</div>
+                    {% endif %}
+                    <label class="foto-btn" for="inputFoto"><i class="fas fa-camera"></i></label>
+                    <input type="file" id="inputFoto" accept=".png,.jpg,.jpeg,.webp" style="display:none;" onchange="subirFoto()">
+                </div>
+                <div>
+                    <h4 class="mb-1">{{ perfil.nombre }} {{ perfil.apellido }}</h4>
+                    <div class="text-muted mb-2"><i class="fas fa-envelope me-1"></i>{{ perfil.correo }}</div>
+                    <span class="rol-badge">Cliente</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Datos personales -->
+        <div class="card mb-4">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="fas fa-id-card me-2 text-primary"></i>Datos personales</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Nombre</label>
+                        <input type="text" class="form-control" id="inpNombre" value="{{ perfil.nombre }}">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Apellido</label>
+                        <input type="text" class="form-control" id="inpApellido" value="{{ perfil.apellido }}">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Teléfono</label>
+                        <input type="tel" class="form-control" id="inpTelefono" value="{{ perfil.telefono or '' }}">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Correo <small class="text-muted">(no editable)</small></label>
+                        <input type="email" class="form-control" value="{{ perfil.correo }}" disabled>
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="guardarDatos()">
+                    <i class="fas fa-floppy-disk me-2"></i>Guardar datos
+                </button>
+            </div>
+        </div>
+
+        <!-- Contraseña -->
+        <div class="card mb-4">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="fas fa-lock me-2 text-primary"></i>Cambiar contraseña</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">Contraseña actual</label>
+                    <input type="password" class="form-control" id="pwActual" placeholder="••••••••">
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Nueva contraseña</label>
+                        <input type="password" class="form-control" id="pwNueva" placeholder="8+ car., mayúscula, minúscula, número, símbolo">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Confirmar nueva contraseña</label>
+                        <input type="password" class="form-control" id="pwConfirmar" placeholder="Repite la nueva contraseña">
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="cambiarPassword()">
+                    <i class="fas fa-key me-2"></i>Actualizar contraseña
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container position-fixed top-0 end-0 p-3" id="toastBox"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function toast(msg, tipo){
+            const box = document.getElementById('toastBox');
+            const el = document.createElement('div');
+            el.className = 'alert ' + (tipo === 'error' ? 'alert-danger' : 'alert-success');
+            el.style.minWidth = '260px';
+            el.textContent = msg;
+            box.appendChild(el);
+            setTimeout(()=> el.remove(), 4000);
+        }
+
+        async function guardarDatos(){
+            const payload = {
+                nombre: document.getElementById('inpNombre').value.trim(),
+                apellido: document.getElementById('inpApellido').value.trim(),
+                telefono: document.getElementById('inpTelefono').value.trim(),
+            };
+            if (!payload.nombre || !payload.apellido){
+                toast('Nombre y apellido son obligatorios.', 'error');
+                return;
+            }
+            try {
+                const r = await fetch('/api/perfil/actualizar_datos', {
+                    method:'POST', headers:{'Content-Type':'application/json'},
+                    body: JSON.stringify(payload)
+                });
+                const data = await r.json();
+                if (data.success) toast(data.message, 'ok');
+                else toast(data.message || 'Error', 'error');
+            } catch(e){ toast('Error de conexión.', 'error'); }
+        }
+
+        async function cambiarPassword(){
+            const actual = document.getElementById('pwActual').value;
+            const nueva = document.getElementById('pwNueva').value;
+            const confirmar = document.getElementById('pwConfirmar').value;
+            if (!actual || !nueva || !confirmar){
+                toast('Completa todos los campos de contraseña.', 'error');
+                return;
+            }
+            try {
+                const r = await fetch('/api/perfil/cambiar_password', {
+                    method:'POST', headers:{'Content-Type':'application/json'},
+                    body: JSON.stringify({ actual, nueva, confirmacion: confirmar })
+                });
+                const data = await r.json();
+                if (data.success){
+                    toast(data.message, 'ok');
+                    document.getElementById('pwActual').value = '';
+                    document.getElementById('pwNueva').value = '';
+                    document.getElementById('pwConfirmar').value = '';
+                } else {
+                    toast(data.message || 'Error', 'error');
+                }
+            } catch(e){ toast('Error de conexión.', 'error'); }
+        }
+
+        async function subirFoto(){
+            const input = document.getElementById('inputFoto');
+            if (!input.files.length) return;
+            const formData = new FormData();
+            formData.append('foto', input.files[0]);
+            try {
+                const r = await fetch('/api/perfil/subir_foto', { method:'POST', body: formData });
+                const data = await r.json();
+                if (data.success){
+                    toast(data.message, 'ok');
+                    const preview = document.getElementById('fotoPreview');
+                    const img = document.createElement('img');
+                    img.src = data.foto_url + '?t=' + Date.now();
+                    img.className = 'foto-perfil';
+                    img.id = 'fotoPreview';
+                    preview.replaceWith(img);
+                } else {
+                    toast(data.message || 'No se pudo subir la foto.', 'error');
+                }
+            } catch(e){ toast('Error de conexión.', 'error'); }
+        }
+    </script>
+</body>
+</html>

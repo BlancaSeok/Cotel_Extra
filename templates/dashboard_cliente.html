@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Cliente - COTEL RL</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #d27300;
+            --secondary-color: #af5700;
+            --accent-color: #f69d00;
+            --light-color: #fff1e0;
+            --soft-color: #f1ba6a;
+        }
+        
+        body {
+            background: linear-gradient(135deg, var(--light-color), #ffffff);
+        }
+        
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            box-shadow: 0 2px 10px rgba(175, 87, 0, 0.3);
+        }
+        
+        .card {
+            box-shadow: 0 5px 15px rgba(210, 115, 0, 0.1);
+        }
+
+        .card:hover {
+            box-shadow: 0 8px 25px rgba(210, 115, 0, 0.2);
+        }
+        
+        .stats-card {
+            background: linear-gradient(135deg, var(--accent-color), var(--primary-color));
+        }
+        
+        .stats-card .card-body {
+            text-align: center;
+            padding: 2rem;
+        }
+        
+        .stats-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-color), var(--primary-color));
+            border: none;
+            border-radius: 25px;
+            padding: 10px 25px;
+        }
+        
+        .table {
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .badge-success {
+            background: #28a745;
+        }
+        
+        .badge-warning {
+            background: #ffc107;
+            color: #000;
+        }
+        
+        .badge-danger {
+            background: #dc3545;
+        }
+        
+        .text-primary {
+            color: var(--primary-color) !important;
+        }
+        .alert-cuenta{
+            display:flex; align-items:flex-start; gap:12px;
+            border-radius:14px; padding:16px 20px; margin-bottom:24px; font-size:.9rem;
+        }
+        .alert-cuenta.mora{
+            background:#fdecea; border:1px solid #f5c6cb; color:#7a1f1f;
+        }
+        .alert-cuenta.mora i{ color:#c62828; font-size:1.3rem; margin-top:2px; }
+        .alert-cuenta.mora a{ color:#7a1f1f; font-weight:700; text-decoration:underline; }
+        .alert-cuenta.pendiente{
+            background:#fff3cd; border:1px solid #ffe08a; color:#7c5a00;
+        }
+        .alert-cuenta.pendiente i{ color:#b45309; font-size:1.2rem; }
+        .alert-cuenta.pendiente a{ color:#7c5a00; font-weight:700; text-decoration:underline; }
+
+        .bienvenida-card{
+            background: linear-gradient(135deg, #ffffff, var(--light-color));
+            border: 1px solid var(--soft-color);
+            border-radius: 18px;
+            padding: 22px 26px;
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            box-shadow: 0 6px 18px rgba(210, 115, 0, 0.1);
+        }
+        .bienvenida-avatar{
+            width: 62px; height: 62px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-color), var(--primary-color));
+            color: #fff; display: flex; align-items: center; justify-content: center;
+            font-size: 1.6rem; font-weight: 700; flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(210, 115, 0, 0.3);
+        }
+        .bienvenida-saludo{ font-size: .85rem; color: var(--secondary-color); font-weight: 600; }
+        .bienvenida-nombre{ margin: 0; font-size: 1.6rem; font-weight: 700; color: var(--dark-text, #5a2e00); }
+
+        .btn-pagar-online{
+            background: linear-gradient(135deg, #43a047, #2e7d32);
+            border: none; border-radius: 25px; padding: 10px 25px;
+            color: #fff; font-weight: 600; width: 100%;
+            box-shadow: 0 4px 12px rgba(46, 125, 50, 0.35);
+            transition: transform .2s, box-shadow .2s;
+        }
+        .btn-pagar-online:hover{
+            transform: scale(1.03); color:#fff;
+            box-shadow: 0 6px 18px rgba(46, 125, 50, 0.45);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="{{ url_for('index') }}">
+                <img src="{{ url_for('static', filename='imagenes/Logo1Cotel.png') }}" alt="Logo" height="40" class="me-2">
+                COTEL RL
+            </a>
+            
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text me-3">
+                    <i class="fas fa-user-circle me-1"></i>
+                    Bienvenido, {{ nombre_usuario }}
+                </span>
+                <a class="nav-link" href="{{ url_for('cerrar_sesion') }}">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Salir
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Alerts -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="bienvenida-card">
+                    <div class="bienvenida-avatar">{{ nombre_usuario[0]|upper if nombre_usuario else 'C' }}</div>
+                    <div>
+                        <div class="bienvenida-saludo">Hola de nuevo,</div>
+                        <h1 class="bienvenida-nombre">{{ nombre_usuario }}</h1>
+                        <p class="text-muted mb-0">Panel de control de tus servicios COTEL RL</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% if estado_cuenta == 'mora' %}
+        <div class="alert-cuenta mora">
+            <i class="fas fa-triangle-exclamation"></i>
+            <div>
+                <strong>Tienes {{ facturas_vencidas }} factura(s) vencida(s) — Bs. {{ "%.2f"|format(monto_adeudado) }} de deuda.</strong>
+                <div>Tu servicio podría suspenderse por falta de pago. <a href="{{ url_for('pagos') }}">Ver y pagar ahora →</a></div>
+            </div>
+        </div>
+        {% elif estado_cuenta == 'pendiente' %}
+        <div class="alert-cuenta pendiente">
+            <i class="fas fa-circle-info"></i>
+            <div>
+                Tienes facturas pendientes por Bs. {{ "%.2f"|format(monto_adeudado) }} (aún no vencidas).
+                <a href="{{ url_for('pagos') }}">Ver detalle →</a>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Stats Cards -->
+        <div class="row mb-4">
+            <div class="col-lg-4 col-md-6 mb-3">
+                <div class="card stats-card">
+                    <div class="card-body">
+                        <div class="stats-number">{{ servicios|length }}</div>
+                        <div class="mt-2">
+                            <i class="fas fa-wifi me-2"></i>
+                            Servicios Activos
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6 mb-3">
+                <div class="card stats-card">
+                    <div class="card-body">
+                        <div class="stats-number">{{ pagos_recientes|length }}</div>
+                        <div class="mt-2">
+                            <i class="fas fa-credit-card me-2"></i>
+                            Pagos Recientes
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6 mb-3">
+                <div class="card stats-card">
+                    <div class="card-body">
+                        <div class="stats-number">24/7</div>
+                        <div class="mt-2">
+                            <i class="fas fa-headset me-2"></i>
+                            Soporte
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-bolt me-2"></i>
+                            Acciones Rápidas
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            
+                            <div class="col-lg-3 col-md-6 mb-3">
+                                <a href="{{ url_for('reclamos') }}" class="btn btn-primary w-100">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    Hacer Reclamo
+                                </a>
+                            </div>
+
+                            <div class="col-lg-3 col-md-6 mb-3">
+                                <a href="{{ url_for('pagos') }}" class="btn-pagar-online d-inline-flex align-items-center justify-content-center text-decoration-none">
+                                    <i class="fas fa-credit-card me-2"></i>
+                                    Pagar en línea
+                                </a>
+                            </div>
+
+                            <div class="col-lg-3 col-md-6 mb-3">
+                                <button class="btn btn-primary w-100" onclick="contactarSoporte()">
+                                    <i class="fas fa-headset me-2"></i>
+                                    Contactar Soporte
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Services and Payments -->
+        <div class="row">
+            <!-- Services -->
+            <div class="col-lg-8 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-wifi me-2"></i>
+                            Mis Servicios
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% if servicios %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Servicio</th>
+                                            <th>Número</th>
+                                            <th>Plan</th>
+                                            <th>Monto</th>
+                                            <th>Estado</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for servicio in servicios %}
+                                        <tr>
+                                            <td>
+                                                <i class="fas fa-{% if servicio[1] == 'Internet' %}wifi{% elif servicio[1] == 'Telefonia' %}phone{% elif servicio[1] == 'Television' %}tv{% else %}globe{% endif %} me-2"></i>
+                                                {{ servicio[1] }}
+                                            </td>
+                                            <td>{{ servicio[2] }}</td>
+                                            <td>{{ servicio[3] }}</td>
+                                            <td>Bs. {{ "%.2f"|format(servicio[6] or 0) }}</td>
+                                            <td>
+                                                <span class="badge bg-success">{{ servicio[4]|title }}</span>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <i class="fas fa-wifi fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">No tienes servicios activos</h5>
+                                <p class="text-muted">Contacta a nuestro equipo para contratar servicios.</p>
+                                <button class="btn btn-primary" onclick="contactarSoporte()">
+                                    <i class="fas fa-phone me-2"></i>
+                                    Contactar Ventas
+                                </button>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Payments -->
+            <div class="col-lg-4 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-credit-card me-2"></i>
+                            Pagos Recientes
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% if pagos_recientes %}
+                            {% for pago in pagos_recientes %}
+                            <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+                                <div>
+                                    <div class="fw-bold">Bs. {{ "%.2f"|format(pago[1]) }}</div>
+                                    <small class="text-muted">{{ pago[2].strftime('%d/%m/%Y') }}</small>
+                                </div>
+                                <div>
+                                    <span class="badge bg-success">{{ pago[4]|title }}</span>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            <div class="mt-3 text-center">
+                                <a href="{{ url_for('pagos') }}" class="btn btn-outline-primary btn-sm">
+                                    Ver Historial Completo
+                                </a>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-3">
+                                <i class="fas fa-credit-card fa-2x text-muted mb-2"></i>
+                                <p class="text-muted mb-0">No hay pagos registrados</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function contactarSoporte() {
+            alert('Función de contacto en desarrollo. Por favor llama al: +591 2 123-4567');
+        }
+        
+        // Auto-hide alerts after 5 seconds
+        setTimeout(function() {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(function(alert) {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            });
+        }, 5000);
+    </script>
+    {% include 'partials/chat_widget.html' %}
+
+  
+</body>
+</html>

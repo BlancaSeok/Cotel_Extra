@@ -1,0 +1,224 @@
+<!--
+  soporte_historial_reclamos.html
+  ============================================================
+  NUEVA — página dedicada de historial, exclusiva de Help Desk.
+  Reutiliza 2 endpoints que YA EXISTEN en tu app.py, sin tocarlos:
+    GET /api/soporte/buscar_cliente?q=texto
+    GET /api/soporte/historial_reclamos_cliente/<usuario_id>
+
+  Ruta nueva que necesitas agregar (backend, te la doy después):
+    @app.route('/soporte/historial_reclamos')
+    -> solo renderiza este template, sin lógica adicional.
+============================================================
+-->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Historial de Reclamos — COTEL RL</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+:root{
+    --bg-dark:#160c02;
+    --bg-dark2:#231202;
+    --orange:#f97316;
+    --orange-deep:#d84315;
+    --orange-soft:#ff8f00;
+    --amber:#ea580c;
+    --green:#34d399;
+    --red:#f87171;
+    --text-light:#fff3e0;
+    --text-muted:#d9b48f;
+    --glass:rgba(255,255,255,0.05);
+    --glass-border:rgba(249,115,22,0.25);
+}
+*{box-sizing:border-box;}
+body{
+    margin:0; font-family:'Segoe UI',system-ui,sans-serif;
+    background:radial-gradient(circle at 20% 0%, #2a1608 0%, var(--bg-dark) 55%);
+    color:var(--text-light); min-height:100vh; padding:24px;
+}
+.wrap{max-width:1100px; margin:0 auto;}
+.topbar{display:flex; align-items:center; justify-content:space-between; margin-bottom:22px; flex-wrap:wrap; gap:12px;}
+.topbar h1{font-size:1.3rem; margin:0; display:flex; align-items:center; gap:10px;}
+.topbar h1 i{color:var(--orange);}
+.btn-back{
+    color:var(--text-light); text-decoration:none; padding:8px 16px;
+    border:1px solid var(--glass-border); border-radius:20px; font-size:.82rem;
+    background:var(--glass); transition:.2s;
+}
+.btn-back:hover{background:rgba(249,115,22,.15);}
+
+.search-panel{
+    background:var(--glass); border:1px solid var(--glass-border); border-radius:14px;
+    padding:18px; margin-bottom:20px;
+}
+.search-row{display:flex; gap:10px;}
+.search-row input{
+    flex:1; background:rgba(255,255,255,.04); border:1px solid var(--glass-border);
+    border-radius:10px; padding:11px 14px; color:var(--text-light); font-size:.9rem;
+}
+.search-row input::placeholder{color:var(--text-muted);}
+.search-row input:focus{outline:none; border-color:var(--orange);}
+.btn-search{
+    background:var(--orange); color:#2a1608; border:none; border-radius:10px;
+    padding:11px 20px; font-weight:600; cursor:pointer; font-size:.9rem; transition:.2s;
+}
+.btn-search:hover{background:var(--orange-deep); color:#fff;}
+
+.resultados-clientes{margin-top:14px; display:flex; flex-direction:column; gap:6px;}
+.cliente-item{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:10px 14px; border:1px solid var(--glass-border); border-radius:10px;
+    cursor:pointer; transition:.2s; font-size:.85rem;
+}
+.cliente-item:hover{background:rgba(249,115,22,.08); border-color:var(--orange);}
+.cliente-item .meta{color:var(--text-muted); font-size:.78rem;}
+
+.cliente-activo{
+    background:var(--glass); border:1px solid var(--glass-border); border-radius:14px;
+    padding:16px 20px; margin-bottom:18px; display:flex; justify-content:space-between; align-items:center;
+    display:none;
+}
+.cliente-activo.show{display:flex;}
+.cliente-activo .nombre{font-size:1.05rem; font-weight:700;}
+.cliente-activo .sub{color:var(--text-muted); font-size:.8rem; margin-top:2px;}
+
+.stats-mini{display:flex; gap:16px; flex-wrap:wrap;}
+.stat-mini{text-align:center;}
+.stat-mini .num{font-size:1.4rem; font-weight:700; color:var(--orange);}
+.stat-mini .lbl{font-size:.68rem; color:var(--text-muted); text-transform:uppercase;}
+
+.timeline{display:flex; flex-direction:column; gap:12px;}
+.hist-card{
+    background:var(--glass); border:1px solid var(--glass-border); border-left:3px solid var(--orange);
+    border-radius:12px; padding:16px 18px;
+}
+.hist-head{display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:8px;}
+.hist-id{font-family:'Consolas',monospace; color:var(--orange); font-size:.85rem;}
+.hist-badges{display:flex; gap:6px; flex-wrap:wrap;}
+.badge{padding:3px 10px; border-radius:20px; font-size:.7rem; font-weight:600;}
+.badge-resuelto{background:rgba(52,211,153,.15); color:var(--green);}
+.badge-auditado{background:rgba(249,115,22,.15); color:var(--orange);}
+.badge-reincidencia{background:rgba(248,113,113,.15); color:var(--red);}
+.badge-conforme{background:rgba(52,211,153,.15); color:var(--green);}
+.badge-mala_atencion{background:rgba(248,113,113,.15); color:var(--red);}
+.badge-fuera_tiempo{background:rgba(234,88,12,.15); color:var(--amber);}
+.hist-servicio{font-weight:600; margin-bottom:4px;}
+.hist-problema{color:var(--text-muted); font-size:.85rem; margin-bottom:8px;}
+.hist-fechas{display:flex; gap:18px; flex-wrap:wrap; font-size:.78rem; color:var(--text-muted);}
+.hist-fechas span i{margin-right:4px; color:var(--orange-soft);}
+.hist-solucion{
+    margin-top:10px; padding-top:10px; border-top:1px dashed var(--glass-border);
+    font-size:.82rem; color:var(--text-light);
+}
+.empty{text-align:center; color:var(--text-muted); padding:40px 0; font-size:.9rem;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+    <div class="topbar">
+        <h1><i class="fas fa-clock-rotate-left"></i> Historial de Reclamos</h1>
+        <a href="{{ url_for('dashboard_soporte') }}" class="btn-back"><i class="fas fa-arrow-left"></i> Volver al panel</a>
+    </div>
+
+    <div class="search-panel">
+        <div class="search-row">
+            <input type="text" id="buscar-input" placeholder="Buscar por nombre, correo, teléfono, código de cliente o N° de contrato…">
+            <button class="btn-search" onclick="buscarCliente()"><i class="fas fa-magnifying-glass"></i> Buscar</button>
+        </div>
+        <div class="resultados-clientes" id="resultados-clientes"></div>
+    </div>
+
+    <div class="cliente-activo" id="cliente-activo">
+        <div>
+            <div class="nombre" id="ca-nombre">—</div>
+            <div class="sub" id="ca-contacto">—</div>
+        </div>
+        <div class="stats-mini">
+            <div class="stat-mini"><div class="num" id="ca-total">0</div><div class="lbl">Total</div></div>
+            <div class="stat-mini"><div class="num" id="ca-resueltos">0</div><div class="lbl">Resueltos</div></div>
+            <div class="stat-mini"><div class="num" id="ca-reincidencias">0</div><div class="lbl">Reincidencias</div></div>
+        </div>
+    </div>
+
+    <div class="timeline" id="timeline">
+        <div class="empty">Busca un cliente arriba para ver su historial completo de reclamos.</div>
+    </div>
+
+</div>
+
+<script>
+async function buscarCliente(){
+    const q = document.getElementById('buscar-input').value.trim();
+    const cont = document.getElementById('resultados-clientes');
+    if (q.length < 3){ cont.innerHTML = '<div style="font-size:.8rem;color:var(--text-muted);padding:8px 0;">Escribe al menos 3 caracteres.</div>'; return; }
+    try {
+        const r = await fetch(`/api/soporte/buscar_cliente?q=${encodeURIComponent(q)}`);
+        const data = await r.json();
+        if (!data.success || !data.clientes.length){
+            cont.innerHTML = '<div style="font-size:.8rem;color:var(--text-muted);padding:8px 0;">Sin resultados.</div>';
+            return;
+        }
+        cont.innerHTML = data.clientes.map(c => `
+            <div class="cliente-item" onclick="cargarHistorial(${c.usuario_id}, ${JSON.stringify(c.nombre + ' ' + c.apellido)}, ${JSON.stringify(c.correo || '')}, ${JSON.stringify(c.telefono || '')})">
+                <div><strong>${c.nombre} ${c.apellido}</strong></div>
+                <div class="meta">${c.correo || '—'} · ${c.telefono || '—'} · Código: ${c.codigo_cliente}</div>
+            </div>
+        `).join('');
+    } catch(e){ cont.innerHTML = '<div style="font-size:.8rem;color:var(--red);padding:8px 0;">Error de conexión.</div>'; }
+}
+document.getElementById('buscar-input').addEventListener('keydown', e => { if (e.key === 'Enter') buscarCliente(); });
+
+async function cargarHistorial(usuarioId, nombre, correo, telefono){
+    document.getElementById('resultados-clientes').innerHTML = '';
+    document.getElementById('buscar-input').value = '';
+
+    document.getElementById('ca-nombre').textContent = nombre;
+    document.getElementById('ca-contacto').textContent = `${correo || '—'} · ${telefono || '—'}`;
+    document.getElementById('cliente-activo').classList.add('show');
+
+    const timeline = document.getElementById('timeline');
+    timeline.innerHTML = '<div class="empty">Cargando historial…</div>';
+
+    try {
+        const r = await fetch(`/api/soporte/historial_reclamos_cliente/${usuarioId}`);
+        const data = await r.json();
+        if (!data.success){ timeline.innerHTML = `<div class="empty">${data.message || 'No se pudo cargar.'}</div>`; return; }
+
+        const total = data.total;
+        const resueltos = data.reclamos.filter(x => x.fecha_resolucion).length;
+        const reincidencias = data.reclamos.filter(x => x.resultado_auditoria === 'reincidencia').length;
+        document.getElementById('ca-total').textContent = total;
+        document.getElementById('ca-resueltos').textContent = resueltos;
+        document.getElementById('ca-reincidencias').textContent = reincidencias;
+
+        if (!data.reclamos.length){ timeline.innerHTML = '<div class="empty">Este cliente no tiene reclamos registrados.</div>'; return; }
+
+        timeline.innerHTML = data.reclamos.map(x => `
+            <div class="hist-card">
+                <div class="hist-head">
+                    <span class="hist-id">#${x.id} — ${x.tipo_reclamo}</span>
+                    <div class="hist-badges">
+                        <span class="badge badge-${x.estado}">${x.estado.replace('_',' ')}</span>
+                        ${x.resultado_auditoria ? `<span class="badge badge-${x.resultado_auditoria}">${x.resultado_auditoria.replace('_',' ')}</span>` : ''}
+                    </div>
+                </div>
+                <div class="hist-servicio">${x.servicio_afectado}</div>
+                <div class="hist-problema">${x.problema_especifico}</div>
+                ${x.solucion ? `<div class="hist-solucion"><i class="fas fa-check" style="color:var(--green)"></i> ${x.solucion}</div>` : ''}
+                <div class="hist-fechas" style="margin-top:8px;">
+                    <span><i class="fas fa-calendar-plus"></i>${x.fecha_falla || '—'}</span>
+                    ${x.fecha_resolucion ? `<span><i class="fas fa-calendar-check"></i>${x.fecha_resolucion}</span>` : ''}
+                    ${x.liberado_ivr ? `<span><i class="fas fa-phone"></i>Liberado IVR ${x.fecha_liberacion || ''}</span>` : ''}
+                    ${x.fecha_auditoria_calidad ? `<span><i class="fas fa-clipboard-check"></i>Auditado ${x.fecha_auditoria_calidad}</span>` : ''}
+                </div>
+            </div>
+        `).join('');
+    } catch(e){ timeline.innerHTML = '<div class="empty">Error de conexión.</div>'; }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>COTEL RL — Reclamo telefónico</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --rojo:#f97316; --rojo-dark:#d84315; --rojo-bg:rgba(249,115,22,0.10);
+    --verde:#34d399; --verde-bg:rgba(52,211,153,0.10);
+    --amber:#ff8f00; --amber-bg:rgba(255,143,0,0.10);
+    --azul:#ff8f00;
+    --gris-900:#fff3e0; --gris-600:#d9b48f; --gris-400:#b8886a;
+    --gris-100:rgba(255,255,255,0.06); --gris-50:#160c02; --borde:rgba(249,115,22,0.25);
+    --radio:10px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:radial-gradient(circle at 20% 0%, #2a1608 0%, var(--gris-50) 55%);
+    color:var(--gris-900);
+    font-family:'Inter',system-ui,-apple-system,sans-serif; -webkit-font-smoothing:antialiased;
+  }
+  .mono{font-family:'JetBrains Mono',ui-monospace,monospace;}
+
+  header.top{
+    background:linear-gradient(120deg,var(--rojo-dark),var(--rojo));
+    color:#fff; padding:18px 28px; display:flex; align-items:center; justify-content:space-between;
+    box-shadow:0 2px 10px rgba(107,26,26,.25);
+  }
+  header.top .left{display:flex; align-items:center; gap:12px;}
+  header.top .phone-icon{
+    width:38px; height:38px; border-radius:50%; background:rgba(255,255,255,.15);
+    display:flex; align-items:center; justify-content:center; font-size:1.1rem;
+  }
+  header.top h1{font-size:1.05rem; font-weight:700; margin:0;}
+  header.top .sub{font-size:.74rem; opacity:.8; margin-top:1px;}
+  header.top .right{display:flex; align-items:center; gap:16px; font-size:.85rem;}
+  header.top .right a{color:#fff; opacity:.85; text-decoration:none;}
+  header.top .right a:hover{opacity:1; text-decoration:underline;}
+
+  main{max-width:760px; margin:0 auto; padding:28px 24px 70px;}
+
+  .flash{padding:12px 16px; border-radius:var(--radio); margin-bottom:16px; font-size:.88rem;}
+  .flash-success{background:var(--verde-bg); color:var(--verde); border:1px solid rgba(52,211,153,.35);}
+  .flash-danger{background:var(--rojo-bg); color:var(--rojo); border:1px solid rgba(249,115,22,.35);}
+  .flash-warning{background:var(--amber-bg); color:var(--amber); border:1px solid rgba(255,143,0,.35);}
+
+  .hint{
+    background:var(--gris-100); border:1px solid var(--borde); border-left:4px solid var(--rojo);
+    border-radius:var(--radio); padding:12px 16px; font-size:.82rem; color:var(--gris-600);
+    margin-bottom:22px; display:flex; gap:10px; align-items:flex-start;
+  }
+
+  .card{background:var(--gris-100); border:1px solid var(--borde); border-radius:14px; padding:26px; margin-bottom:20px;}
+  .card h2{font-size:.9rem; font-weight:700; margin:0 0 16px; display:flex; align-items:center; gap:8px; color:var(--gris-900);}
+  .card h2 .num{
+    width:22px; height:22px; border-radius:50%; background:var(--rojo); color:#fff;
+    font-size:.72rem; display:inline-flex; align-items:center; justify-content:center; font-weight:700;
+  }
+
+  .field{margin-bottom:15px; position:relative;}
+  .field label{display:block; font-size:.8rem; font-weight:600; color:var(--gris-600); margin-bottom:6px;}
+  .field input, .field select, .field textarea{
+    width:100%; padding:10px 12px; border:1px solid var(--borde); border-radius:8px;
+    font-size:.88rem; font-family:inherit; color:var(--gris-900);
+    background:rgba(255,255,255,.04);
+  }
+  .field select option{ background:#231202; color:var(--gris-900); }
+  .field input:focus, .field select:focus, .field textarea:focus{
+    outline:none; border-color:var(--rojo); box-shadow:0 0 0 3px rgba(255,111,0,.12);
+  }
+  .field textarea{resize:vertical; min-height:80px;}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+
+  /* Buscador de cliente */
+  .search-results{
+    position:absolute; top:100%; left:0; right:0; background:#231202; border:1px solid var(--borde);
+    border-radius:8px; margin-top:4px; box-shadow:0 8px 24px rgba(0,0,0,.4); max-height:220px;
+    overflow-y:auto; z-index:20; display:none;
+  }
+  .search-results.open{display:block;}
+  .search-item{padding:10px 12px; cursor:pointer; font-size:.85rem; border-bottom:1px solid var(--borde);}
+  .search-item:last-child{border-bottom:none;}
+  .search-item:hover{background:var(--rojo-bg);}
+  .search-item .nom{font-weight:600; color:var(--gris-900);}
+  .search-item .meta{font-size:.74rem; color:var(--gris-400);}
+
+  .cliente-elegido{
+    display:none; background:var(--rojo-bg); border:1px solid var(--borde); border-radius:9px;
+    padding:12px 14px; margin-bottom:15px; align-items:center; justify-content:space-between;
+  }
+  .cliente-elegido.show{display:flex;}
+  .cliente-elegido .nom{font-weight:700; color:var(--rojo);}
+  .cliente-elegido .meta{font-size:.76rem; color:var(--gris-600);}
+  .cliente-elegido button{
+    background:none; border:none; color:var(--rojo); font-size:.78rem; font-weight:600; cursor:pointer;
+    text-decoration:underline;
+  }
+
+  .btn{border:none; border-radius:9px; padding:12px 20px; font-size:.9rem; font-weight:700; cursor:pointer; width:100%;}
+  .btn-rojo{background:var(--rojo); color:#2a1608;} .btn-rojo:hover{background:var(--rojo-dark); color:#fff;}
+  .btn-rojo:disabled{background:var(--gris-400); color:rgba(255,255,255,.6); cursor:not-allowed;}
+
+  .resultado-box{
+    display:none; background:var(--gris-100); border:1px solid var(--verde); border-radius:14px; padding:24px;
+    text-align:center;
+  }
+  .resultado-box.show{display:block;}
+  .resultado-box .ok-icon{font-size:2rem; margin-bottom:8px;}
+  .resultado-box .rid{font-size:1.3rem; font-weight:800; color:var(--rojo); margin:6px 0;}
+  .resultado-box .prioridad{
+    display:inline-block; margin-top:8px; padding:3px 12px; border-radius:20px; font-size:.75rem; font-weight:700;
+  }
+  .prioridad-critica{background:var(--rojo-bg); color:var(--rojo);}
+  .prioridad-alta{background:var(--amber-bg); color:var(--amber);}
+  .prioridad-media{background:rgba(255,143,0,.10); color:var(--amber);}
+  .prioridad-baja{background:var(--verde-bg); color:var(--verde);}
+  .resultado-actions{display:flex; gap:10px; margin-top:18px;}
+  .resultado-actions .btn{width:auto; flex:1; padding:10px 14px; font-size:.82rem;}
+  .btn-ghost{background:var(--gris-100); color:var(--gris-600); border:1px solid var(--borde);}
+  .btn-ghost:hover{background:rgba(255,255,255,.1);}
+
+  /* ---------- fondo animado (gold-orange) ---------- */
+  .bg-blob{position:fixed; border-radius:50%; z-index:0; pointer-events:none; filter:blur(50px);}
+  .bg-blob1{width:420px; height:420px; top:-130px; right:-110px; background:rgba(255,193,7,.22); animation:bgFloat1 18s ease-in-out infinite alternate;}
+  .bg-blob2{width:380px; height:380px; bottom:-110px; left:-90px; background:rgba(255,111,0,.14); animation:bgFloat2 23s ease-in-out infinite alternate;}
+  @keyframes bgFloat1{0%{transform:translate(0,0) scale(1);} 50%{transform:translate(-25px,35px) scale(1.1);} 100%{transform:translate(20px,-15px) scale(.95);}}
+  @keyframes bgFloat2{0%{transform:translate(0,0) scale(1);} 50%{transform:translate(25px,-25px) scale(1.08);} 100%{transform:translate(-15px,12px) scale(.92);}}
+</style>
+</head>
+<body>
+<div class="bg-blob bg-blob1"></div>
+<div class="bg-blob bg-blob2"></div>
+
+<header class="top">
+  <div class="left">
+    <div class="phone-icon">☎</div>
+    <div>
+      <h1>Reclamo telefónico · 101 / 800161040</h1>
+      <div class="sub">Registro de reclamo recibido por llamada</div>
+    </div>
+  </div>
+  <div class="right">
+    <span>{{ nombre_usuario }}</span>
+    <a href="{{ url_for('dashboard_soporte') }}">Volver al panel</a>
+  </div>
+</header>
+
+<main>
+
+  {% with mensajes = get_flashed_messages(with_categories=true) %}
+    {% if mensajes %}
+      {% for categoria, msg in mensajes %}
+        <div class="flash flash-{{ categoria }}">{{ msg }}</div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <div class="hint">
+     Usa este formulario cuando el cliente llame por teléfono en vez de registrar su falla por la web.
+    Verifica primero su identidad (nombre, número de contrato o CI) antes de continuar.
+  </div>
+
+  <form id="formReclamo" onsubmit="return false;">
+
+    <!-- PASO 1: Identificar cliente -->
+    <div class="card">
+      <h2><span class="num">1</span> Identificar al cliente</h2>
+
+      <div class="cliente-elegido" id="clienteElegido">
+        <div>
+          <div class="nom" id="clienteElegidoNombre"></div>
+          <div class="meta" id="clienteElegidoMeta"></div>
+        </div>
+        <button type="button" onclick="quitarCliente()">Cambiar</button>
+      </div>
+
+      <div class="field" id="buscadorWrapper">
+        <label>Buscar por nombre, correo, teléfono o N° de contrato *</label>
+        <input type="text" id="buscarCliente" placeholder="Ej: Juan Pérez / 71234567 / juan@correo.com" autocomplete="off">
+        <div class="search-results" id="resultadosBusqueda"></div>
+      </div>
+    </div>
+
+    <!-- PASO 2: Datos del reclamo -->
+    <div class="card">
+      <h2><span class="num">2</span> Datos del reclamo</h2>
+
+      <div class="grid2">
+        <div class="field">
+          <label>Tipo de reclamo *</label>
+          <select id="tipo_reclamo">
+            <option value="">Selecciona…</option>
+            <option value="tecnico">Falla técnica (Internet / TV / Telefonía)</option>
+            <option value="facturacion">Facturación / cobro</option>
+            <option value="atencion">Atención al cliente</option>
+            <option value="otro">Otro</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Servicio afectado</label>
+          <select id="servicio_afectado" onchange="cargarProblemas()">
+            <option value="">Selecciona…</option>
+            {% for s in servicios %}
+            <option value="{{ s[1] }}">{{ s[1] }} {% if s[2] %}({{ s[2] }}){% endif %}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Problema específico</label>
+        <select id="problema_especifico">
+          <option value="">Selecciona un servicio primero…</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Título del reclamo *</label>
+        <input type="text" id="titulo" placeholder="Ej: Sin conexión a internet desde ayer">
+      </div>
+
+      <div class="field">
+        <label>Descripción *</label>
+        <textarea id="descripcion" placeholder="Detalle lo que indica el cliente durante la llamada"></textarea>
+      </div>
+
+      <div class="grid2">
+        <div class="field">
+          <label>Ubicación del cliente</label>
+          <input type="text" id="ubicacion_cliente" placeholder="Dirección o referencia">
+        </div>
+        <div class="field">
+          <label>Número de cliente / contrato</label>
+          <input type="text" id="numero_cliente" placeholder="Se autocompleta al elegir cliente">
+        </div>
+      </div>
+
+    </div>
+
+    <button type="button" class="btn btn-rojo" id="btnRegistrar" onclick="registrarReclamo()" disabled>
+      Registrar reclamo
+    </button>
+  </form>
+
+  <div class="resultado-box" id="resultadoBox">
+    <div class="ok-icon">✅</div>
+    <div>Reclamo registrado correctamente</div>
+    <div class="rid" id="resultadoId"></div>
+    <span class="prioridad" id="resultadoPrioridad"></span>
+    <div class="resultado-actions">
+      <button class="btn btn-ghost" onclick="nuevoReclamo()">Registrar otra llamada</button>
+      <a class="btn btn-rojo" style="text-decoration:none; display:flex; align-items:center; justify-content:center;"
+         href="{{ url_for('dashboard_soporte') }}">Ir al panel de soporte</a>
+    </div>
+  </div>
+
+</main>
+
+<script>
+let clienteSeleccionado = null;
+let debounceTimer = null;
+
+const buscarInput   = document.getElementById('buscarCliente');
+const resultadosBox  = document.getElementById('resultadosBusqueda');
+
+buscarInput.addEventListener('input', () => {
+  clearTimeout(debounceTimer);
+  const q = buscarInput.value.trim();
+  if(q.length < 3){ resultadosBox.classList.remove('open'); return; }
+  debounceTimer = setTimeout(() => buscarClientes(q), 350);
+});
+
+document.addEventListener('click', (e) => {
+  if(!document.getElementById('buscadorWrapper').contains(e.target)){
+    resultadosBox.classList.remove('open');
+  }
+});
+
+function buscarClientes(q){
+  fetch(`/api/soporte/buscar_cliente?q=${encodeURIComponent(q)}`)
+    .then(r => r.json())
+    .then(d => {
+      if(!d.success || !d.clientes.length){
+        resultadosBox.innerHTML = '<div class="search-item" style="color:var(--gris-400);">Sin resultados</div>';
+        resultadosBox.classList.add('open');
+        return;
+      }
+      resultadosBox.innerHTML = d.clientes.map(c => `
+        <div class="search-item" onclick='elegirCliente(${JSON.stringify(c)})'>
+          <div class="nom">${c.nombre} ${c.apellido}</div>
+          <div class="meta">${c.correo || ''} · ${c.telefono || 'sin teléfono'} · Código: ${c.codigo_cliente || '—'}</div>
+        </div>
+      `).join('');
+      resultadosBox.classList.add('open');
+    })
+    .catch(() => {
+      resultadosBox.innerHTML = '<div class="search-item">Error al buscar</div>';
+      resultadosBox.classList.add('open');
+    });
+}
+
+function elegirCliente(c){
+  clienteSeleccionado = c;
+  document.getElementById('clienteElegidoNombre').textContent = `${c.nombre} ${c.apellido}`;
+  document.getElementById('clienteElegidoMeta').textContent =
+    `${c.correo || ''} · ${c.telefono || 'sin teléfono'} · Código: ${c.codigo_cliente || '—'}`;
+  document.getElementById('clienteElegido').classList.add('show');
+  document.getElementById('buscadorWrapper').style.display = 'none';
+  document.getElementById('numero_cliente').value = c.codigo_cliente || '';
+  resultadosBox.classList.remove('open');
+  buscarInput.value = '';
+  validarFormulario();
+}
+
+function quitarCliente(){
+  clienteSeleccionado = null;
+  document.getElementById('clienteElegido').classList.remove('show');
+  document.getElementById('buscadorWrapper').style.display = 'block';
+  validarFormulario();
+}
+
+function cargarProblemas(){
+  const servicio = document.getElementById('servicio_afectado').value;
+  const sel = document.getElementById('problema_especifico');
+  if(!servicio){ sel.innerHTML = '<option value="">Selecciona un servicio primero…</option>'; return; }
+
+  sel.innerHTML = '<option value="">Cargando…</option>';
+  fetch(`/api/problemas_servicio/${encodeURIComponent(servicio)}`)
+    .then(r => r.json())
+    .then(d => {
+      if(!Array.isArray(d) || !d.length){
+        sel.innerHTML = '<option value="">Sin problemas catalogados para este servicio</option>';
+        return;
+      }
+      sel.innerHTML = '<option value="">Selecciona…</option>' + d.map(p =>
+        `<option value="${p[1]}">${p[1]}</option>`
+      ).join('');
+    })
+    .catch(() => { sel.innerHTML = '<option value="">Error al cargar</option>'; });
+}
+
+['tipo_reclamo','titulo','descripcion'].forEach(id => {
+  document.addEventListener('input', (e) => { if(e.target.id === id) validarFormulario(); });
+  document.addEventListener('change', (e) => { if(e.target.id === id) validarFormulario(); });
+});
+
+function validarFormulario(){
+  const ok = clienteSeleccionado
+    && document.getElementById('tipo_reclamo').value
+    && document.getElementById('titulo').value.trim()
+    && document.getElementById('descripcion').value.trim();
+  document.getElementById('btnRegistrar').disabled = !ok;
+}
+
+function registrarReclamo(){
+  if(!clienteSeleccionado){ alert('Identifica primero al cliente'); return; }
+
+  const btn = document.getElementById('btnRegistrar');
+  btn.disabled = true; btn.textContent = 'Registrando…';
+
+  fetch('/api/soporte/crear_reclamo_telefonico', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({
+      usuario_id: clienteSeleccionado.usuario_id,
+      tipo_reclamo: document.getElementById('tipo_reclamo').value,
+      titulo: document.getElementById('titulo').value.trim(),
+      descripcion: document.getElementById('descripcion').value.trim(),
+      servicio_afectado: document.getElementById('servicio_afectado').value,
+      problema_especifico: document.getElementById('problema_especifico').value,
+      ubicacion_cliente: document.getElementById('ubicacion_cliente').value.trim(),
+      numero_cliente: document.getElementById('numero_cliente').value.trim(),
+    })
+  })
+  .then(r => r.json())
+  .then(d => {
+    if(d.success){
+      document.getElementById('formReclamo').style.display = 'none';
+      document.getElementById('resultadoId').textContent = '#' + d.reclamo_id;
+      const pill = document.getElementById('resultadoPrioridad');
+      pill.textContent = 'Prioridad: ' + d.prioridad;
+      pill.className = 'prioridad prioridad-' + d.prioridad;
+      document.getElementById('resultadoBox').classList.add('show');
+    } else {
+      alert(d.message || 'No se pudo registrar el reclamo');
+      btn.disabled = false; btn.textContent = 'Registrar reclamo';
+    }
+  })
+  .catch(() => {
+    alert('Error de conexión');
+    btn.disabled = false; btn.textContent = 'Registrar reclamo';
+  });
+}
+
+function nuevoReclamo(){
+  location.reload();
+}
+
+</script>
+
+</body>
+</html>

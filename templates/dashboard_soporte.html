@@ -1,0 +1,1826 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Help Desk - COTEL RL</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<style>
+:root{
+    --bg-dark:#160c02;
+    --bg-dark2:#231202;
+    --orange:#f97316;
+    --orange-deep:#d84315;
+    --orange-soft:#ff8f00;
+    --amber:#ea580c;
+    --green:#34d399;
+    --red:#f87171;
+    --text-light:#fff3e0;
+    --text-muted:#d9b48f;
+    --glass:rgba(255,255,255,0.05);
+    --glass-border:rgba(249,115,22,0.25);
+}
+*{box-sizing:border-box;}
+body{
+    margin:0; font-family:'Segoe UI',system-ui,sans-serif;
+    background:
+        radial-gradient(circle at 15% 20%, rgba(249,115,22,0.18), transparent 45%),
+        radial-gradient(circle at 85% 75%, rgba(216,67,21,0.16), transparent 50%),
+        linear-gradient(160deg, var(--bg-dark), var(--bg-dark2));
+    color:var(--text-light); min-height:100vh; overflow-x:hidden;
+}
+::-webkit-scrollbar{width:6px; height:6px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:rgba(249,115,22,.3); border-radius:3px;}
+
+.bg-anim{position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden; opacity:.55;}
+.bg-anim::before{
+    content:''; position:absolute; inset:0;
+    background-image:
+        linear-gradient(rgba(249,115,22,.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(249,115,22,.06) 1px, transparent 1px);
+    background-size:46px 46px;
+}
+
+
+
+.bg-anim span{
+    position:absolute; width:10px; height:10px; border-radius:50%;
+    border:1px solid rgba(249,115,22,.5);
+    animation:pulso 3s ease-out infinite;
+}
+@keyframes pulso{
+    0%{ transform:scale(.3); opacity:.9; }
+    100%{ transform:scale(4.2); opacity:0; }
+}
+@keyframes slidein{from{transform:translateX(30px); opacity:0;} to{transform:translateX(0); opacity:1;}}
+@media (prefers-reduced-motion: reduce){ .bg-anim span{ animation:none; opacity:0; } }
+
+.wrap{position:relative; z-index:1; max-width:1350px; margin:0 auto; padding:28px 22px 60px;}
+.topbar{display:flex; align-items:center; justify-content:space-between; margin-bottom:28px; flex-wrap:wrap; gap:14px;}
+.brand{display:flex; align-items:center; gap:12px;}
+.brand-icon{
+    width:46px; height:46px; border-radius:14px;
+    background:linear-gradient(135deg, var(--orange), var(--orange-deep));
+    display:flex; align-items:center; justify-content:center; font-size:1.3rem;
+    box-shadow:0 6px 18px rgba(249,115,22,0.35);
+}
+.brand h1{font-size:1.3rem; margin:0; letter-spacing:.3px;}
+.brand small{color:var(--text-muted); display:block; font-size:.78rem;}
+.top-actions{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+.btn-logout{
+    color:var(--text-light); text-decoration:none; padding:9px 18px;
+    border:1px solid var(--glass-border); border-radius:30px; font-size:.85rem;
+    background:var(--glass); transition:.2s;
+}
+.btn-logout:hover{background:rgba(249,115,22,0.18); color:#fff;}
+.btn-tel{
+    display:flex; align-items:center; gap:8px; text-decoration:none;
+    color:#fff; padding:9px 18px; border-radius:30px; font-size:.85rem; font-weight:700;
+    background:linear-gradient(135deg, var(--orange), var(--orange-deep));
+    box-shadow:0 4px 14px rgba(249,115,22,.3);
+    border:none; cursor:pointer; font-family:inherit;
+    transition:.2s;
+}
+.btn-tel:hover{transform:translateY(-1px); box-shadow:0 6px 18px rgba(249,115,22,.4);}
+.btn-tel.alt{
+    background:transparent; border:1px solid var(--glass-border); color:var(--text-light);
+    box-shadow:none;
+}
+
+.stats-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:16px; margin-bottom:28px;}
+.stat-card{
+    background:var(--glass); border:1px solid var(--glass-border); border-radius:16px;
+    padding:18px 20px; backdrop-filter:blur(6px); position:relative; overflow:hidden;
+    transition:.2s;
+}
+.stat-card.clickable{cursor:pointer;}
+.stat-card.clickable:hover{background:rgba(249,115,22,0.1); transform:translateY(-2px); border-color:var(--orange);}
+.stat-card.clickable::after{
+    content:'\f105'; font-family:'Font Awesome 6 Free'; font-weight:900;
+    position:absolute; right:16px; top:50%; transform:translateY(-50%);
+    color:var(--text-muted); font-size:.9rem;
+}
+.stat-num{font-size:2rem; font-weight:700; color:var(--orange-soft);}
+.stat-label{font-size:.82rem; color:var(--text-muted); margin-top:4px;}
+
+.panel{
+    background:var(--glass); border:1px solid var(--glass-border); border-radius:18px;
+    padding:22px; margin-bottom:24px; backdrop-filter:blur(6px);
+}
+.panel-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap; gap:10px;}
+.panel h2{font-size:1.05rem; margin:0; display:flex; align-items:center; gap:10px; color:var(--text-light);}
+.panel h2 i{color:var(--orange);}
+
+table{width:100%; border-collapse:collapse; font-size:.86rem;}
+th{
+    text-align:left; padding:10px 12px; color:var(--text-muted); border-bottom:1px solid var(--glass-border);
+    font-weight:600; font-size:.76rem; text-transform:uppercase; letter-spacing:.03em;
+}
+td{padding:10px 12px; border-bottom:1px solid rgba(255,255,255,0.05); vertical-align:middle;}
+tr:hover td{background:rgba(249,115,22,0.06);}
+
+.badge{display:inline-block; padding:3px 10px; border-radius:20px; font-size:.72rem; font-weight:700;}
+.badge-critica{background:rgba(220,38,38,.2); color:#fca5a5;}
+.badge-alta{background:rgba(234,88,12,.22); color:#fdba74;}
+.badge-media{background:rgba(249,115,22,.18); color:#fed7aa;}
+.badge-baja{background:rgba(107,114,128,.25); color:#d1d5db;}
+.badge-fuera-horario{
+  display:inline-block; font-size:.68rem; padding:2px 8px; border-radius:10px;
+  background:rgba(139,92,246,.15); color:#c4b5fd; border:1px solid rgba(139,92,246,.35);
+  margin-left:4px; white-space:nowrap;
+}
+.badge-estado{background:rgba(255,255,255,.08); color:var(--text-light); border:1px solid var(--glass-border);}
+
+.btn-sm{
+    background:linear-gradient(135deg, var(--orange), var(--orange-deep)); color:#fff;
+    border:none; border-radius:20px; padding:6px 14px; font-size:.78rem; cursor:pointer; font-weight:700; transition:.2s;
+}
+.btn-sm:hover{transform:translateY(-1px); box-shadow:0 4px 12px rgba(249,115,22,.35); background:linear-gradient(135deg,#ea580c,#b91c1c);}
+.btn-sm.outline{background:transparent; border:1px solid var(--glass-border); color:var(--text-light); box-shadow:none;}
+.btn-sm.outline:hover{background:rgba(249,115,22,0.08);}
+.btn-sm.small{padding:5px 12px; font-size:.72rem;}
+.btn-sm:disabled{opacity:.5; cursor:not-allowed; transform:none; box-shadow:none;}
+
+.empty{text-align:center; padding:30px; color:var(--text-muted);}
+.empty i{color:var(--orange); margin-bottom:8px;}
+
+/* ── Avisos de demora ── */
+.aviso-mora{
+    display:flex; gap:10px; align-items:flex-start;
+    background:rgba(248,113,113,0.1); border:1px solid rgba(248,113,113,.35); border-radius:10px;
+    padding:12px 14px; margin:10px 0; font-size:.82rem; color:#fca5a5;
+}
+.aviso-mora i{font-size:1.1rem; margin-top:2px;}
+.aviso-pendiente{
+    display:flex; gap:8px; align-items:center;
+    background:rgba(249,115,22,0.08); border:1px solid var(--glass-border); border-radius:10px;
+    padding:10px 14px; margin:10px 0; font-size:.8rem; color:var(--text-muted);
+}
+.historial-box{
+    max-height:150px; overflow-y:auto; border:1px solid var(--glass-border); border-radius:8px; padding:6px;
+}
+.hist-item{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:6px 8px; font-size:.78rem; border-bottom:1px solid rgba(255,255,255,0.05);
+}
+.hist-detalle-item{
+    background:rgba(255,255,255,0.03); border:1px solid var(--glass-border); border-radius:10px;
+    padding:10px 12px; margin-bottom:8px; font-size:.78rem;
+}
+.hist-top{display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;}
+.hist-linea{color:var(--text-muted); margin-top:3px; display:flex; gap:6px; align-items:flex-start;}
+.hist-linea i{color:var(--orange); font-size:.72rem; margin-top:2px; width:12px;}
+.hist-linea b{color:var(--text-light); font-weight:600;}
+
+.hist-item:last-child{border-bottom:none;}
+.hist-mas{text-align:center; font-size:.72rem; color:var(--text-muted); padding:4px;}
+
+/* ── Cards de fallas con temporizador ── */
+.fallas-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:14px;}
+.falla-card{
+    background:rgba(255,255,255,0.03); border:1px solid var(--glass-border); border-radius:14px;
+    padding:16px; display:flex; flex-direction:column; gap:8px; transition:background .2s;
+}
+.falla-card:hover{background:rgba(249,115,22,0.06);}
+.falla-card .fc-top{display:flex; justify-content:space-between; align-items:flex-start; gap:8px;}
+.falla-card .fc-id{font-size:.78rem; color:var(--text-muted); font-weight:600;}
+.falla-card .fc-title{font-size:.92rem; font-weight:600; color:var(--text-light); margin:2px 0;}
+.falla-card .fc-meta{font-size:.78rem; color:var(--text-muted); display:flex; flex-direction:column; gap:3px;}
+.falla-card .fc-timer{
+    display:flex; align-items:center; gap:7px; font-family:'Consolas',monospace;
+    font-size:1rem; font-weight:700; color:var(--green);
+    background:rgba(52,211,153,0.08); border-radius:8px; padding:7px 10px; margin-top:4px;
+    border:1px solid rgba(52,211,153,0.25);
+    transition:background-color .4s ease, color .4s ease, border-color .4s ease;
+}
+/* Verde = 0h a 2h (color base de arriba) */
+.falla-card .fc-timer.alerta{
+    color:var(--amber); background:rgba(234,88,12,0.12); border-color:rgba(234,88,12,.35);
+}
+.falla-card .fc-timer.urgent{
+    color:var(--red); background:rgba(248,113,113,0.1); border-color:rgba(248,113,113,.4);
+    animation:parpadeo-rojo 1.2s infinite;
+}
+.falla-card .fc-timer.congelado{
+    color:var(--text-muted); background:rgba(255,255,255,0.04); border-color:var(--glass-border);
+    animation:none; opacity:.75;
+}
+.falla-card .fc-timer.congelado i{opacity:.6;}
+.falla-card .fc-timer i{font-size:.85rem;}
+@keyframes parpadeo-rojo{
+    0%,100%{box-shadow:0 0 0 0 rgba(248,113,113,.45);}
+    50%{box-shadow:0 0 0 5px rgba(248,113,113,0);}
+}
+#dg-alerta-previa{
+    background: rgba(234,88,12,0.08);
+    border: 1px solid rgba(234,88,12,0.3);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 14px;
+}
+.alerta-previa-item{ margin-bottom: 10px; font-size: .85rem; line-height: 1.4; }
+.alerta-previa-item:last-child{ margin-bottom: 0; }
+.alerta-previa-botones{ margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap; }
+.falla-card .fc-actions{margin-top:6px; display:flex; justify-content:flex-end;}
+
+/* ── Modal Zonas ── */
+.zonas-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-top:10px;}
+.zona-card{
+    background:rgba(255,255,255,0.03); border:1px solid var(--glass-border); border-radius:12px;
+    padding:16px; text-align:center;
+}
+.zona-card .z-nombre{font-size:.82rem; color:var(--text-muted); margin-bottom:8px; font-weight:600;}
+.zona-card .z-total{font-size:1.8rem; font-weight:700; color:var(--orange-soft);}
+.zona-card .z-bar{height:4px; border-radius:2px; background:rgba(255,255,255,0.08); margin:8px 0 6px; overflow:hidden;}
+.zona-card .z-bar-fill{height:100%; background:linear-gradient(90deg,var(--orange),var(--amber)); border-radius:2px; transition:width .4s;}
+.zona-card .z-sub{font-size:.72rem; color:var(--text-muted);}
+.zona-card .z-sub span{color:var(--amber); font-weight:700;}
+.zona-card.clickable{cursor:pointer; transition:.2s;}
+.zona-card.clickable:hover{background:rgba(249,115,22,0.1); border-color:var(--orange); transform:translateY(-2px);}
+
+.zona-detalle-head{display:flex; align-items:center; gap:10px; margin-bottom:14px;}
+.btn-volver{
+    background:transparent; border:1px solid var(--glass-border); color:var(--text-light);
+    border-radius:20px; padding:5px 12px; font-size:.78rem; cursor:pointer; font-family:inherit;
+}
+.btn-volver:hover{background:rgba(249,115,22,0.1);}
+.zona-detalle-lista{display:flex; flex-direction:column; gap:8px; max-height:360px; overflow-y:auto;}
+.zd-item{
+    background:rgba(255,255,255,0.03); border:1px solid var(--glass-border); border-radius:10px;
+    padding:10px 12px; font-size:.82rem; display:flex; justify-content:space-between; align-items:center; gap:10px;
+}
+.zd-item.clickable{ cursor:pointer; transition:.2s; }
+.zd-item.clickable:hover{ background:rgba(249,115,22,0.1); border-color:var(--orange); }
+.zd-item .zd-left strong{display:block; color:var(--text-light);}
+.zd-item .zd-left small{color:var(--text-muted);}
+
+.btn-refresh{
+    background:transparent; border:1px solid var(--glass-border); color:var(--text-muted);
+    border-radius:20px; padding:5px 12px; font-size:.75rem; cursor:pointer; font-family:inherit;
+    display:inline-flex; align-items:center; gap:6px; transition:.2s;
+}
+.btn-refresh:hover{color:var(--text-light); border-color:var(--orange); background:rgba(249,115,22,0.08);}
+.btn-refresh.spinning i{animation:spin 0.8s linear infinite;}
+@keyframes spin{from{transform:rotate(0);} to{transform:rotate(360deg);}}
+
+.modal-overlay{
+    display:none; position:fixed; inset:0; z-index:200; background:rgba(10,5,0,.75);
+    backdrop-filter:blur(4px); align-items:center; justify-content:center; padding:20px;
+}
+.modal-overlay.open{display:flex;}
+.modal-box{
+    width:100%; max-width:560px; max-height:90vh; overflow-y:auto;
+    background:#231202; border:1px solid var(--glass-border); border-radius:16px; padding:24px;
+    box-shadow:0 20px 60px rgba(0,0,0,.5);
+}
+.modal-box.wide{max-width:680px;}
+.modal-head{display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;}
+.modal-box h3{margin:0; font-size:1.15rem;}
+.modal-close{background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:1.1rem; padding:0;}
+.modal-close:hover{color:var(--text-light);}
+.modal-box .sub{color:var(--text-muted); font-size:.8rem; margin-bottom:16px;}
+.field{margin-bottom:14px;}
+.field label{display:block; font-size:.78rem; color:var(--text-muted); margin-bottom:6px;}
+.field label .opt-tag{font-size:.68rem; color:var(--amber); font-weight:700; margin-left:6px;}
+.field select, .field textarea, .field input{
+    width:100%; background:rgba(255,255,255,.04); border:1px solid var(--glass-border); border-radius:8px;
+    color:var(--text-light); padding:10px 12px; font-size:.88rem; font-family:inherit;
+}
+.field select:disabled, .field input:disabled{opacity:.45; cursor:not-allowed;}
+.field select:focus, .field textarea:focus, .field input:focus{outline:none; border-color:var(--orange);}
+
+/* Color-scheme dark: hints native UI chrome (scrollbars, base picker frame) to render dark instead of white on browsers that respect it */
+.field select{color-scheme:dark;}
+
+/* Estiliza las <option> del listado desplegable para que no salgan blancas.
+   Soportado en Chrome/Edge y razonablemente en Firefox; Safari ignora estas
+   reglas y usa su propio estilo nativo del sistema. */
+.field select option,
+.field select optgroup{
+    background:#231202;
+    color:var(--text-light);
+    padding:8px 10px;
+}
+.field select option:checked,
+.field select option:hover{
+    background:var(--orange-deep);
+    color:#fff;
+}
+.field select option:disabled{
+    color:var(--text-muted);
+}
+
+.field-row{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+.help-inline{font-size:.72rem; color:var(--text-muted); margin-top:5px;}
+
+/* Botones tipo de reclamo estilo mockup */
+.tipo-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+.tipo-btn{
+    padding:10px 12px; border-radius:8px; cursor:pointer; text-align:left;
+    background:rgba(255,255,255,0.04); border:1px solid var(--glass-border);
+    color:var(--text-muted); font-family:inherit; font-size:.85rem; transition:all .15s;
+}
+.tipo-btn.active{font-weight:700;}
+.tipo-btn.tecnico.active{background:rgba(248,113,113,0.15); border-color:rgba(248,113,113,0.4); color:#fca5a5;}
+.tipo-btn.facturacion.active{background:rgba(250,204,21,0.12); border-color:rgba(250,204,21,0.4); color:#fde68a;}
+.tipo-btn.comercial.active{background:rgba(52,211,153,0.12); border-color:rgba(52,211,153,0.4); color:#6ee7b7;}
+.tipo-btn.otro.active{background:rgba(148,163,184,0.12); border-color:rgba(148,163,184,0.35); color:#cbd5e1;}
+
+.check-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px;}
+.check-item{
+    display:flex; align-items:center; gap:8px; padding:8px 10px; border-radius:8px;
+    border:1px solid var(--glass-border); font-size:.82rem; cursor:pointer;
+}
+.check-item:has(input:checked){border-color:var(--orange); background:rgba(249,115,22,.1);}
+.modal-actions{display:flex; justify-content:flex-end; gap:10px; margin-top:18px;}
+.result-options{display:flex; gap:10px; flex-wrap:wrap;}
+.result-btn{
+    flex:1; min-width:140px; padding:12px; border-radius:10px; border:1px solid var(--glass-border);
+    background:rgba(255,255,255,.03); color:var(--text-light); cursor:pointer; font-size:.85rem; text-align:center;
+}
+
+.check-item{ align-items:flex-start; }
+.check-item input[type=checkbox]{ margin-top:3px; flex-shrink:0; }
+.ci-title{ font-weight:600; font-size:.85rem; }
+.ci-desc{ font-size:.72rem; color:var(--text-muted); margin-top:2px; line-height:1.3; }
+.check-item:has(input:checked) .ci-desc{ color:var(--text-light); }
+.result-btn small{ font-weight:400; opacity:.85; }
+
+.result-btn.solucionado{border-color:rgba(52,211,153,.4);}
+.result-btn.solucionado:hover{background:rgba(52,211,153,.12);}
+.result-btn.no-solucionado{border-color:rgba(248,113,113,.4);}
+.result-btn.no-solucionado:hover{background:rgba(248,113,113,.12);}
+
+/* búsqueda de cliente en modal nuevo reclamo */
+.cliente-resultados{
+    max-height:180px; overflow-y:auto; border:1px solid var(--glass-border); border-radius:8px;
+    margin-top:6px; display:none;
+}
+.cliente-resultados.show{display:block;}
+.cliente-item{
+    padding:9px 12px; font-size:.82rem; cursor:pointer; border-bottom:1px solid rgba(255,255,255,0.05);
+}
+.cliente-item:last-child{border-bottom:none;}
+.cliente-item:hover{background:rgba(249,115,22,0.1);}
+.cliente-item small{display:block; color:var(--text-muted); font-size:.72rem;}
+.cliente-seleccionado{
+    display:none; align-items:center; justify-content:space-between; gap:10px;
+    background:rgba(52,211,153,0.1); border:1px solid rgba(52,211,153,.35); border-radius:8px;
+    padding:10px 12px; font-size:.85rem; margin-top:8px;
+}
+.cliente-seleccionado.show{display:flex;}
+.cliente-seleccionado .cs-info strong{display:block;}
+.cliente-seleccionado .cs-info small{color:var(--text-muted);}
+.cliente-seleccionado button{background:none; border:none; color:var(--red); cursor:pointer; font-size:.9rem;}
+
+fieldset.opt-fieldset{
+    border:1px dashed var(--glass-border); border-radius:10px; padding:14px; margin-bottom:14px;
+    background:rgba(255,153,52,0.04);
+}
+fieldset.opt-fieldset legend{font-size:.75rem; color:var(--amber); padding:0 6px; font-weight:700;}
+
+/* Pantalla de éxito al crear reclamo */
+.exito-box{text-align:center; padding:20px 0;}
+.exito-box .exito-icon{font-size:3rem; margin-bottom:12px; color:var(--green);}
+.exito-box h4{color:var(--green); margin:0 0 8px; font-size:1.1rem;}
+.exito-box p{color:var(--text-muted); font-size:.88rem; line-height:1.6; margin:0 0 16px;}
+.exito-track{
+    display:inline-block; padding:10px 20px; border-radius:8px;
+    background:rgba(249,115,22,0.08); border:1px solid var(--glass-border);
+    font-size:.85rem; color:var(--text-light); margin-bottom:20px;
+}
+.exito-track strong{color:var(--orange-soft);}
+.exito-actions{display:flex; justify-content:center; gap:10px;}
+
+.toast-box{position:fixed; top:20px; right:20px; z-index:300; display:flex; flex-direction:column; gap:10px;}
+.toast{
+    background:#231202; border:1px solid var(--glass-border); color:var(--text-light);
+    padding:12px 18px; border-radius:10px; font-size:.85rem; box-shadow:0 6px 20px rgba(0,0,0,.4);
+    animation:slidein .25s ease;
+}
+</style>
+</head>
+<body>
+
+<div class="bg-anim" id="bgAnim"></div>
+
+<div class="wrap">
+    <div class="topbar">
+        <div class="brand">
+            <div class="brand-icon"><i class="fas fa-headset"></i></div>
+            <div>
+                <h1>Help Desk</h1>
+                <small>Diagnóstico remoto &middot; {{ nombre_usuario }}</small>
+            </div>
+        </div>
+        <div class="top-actions">
+            <button class="btn-tel" onclick="abrirModalNuevoReclamo()"><i class="fas fa-circle-plus"></i> Crear Reclamo</button>
+            <a href="{{ url_for('soporte_reclamo_telefonico') }}" class="btn-tel alt">
+                <i class="fas fa-phone"></i> Registrar llamada (101 / 800161040)
+            </a>
+            <a href="{{ url_for('perfil') }}" class="btn-logout"><i class="fas fa-user-circle"></i> Mi Perfil</a>
+            <a href="{{ url_for('cerrar_sesion') }}" class="btn-logout"><i class="fas fa-sign-out-alt"></i> Salir</a>
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card clickable" onclick="abrirModalZonas()">
+            <div class="stat-num" id="numTotalFallas">{{ total_fallas or 0 }}</div>
+            <div class="stat-label">Total de fallas <span style="color:var(--amber);">· ver por zona</span></div>
+        </div>
+        <div class="stat-card"><div class="stat-num" id="numFallasProceso">{{ fallas_en_proceso or 0 }}</div><div class="stat-label">Fallas en proceso / resolviendo</div></div>
+        
+        <div class="stat-card"><div class="stat-num">{{ usuarios_activos or 0 }}</div><div class="stat-label">Usuarios activos</div></div>
+    </div>
+
+    <div class="panel">
+        <div class="panel-head">
+            <h2><i class="fas fa-list-check"></i> Fallas ingresadas</h2>
+            <div style="display:flex; align-items:center; gap:12px;">
+                <span style="font-size:.78rem; color:var(--text-muted);">El temporizador corre desde que el cliente registró el reclamo y se congela al enviarse a Jefe de Instancia &middot; <span style="color:var(--green);">verde</span> &lt;2h &middot; <span style="color:var(--amber);">amarillo</span> 2-4h &middot; <span style="color:var(--red);">rojo</span> &gt;4h</span>
+                <button class="btn-refresh" id="btnRefrescarFallas" onclick="cargarFallasRecientes(true)">
+                    <i class="fas fa-rotate"></i> Actualizar
+                </button>
+            </div>
+        </div>
+        <div class="fallas-grid" id="fallasGrid">
+            {% if reclamos_recientes %}
+            {% for r in reclamos_recientes if r[5] == 'abierto' or r[5].startswith('pendiente') %}
+            <div class="falla-card">
+                <div class="fc-top">
+                    <span class="fc-id">#{{ r[0] }}</span>
+                    <span class="badge badge-{{ r[7] }}">{{ r[7]|capitalize }}</span>
+                    {% if r|length > 10 and r[10] %}
+                    <span class="badge-fuera-horario" title="Registrado fuera del horario de atención (8:00-20:00)">⏰ Fuera de horario</span>
+                    {% endif %}
+                </div>
+                <div class="fc-title">{{ r[4][:40] }}{% if r[4]|length > 40 %}…{% endif %}</div>
+                <div class="fc-meta">
+                    <span><i class="fas fa-user"></i> {{ r[1] }} {{ r[2] }}</span>
+                    <span><i class="fas fa-network-wired"></i> {{ r[9] or 'Sin servicio' }}</span>
+                    <span><i class="fas fa-user-gear"></i> {{ r[8] }}</span>
+                    <span><span class="badge badge-estado">{{ r[5]|replace('_',' ')|title }}</span></span>
+                </div>
+                {% set estados_resueltos_hd = ['resuelto','resuelto_remoto','resuelto_tecnico','liberado','cerrado','auditado'] %}
+                {% set fecha_etapa = r[10] if r|length > 10 else None %}
+                {% set fecha_resol = r[11] if r|length > 11 else None %}
+                {% set congelado = r[5] not in ['abierto', 'en_diagnostico'] %}
+                {% set es_resuelto = r[5] in estados_resueltos_hd %}
+                {% set fin_timer = fecha_resol if (es_resuelto and fecha_resol) else fecha_etapa %}
+                <div class="fc-timer{% if congelado %} congelado{% endif %}"
+                     data-inicio="{{ r[6].strftime('%Y-%m-%dT%H:%M:%S') if r[6] else '' }}"
+                     data-fin="{{ fin_timer.strftime('%Y-%m-%dT%H:%M:%S') if (congelado and fin_timer) else '' }}"
+                     data-congelado="{{ 'true' if congelado else 'false' }}">
+                    <i class="fas fa-stopwatch"></i> <span class="timer-value">--:--:--</span>
+                </div>
+                <div class="fc-actions">
+                    {% if r[5] in ['abierto','liberado','en_diagnostico','falla_masiva'] %}
+                    <button class="btn-sm small" onclick="abrirVerReclamo({{ r[0] }}, {{ (r[1]+' '+r[2])|tojson }})">
+                        <i class="fas fa-eye"></i> Ver reclamo
+                    </button>
+                    {% else %}
+                    <span style="color:var(--text-muted); font-size:.78rem;">—</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="empty" style="grid-column:1/-1;"><i class="fas fa-check-circle fa-2x"></i><p>No hay reclamos recientes.</p></div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="panel">
+        <h2><i class="fas fa-user-clock"></i> Mis reclamos en proceso</h2>
+        {% if mis_reclamos_lista %}
+        <div style="overflow-x:auto;">
+        <table>
+            <thead><tr><th>ID</th><th>Cliente</th><th>Título</th><th>Servicio</th><th>Problema</th><th>Prioridad</th><th></th></tr></thead>
+            <tbody>
+                {% for r in mis_reclamos_lista %}
+                <tr>
+                    <td>#{{ r[0] }}</td>
+                    <td>{{ r[1] }} {{ r[2] }}</td>
+                    <td>{{ r[4] }}</td>
+                    <td>{{ r[8] or '—' }}</td>
+                    <td>{{ r[9] or '—' }}</td>
+                    <td><span class="badge badge-{{ r[7] }}">{{ r[7]|capitalize }}</span></td>
+                    <td><button class="btn-sm small" onclick="abrirVerReclamo({{ r[0] }}, {{ (r[1]+' '+r[2])|tojson }})"><i class="fas fa-eye"></i> Ver</button></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+        {% else %}
+        <div class="empty">No tienes reclamos asignados en proceso.</div>
+        {% endif %}
+    </div>
+
+    <div class="panel">
+        <h2><i class="fas fa-clock-rotate-left"></i> Historial de reclamos resueltos</h2>
+        <div class="sub" style="color:var(--text-muted); font-size:.8rem; margin-bottom:12px;">
+            Registro permanente — a diferencia de "Fallas ingresadas", estos no desaparecen después de 24h.
+        </div>
+        <div style="overflow-x:auto;">
+        <table>
+            <thead><tr><th>ID</th><th>Cliente</th><th>Título</th><th>Servicio</th><th>Estado</th><th>Resuelto</th><th></th></tr></thead>
+            <tbody id="historialResueltosBody">
+                <tr><td colspan="7" class="empty">Cargando…</td></tr>
+            </tbody>
+        </table>
+        </div>
+        <div style="display:flex; justify-content:center; gap:10px; margin-top:12px;">
+            <button class="btn-sm outline" id="btnHistorialAnterior" onclick="cambiarPaginaHistorial(-1)" disabled>« Anterior</button>
+            <span id="historialPaginaInfo" style="font-size:.8rem; color:var(--text-muted); align-self:center;"></span>
+            <button class="btn-sm outline" id="btnHistorialSiguiente" onclick="cambiarPaginaHistorial(1)" disabled>Siguiente »</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: Fallas por zona -->
+<div class="modal-overlay" id="modalZonas" onclick="if(event.target===this) cerrarModales()">
+    <div class="modal-box">
+        <div class="modal-head">
+            <h3><i class="fas fa-map-location-dot"></i> Fallas por zona</h3>
+            <button class="modal-close" onclick="cerrarModales()"><i class="fas fa-xmark"></i></button>
+        </div>
+        <div class="sub" id="zonasSub">Distribución del total de fallas registradas en el sistema. Haz clic en una zona para ver sus reclamos.</div>
+
+        <!-- Vista 1: cuadrícula de zonas -->
+        <div class="zonas-grid" id="zonasGrid">
+            <div class="empty" style="grid-column:1/-1;">Cargando…</div>
+        </div>
+
+        <!-- Vista 2: detalle de una zona (oculta por defecto) -->
+        <div id="zonaDetalleWrap" style="display:none;">
+            <div class="zona-detalle-head">
+                <button class="btn-volver" onclick="volverAZonas()"><i class="fas fa-arrow-left"></i> Volver a zonas</button>
+                <strong id="zonaDetalleTitulo" style="font-size:.95rem;"></strong>
+            </div>
+            <div class="zona-detalle-lista" id="zonaDetalleLista"></div>
+        </div>
+
+        <div class="modal-actions">
+            <button class="btn-sm outline" onclick="cerrarModales()">Cerrar</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: Crear reclamo -->
+<div class="modal-overlay" id="modalNuevoReclamo" onclick="if(event.target===this) cerrarModales()">
+    <div class="modal-box wide">
+        <div class="modal-head">
+            <h3><i class="fas fa-circle-plus"></i> Crear reclamo</h3>
+            <button class="modal-close" onclick="cerrarModales()"><i class="fas fa-xmark"></i></button>
+        </div>
+
+        <div id="nr-form-wrap">
+            <div class="sub">Busca al cliente, elige su contrato y luego selecciona la falla correspondiente a ese contrato.</div>
+
+            <div class="field">
+                <label>Buscar cliente (nombre, teléfono, código, N° contrato o dirección)</label>
+                <input type="text" id="nr-buscar" placeholder="Escribe al menos 3 caracteres…" oninput="buscarClienteDebounce()">
+                <div class="cliente-resultados" id="nr-resultados"></div>
+                <div class="cliente-seleccionado" id="nr-cliente-sel">
+                    <div class="cs-info">
+                        <strong id="nr-cliente-nombre"></strong>
+                        <small id="nr-cliente-detalle"></small>
+                    </div>
+                    <button type="button" onclick="quitarClienteSeleccionado()"><i class="fas fa-xmark"></i></button>
+                </div>
+                <div id="nr-alerta-mora"></div>
+
+                <div class="field" id="nr-historial-wrap">
+                    <label>Historial de reclamos del cliente</label>
+                    <div id="nr-historial-reclamos" class="historial-box"></div>
+                </div>
+            </div>
+
+            <!-- Paso 2: se habilita solo tras seleccionar cliente -->
+            <div class="field" id="nr-contrato-wrap" style="display:none;">
+                <label>Contrato del cliente</label>
+                <select id="nr-contrato" onchange="onContratoChange()">
+                    <option value="">Selecciona un contrato…</option>
+                </select>
+                <div class="help-inline" id="nr-contrato-help"></div>
+            </div>
+
+            <!-- Solo si eligió "Otro" -->
+            <div class="field" id="nr-servicio-manual-wrap" style="display:none;">
+                <label>Servicio afectado</label>
+                <select id="nr-servicio-afectado" onchange="onServicioManualChange()">
+                    <option value="">Selecciona el servicio…</option>
+                    {% for s in servicios %}
+                    <option value="{{ s[1] }}">{{ s[1] }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Paso 3: fallas — SOLO visibles tras determinar el contrato/servicio -->
+            <div class="field" id="nr-problema-wrap" style="display:none;">
+                <label>Falla / Problema específico <span id="nr-problema-contexto" style="color:var(--amber); font-weight:700; font-size:.7rem;"></span></label>
+                <select id="nr-problema-especifico" disabled onchange="mostrarSolucionSugerida()"><option value="">Selecciona…</option></select>
+                <div id="nr-solucion-sugerida" style="display:none; margin-top:8px; font-size:.82rem; background:rgba(52,211,153,.08); border:1px solid rgba(52,211,153,.3); border-radius:8px; padding:10px 12px; white-space:pre-line; color:var(--text-light);">
+                    <div style="font-weight:700; color:var(--green); margin-bottom:4px;"><i class="fas fa-lightbulb"></i> Solución para esta falla:</div>
+                    <div id="nr-solucion-texto"></div>
+                </div>
+            </div>
+
+            <fieldset class="opt-fieldset">
+                <legend>Datos de referencia (opcionales)</legend>
+                <div class="field-row">
+                    <div class="field">
+                        <label>N° de contrato <span class="opt-tag">opcional</span></label>
+                        <input type="text" id="nr-numero-cliente" placeholder="Si el cliente lo recuerda" maxlength="8">
+                    </div>
+                    <div class="field">
+                        <label>Dirección <span class="opt-tag">opcional</span></label>
+                        <input type="text" id="nr-direccion" placeholder="Dirección de instalación">
+                    </div>
+                </div>
+                <div class="field-row">
+                    <div class="field">
+                        <label>N° de referencia (teléfono) <span class="opt-tag">opcional</span></label>
+                        <input type="tel" id="nr-telefono-referencia" placeholder="Teléfono de contacto para la visita">
+                    </div>
+                    <div class="field">
+                        <label>Teléfono en factura <span class="opt-tag">opcional</span></label>
+                        <input type="tel" id="nr-telefono-cliente" placeholder="Teléfono registrado en la factura">
+                    </div>
+                </div>
+
+            </fieldset>
+
+            <div class="field">
+                <label>Tipo de reclamo</label>
+                <div class="tipo-grid">
+                    <button type="button" class="tipo-btn tecnico active" data-tipo="tecnico" onclick="elegirTipoReclamo('tecnico', this)"><i class="fas fa-screwdriver-wrench"></i> Técnico / Falla</button>
+                    <button type="button" class="tipo-btn facturacion" data-tipo="facturacion" onclick="elegirTipoReclamo('facturacion', this)"><i class="fas fa-credit-card"></i> Facturación</button>
+                    <button type="button" class="tipo-btn comercial" data-tipo="comercial" onclick="elegirTipoReclamo('comercial', this)"><i class="fas fa-handshake"></i> Comercial</button>
+                    <button type="button" class="tipo-btn otro" data-tipo="otro" onclick="elegirTipoReclamo('otro', this)"><i class="fas fa-circle-question"></i> Otro</button>
+                </div>
+            </div>
+
+            <div class="field">
+                <label>Título</label>
+                <input type="text" id="nr-titulo" placeholder="Resumen breve del reclamo">
+            </div>
+            <div class="field">
+                <label>Descripción <span class="opt-tag">opcional</span></label>
+                <textarea id="nr-descripcion" rows="3" placeholder="Detalle de lo indicado por el cliente…"></textarea>
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn-sm outline" onclick="cerrarModales()">Cancelar</button>
+                <button class="btn-sm" onclick="enviarNuevoReclamo()">Registrar reclamo</button>
+            </div>
+        </div>
+
+        <!-- Pantalla de confirmación -->
+        <div id="nr-exito-wrap" class="exito-box" style="display:none;">
+            <div class="exito-icon"><i class="fas fa-circle-check"></i></div>
+            <h4>Reclamo registrado</h4>
+            <p>El reclamo fue ingresado correctamente. El temporizador comenzó desde este momento.</p>
+            <div class="exito-track">N° de seguimiento: <strong id="nr-exito-id"></strong></div>
+            <div class="exito-actions">
+                <button class="btn-sm outline" onclick="abrirModalNuevoReclamo()">Nuevo reclamo</button>
+                <button class="btn-sm" onclick="cerrarModales(); location.reload();">Aceptar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: Diagnóstico remoto -->
+<!-- MODAL: Ver reclamo (detalle completo, antes de decidir la acción) -->
+<div class="modal-overlay" id="modalVerReclamo" onclick="if(event.target===this) cerrarModales()">
+    <div class="modal-box wide">
+        <div class="modal-head">
+            <h3><i class="fas fa-file-lines"></i> Reclamo #<span id="vr-id"></span> — <span id="vr-cliente"></span></h3>
+            <button class="modal-close" onclick="cerrarModales()"><i class="fas fa-xmark"></i></button>
+        </div>
+        <div class="sub">Detalle completo antes de actuar sobre el reclamo.</div>
+
+        <div id="vr-loading" class="empty"><i class="fas fa-spinner fa-spin"></i> Cargando…</div>
+
+        <div id="vr-contenido" style="display:none;">
+            <div class="check-grid" style="grid-template-columns:1fr 1fr; gap:10px;">
+                <div class="field"><label>Estado</label><div><span class="badge badge-estado" id="vr-estado"></span></div></div>
+                <div class="field"><label>Prioridad</label><div><span class="badge" id="vr-prioridad"></span></div></div>
+                <div class="field"><label>Servicio afectado</label><div id="vr-servicio">—</div></div>
+                <div class="field"><label>Problema específico</label><div id="vr-problema">—</div></div>
+                <div class="field"><label>Teléfono de referencia</label><div id="vr-telefono">—</div></div>
+                <div class="field"><label>Dirección</label><div id="vr-direccion">—</div></div>
+                <div class="field"><label>Registrado</label><div id="vr-fecha">—</div></div>
+                <div class="field"><label>Asignado a</label><div id="vr-asignado">—</div></div>
+            </div>
+
+            <div id="vr-badge-nocturno" style="display:none; margin:6px 0 12px;">
+                <span class="badge" style="background:rgba(167,139,250,.18); color:#c4b5fd;">🌙 Reclamo nocturno / fin de semana / feriado</span>
+                <span id="vr-badge-escalado" style="display:none; background:rgba(52,211,153,.15); color:var(--green);" class="badge">Escalado desde Planta Interna</span>
+            </div>
+
+            <div class="field"><label>Descripción del cliente</label>
+                <div id="vr-descripcion" style="font-size:.85rem; color:var(--text-light); background:rgba(255,255,255,.03); border:1px solid var(--glass-border); border-radius:8px; padding:10px 12px;">—</div>
+            </div>
+
+
+            <div class="field"><label>Historial</label>
+                <div id="vr-historial" style="max-height:180px; overflow-y:auto; display:flex; flex-direction:column; gap:6px;"></div>
+            </div>
+        </div>
+
+        <div class="modal-actions">
+            <button class="btn-sm outline" onclick="cerrarModales()">Cerrar</button>
+            <span id="vr-accion-container"></span>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modalDiagnostico" onclick="if(event.target===this) cerrarModales()">
+    <div class="modal-box">
+        <div class="modal-head">
+            <h3><i class="fas fa-stethoscope"></i> Diagnóstico remoto — <span id="dg-cliente"></span></h3>
+            <button class="modal-close" onclick="cerrarModales()"><i class="fas fa-xmark"></i></button>
+        </div>
+        <div class="sub">Marca los procedimientos realizados durante la llamada.</div>
+
+        <div id="dg-alerta-previa" style="display:none;"></div>
+
+        <div class="check-grid">
+            <label class="check-item">
+                <input type="checkbox" id="dg-reinicio-onu">
+                <div>
+                    <div class="ci-title">Reinicio de ONU</div>
+                    <div class="ci-desc">Se pide al cliente apagar y encender el equipo (ONU/router).</div>
+                </div>
+            </label>
+            <label class="check-item">
+                <input type="checkbox" id="dg-validacion-potencia">
+                <div>
+                    <div class="ci-title">Validación de potencia</div>
+                    <div class="ci-desc">Se revisa remotamente el nivel de señal óptica que llega al equipo.</div>
+                </div>
+            </label>
+            <label class="check-item">
+                <input type="checkbox" id="dg-reconfiguracion">
+                <div>
+                    <div class="ci-title">Reconfiguración</div>
+                    <div class="ci-desc">Se reprograman parámetros del equipo desde el sistema.</div>
+                </div>
+            </label>
+            <label class="check-item">
+                <input type="checkbox" id="dg-reinicio-puerto">
+                <div>
+                    <div class="ci-title">Reinicio de puerto</div>
+                    <div class="ci-desc">Se reinicia el puerto de red que atiende al cliente en el nodo.</div>
+                </div>
+            </label>
+            <label class="check-item">
+                <input type="checkbox" id="dg-sincronizacion">
+                <div>
+                    <div class="ci-title">Sincronización</div>
+                    <div class="ci-desc">Se verifica que el equipo esté enganchado correctamente a la red.</div>
+                </div>
+            </label>
+            <label class="check-item">
+                <input type="checkbox" id="dg-cambio-perfil">
+                <div>
+                    <div class="ci-title">Cambio de perfil</div>
+                    <div class="ci-desc">Se cambia el perfil de velocidad/plan asignado al equipo.</div>
+                </div>
+            </label>
+        </div>
+
+        <div class="field"><label>Elemento de red afectado</label>
+            <select id="dg-elemento-red"><option value="">Selecciona el elemento (opcional)…</option></select>
+        </div>
+        <div class="field"><label>Código de falla <span style="color:var(--red);">*</span></label>
+            <select id="dg-codigo-falla"><option value="">Selecciona el motivo…</option></select>
+        </div>
+        <div class="field"><label>Observaciones</label><textarea id="dg-observaciones" rows="2" placeholder="Notas de la llamada…"></textarea></div>
+
+        <div style="margin:18px 0 8px; font-size:.82rem; color:var(--text-muted);">¿Se resolvió la falla en esta llamada?</div>
+        <div class="result-options">
+            <button class="result-btn solucionado" onclick="finalizarDiagnostico('resuelto')">✅ Sí, resuelto remotamente</button>
+            <button class="result-btn no-solucionado" onclick="finalizarDiagnostico('no_interno')">🏠 No — Falla interna<br><small>(envía a 1ra Instancia)</small></button>
+            <button class="result-btn no-solucionado" onclick="finalizarDiagnostico('no_externo')">🔌 No — Falla externa<br><small>(envía a 2da Instancia)</small></button>
+            <button class="result-btn no-solucionado" onclick="finalizarDiagnostico('masiva')">🚨 Es falla masiva</button>
+        </div>
+
+        <div class="modal-actions">
+            <button class="btn-sm outline" onclick="guardarDiagnosticoParcial()">Guardar avance</button>
+            <button class="btn-sm outline" onclick="cerrarModales()">Cerrar</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: Confirmar cierre -->
+<div class="modal-overlay" id="modalCierre" onclick="if(event.target===this) cerrarModales()">
+    <div class="modal-box">
+        <div class="modal-head">
+            <h3><i class="fas fa-check-double"></i> Confirmar cierre — <span id="cc-cliente"></span></h3>
+            <button class="modal-close" onclick="cerrarModales()"><i class="fas fa-xmark"></i></button>
+        </div>
+        <div class="sub">El reclamo fue liberado por IVR. Confirma con el cliente antes de cerrar.</div>
+        <div class="field"><label>Observaciones</label><textarea id="cc-observaciones" rows="3" placeholder="Confirmación del cliente, detalles del cierre…"></textarea></div>
+        <div class="modal-actions">
+            <button class="btn-sm outline" onclick="reabrirReclamo()">Reabrir reclamo</button>
+            <button class="btn-sm" onclick="confirmarCierre()">Confirmar cierre</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast-box" id="toastBox"></div>
+
+<script>
+(function(){
+    const cont = document.getElementById('bgAnim');
+    const n = window.innerWidth < 700 ? 6 : 12;
+    for (let i=0;i<n;i++){
+        const s = document.createElement('span');
+        s.style.left = Math.random()*100 + '%';
+        s.style.top  = Math.random()*100 + '%';
+        s.style.animationDelay = (Math.random()*3) + 's';
+        cont.appendChild(s);
+    }
+})();
+
+function toast(msg, tipo){
+    const box = document.getElementById('toastBox');
+    const el = document.createElement('div');
+    el.className = 'toast';
+    el.style.borderColor = tipo === 'error' ? 'rgba(248,113,113,.5)' : 'rgba(249,115,22,.5)';
+    el.textContent = msg;
+    box.appendChild(el);
+    setTimeout(()=> el.remove(), 4000);
+}
+function cerrarModales(){ document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('open')); }
+
+/* ── Temporizadores de fallas (rojo tras 2h, como en el mockup) ── */
+function formatDuracion(ms){
+    if (ms < 0) ms = 0;
+    const totalSec = Math.floor(ms/1000);
+    const dias = Math.floor(totalSec / 86400);
+    const horas = Math.floor((totalSec % 86400) / 3600);
+    const min = Math.floor((totalSec % 3600) / 60);
+    const seg = totalSec % 60;
+    const pad = n => String(n).padStart(2,'0');
+    return dias > 0
+        ? `${dias}d ${pad(horas)}:${pad(min)}:${pad(seg)}`
+        : `${pad(horas)}:${pad(min)}:${pad(seg)}`;
+}
+function actualizarTimers(){
+    const ahora = Date.now();
+    document.querySelectorAll('.fc-timer[data-inicio]').forEach(el => {
+        const inicio = el.getAttribute('data-inicio');
+        if (!inicio) return;
+        const t0 = new Date(inicio).getTime();
+
+        // Si el reclamo ya se congeló (salió de Help Desk), el "fin" queda
+        // fijo en el momento en que cambió de etapa — el timer deja de correr.
+        const finAttr = el.getAttribute('data-fin');
+        const tFin = finAttr ? new Date(finAttr).getTime() : ahora;
+        const elapsed = tFin - t0;
+        const horas = elapsed / (60 * 60 * 1000);
+
+        const span = el.querySelector('.timer-value');
+        if (span) span.textContent = formatDuracion(elapsed);
+
+        el.classList.toggle('alerta', horas >= 2 && horas < 4);
+        el.classList.toggle('urgent', horas >= 4);
+        el.classList.toggle('congelado', el.getAttribute('data-congelado') === 'true');
+    });
+}
+actualizarTimers();
+setInterval(actualizarTimers, 1000);
+
+/* ── Refresco del panel "Fallas ingresadas" (AJAX) ── */
+const ESTADOS_ACTIVOS_HD = ['abierto', 'en_diagnostico'];
+
+function renderFallaCard(r){
+    const nombreCliente = `${r.nombre} ${r.apellido}`;
+    const ESTADOS_CON_VER = ['abierto','liberado','en_diagnostico','falla_masiva'];
+    let accion = '<span style="color:var(--text-muted); font-size:.78rem;">—</span>';
+    if (ESTADOS_CON_VER.includes(r.estado)){
+        accion = `<button class="btn-sm small" onclick='abrirVerReclamo(${r.id}, ${JSON.stringify(nombreCliente)})'><i class="fas fa-eye"></i> Ver reclamo</button>`;
+    }
+    const titulo = (r.titulo || '').length > 40 ? r.titulo.slice(0,40) + '…' : (r.titulo || '');
+
+    // Si el reclamo ya no está en manos de Help Desk, el temporizador se
+    // congela. Para estados YA RESUELTOS usamos fecha_resolucion (siempre
+    // se guarda al resolver, cerrar o liberar por IVR — es la fuente más
+    // confiable). Para estados intermedios (enviado a instancia, en
+    // proceso, etc.) usamos fecha_inicio_etapa como antes.
+    const ESTADOS_RESUELTOS_HD = ['resuelto','resuelto_remoto','resuelto_tecnico','liberado','cerrado','auditado'];
+    const congelado  = !ESTADOS_ACTIVOS_HD.includes(r.estado);
+    const esResuelto = ESTADOS_RESUELTOS_HD.includes(r.estado);
+    const dataFin = congelado
+        ? (esResuelto && r.fecha_resolucion ? r.fecha_resolucion : (r.fecha_inicio_etapa || ''))
+        : '';
+
+    return `<div class="falla-card">
+        <div class="fc-top">
+            <span class="fc-id">#${r.id}</span>
+            <span class="badge badge-${r.prioridad}">${r.prioridad.charAt(0).toUpperCase()+r.prioridad.slice(1)}</span>
+            ${r.fuera_de_horario ? '<span class="badge-fuera-horario" title="Registrado fuera del horario de atención (8:00-20:00)">⏰ Fuera de horario</span>' : ''}
+        </div>
+        <div class="fc-title">${titulo}</div>
+        <div class="fc-meta">
+            <span><i class="fas fa-user"></i> ${nombreCliente}</span>
+            <span><i class="fas fa-network-wired"></i> ${r.servicio || 'Sin servicio'}</span>
+            <span><i class="fas fa-user-gear"></i> ${r.agente}</span>
+            <span><span class="badge badge-estado">${r.estado.replace('_',' ')}</span></span>
+        </div>
+        <div class="fc-timer${congelado ? ' congelado' : ''}"
+             data-inicio="${r.fecha_creacion || ''}"
+             data-fin="${dataFin}"
+             data-congelado="${congelado}">
+            <i class="fas fa-stopwatch"></i> <span class="timer-value">--:--:--</span>
+        </div>
+        <div class="fc-actions">${accion}</div>
+    </div>`;
+}
+
+async function cargarFallasRecientes(manual){
+    const btn = document.getElementById('btnRefrescarFallas');
+    if (manual && btn) btn.classList.add('spinning');
+    try {
+        const r = await fetch('/api/soporte/fallas_recientes');
+        const data = await r.json();
+        if (!data.success) return;
+
+        document.getElementById('numTotalFallas').textContent = data.total_fallas;
+        document.getElementById('numFallasProceso').textContent = data.fallas_en_proceso;
+
+        // Filtro: esta vista de Help Desk solo debe mostrar reclamos
+        // "abierto" o cualquier estado "pendiente_*" (triage, asignación,
+        // revisión de especialidad) — no en_proceso, resueltos ni cerrados.
+        const reclamosFiltrados = data.reclamos.filter(r =>
+            r.estado === 'abierto' || r.estado.startsWith('pendiente')
+        );
+
+        const grid = document.getElementById('fallasGrid');
+        if (!reclamosFiltrados.length){
+            grid.innerHTML = '<div class="empty" style="grid-column:1/-1;"><i class="fas fa-check-circle fa-2x"></i><p>No hay reclamos abiertos o pendientes por ahora.</p></div>';
+        } else {
+            grid.innerHTML = reclamosFiltrados.map(renderFallaCard).join('');
+        }
+        actualizarTimers();
+        if (manual) toast('Panel actualizado.', 'ok');
+    } catch(e){
+        if (manual) toast('No se pudo actualizar.', 'error');
+    } finally {
+        if (manual && btn) setTimeout(() => btn.classList.remove('spinning'), 400);
+    }
+}
+
+// Refresca automáticamente cada 20s y también al volver a la pestaña
+cargarFallasRecientes(false);
+setInterval(() => cargarFallasRecientes(false), 20000);
+document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) cargarFallasRecientes(false);
+});
+
+async function enviarAJefe(reclamoId){
+    try {
+        const r = await fetch(`/api/soporte/enviar_jefe_instancia/${reclamoId}`, { method: 'POST' });
+        const data = await r.json();
+        if (data.success){
+            toast(data.message, 'ok');
+            cargarFallasRecientes(false);
+        } else {
+            toast(data.message || 'No se pudo enviar.', 'error');
+        }
+    } catch(e){ toast('Error de conexión.', 'error'); }
+}
+
+/* ── Modal: fallas por zona (con drill-down) ── */
+async function abrirModalZonas(){
+    document.getElementById('modalZonas').classList.add('open');
+    volverAZonas(false);
+    await cargarZonasGrid();
+}
+
+async function cargarZonasGrid(){
+    const grid = document.getElementById('zonasGrid');
+    grid.innerHTML = '<div class="empty" style="grid-column:1/-1;">Cargando…</div>';
+    try {
+        const r = await fetch('/api/soporte/fallas_por_zona');
+        const data = await r.json();
+        if (!data.success){ grid.innerHTML = '<div class="empty" style="grid-column:1/-1;">No se pudo cargar.</div>'; return; }
+        const orden = ['Gran Centro','Zona Sur','Sopocachi','El Alto','Miraflores','Sin zona'];
+        const maxVal = Math.max(1, ...orden.map(z => (data.zonas[z] || {}).total || 0));
+        grid.innerHTML = orden.map(z => {
+            const d = data.zonas[z] || {total:0, en_proceso:0};
+            const nombre = z === 'Sin zona' ? 'Sin zona asignada' : z;
+            const pct = Math.round((d.total / maxVal) * 100);
+            return `<div class="zona-card clickable" onclick="abrirDetalleZona('${z}')">
+                <div class="z-nombre">${nombre}</div>
+                <div class="z-total">${d.total}</div>
+                <div class="z-bar"><div class="z-bar-fill" style="width:${pct}%"></div></div>
+                <div class="z-sub"><span>${d.en_proceso}</span> en proceso</div>
+            </div>`;
+        }).join('');
+    } catch(e){
+        grid.innerHTML = '<div class="empty" style="grid-column:1/-1;">Error de conexión.</div>';
+    }
+}
+
+function volverAZonas(recargar = true){
+    document.getElementById('zonasGrid').style.display = 'grid';
+    document.getElementById('zonaDetalleWrap').style.display = 'none';
+    document.getElementById('zonasSub').style.display = 'block';
+    if (recargar) cargarZonasGrid();
+}
+
+const ESTADO_BADGE = {
+    critica: 'badge-critica', alta: 'badge-alta', media: 'badge-media', baja: 'badge-baja'
+};
+
+async function abrirDetalleZona(zona){
+    document.getElementById('zonasGrid').style.display = 'none';
+    document.getElementById('zonasSub').style.display = 'none';
+    const wrap = document.getElementById('zonaDetalleWrap');
+    wrap.style.display = 'block';
+    const nombreMostrar = zona === 'Sin zona' ? 'Sin zona asignada' : zona;
+    document.getElementById('zonaDetalleTitulo').textContent = nombreMostrar;
+    const lista = document.getElementById('zonaDetalleLista');
+    lista.innerHTML = '<div class="empty">Cargando…</div>';
+    try {
+        const r = await fetch(`/api/soporte/reclamos_por_zona/${encodeURIComponent(zona)}`);
+        const data = await r.json();
+        if (!data.success || !data.reclamos.length){
+            lista.innerHTML = '<div class="empty">No hay reclamos registrados en esta zona.</div>';
+            return;
+        }
+        lista.innerHTML = data.reclamos.map(rc => {
+            const accionable = ESTADOS_ACCIONABLES.includes(rc.estado);
+            return `
+            <div class="zd-item ${accionable ? 'clickable' : ''}" onclick='abrirDesdeZona(${JSON.stringify(rc)})'>
+                <div class="zd-left">
+                    <strong>#${rc.id} — ${rc.cliente}</strong>
+                    <small>${rc.titulo || rc.servicio} · ${rc.fecha_creacion}</small>
+                </div>
+                <span class="badge ${ESTADO_BADGE[rc.prioridad] || 'badge-estado'}">${rc.estado.replace('_',' ')}</span>
+            </div>`;
+        }).join('');
+    } catch(e){
+        lista.innerHTML = '<div class="empty">Error de conexión.</div>';
+    }
+}
+
+/* Estados sobre los que Help Desk todavía puede actuar directamente,
+   igual que en las tarjetas de "Fallas ingresadas" */
+const ESTADOS_ACCIONABLES = ['abierto', 'en_diagnostico', 'liberado', 'falla_masiva'];
+
+function abrirDesdeZona(rc){
+    if (!ESTADOS_ACCIONABLES.includes(rc.estado)){
+        toast('Este reclamo ya está en manos del Jefe/Técnico — sin acciones disponibles para Help Desk.', 'error');
+        return;
+    }
+    cerrarModales();
+    if (rc.estado === 'abierto'){
+        abrirDiagnostico(rc.id, rc.cliente);
+    } else if (rc.estado === 'en_diagnostico'){
+        continuarDiagnostico(rc.id, rc.cliente);
+    } else if (rc.estado === 'liberado'){
+        abrirCierre(rc.id, rc.cliente);
+    } else if (rc.estado === 'falla_masiva'){
+        enviarAJefe(rc.id);
+    }
+}
+
+/* ── Modal: Crear reclamo ── */
+let _clienteSeleccionado = null;
+let _buscarTimeout = null;
+let _tipoReclamo = 'tecnico';
+
+function abrirModalNuevoReclamo(){
+    document.getElementById('nr-form-wrap').style.display = 'block';
+    document.getElementById('nr-exito-wrap').style.display = 'none';
+    quitarClienteSeleccionado();
+    document.getElementById('nr-buscar').value = '';
+    document.getElementById('nr-resultados').innerHTML = '';
+    document.getElementById('nr-resultados').classList.remove('show');
+    document.getElementById('nr-numero-cliente').value = '';
+    document.getElementById('nr-direccion').value = '';
+    document.getElementById('nr-telefono-referencia').value = '';
+    document.getElementById('nr-telefono-cliente').value = '';
+    document.getElementById('nr-titulo').value = '';
+    document.getElementById('nr-descripcion').value = '';
+    document.querySelectorAll('.tipo-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector('.tipo-btn[data-tipo="tecnico"]').classList.add('active');
+    _tipoReclamo = 'tecnico';
+    document.getElementById('modalNuevoReclamo').classList.add('open');
+}
+
+function elegirTipoReclamo(tipo, btn){
+    _tipoReclamo = tipo;
+    document.querySelectorAll('.tipo-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+}
+
+function buscarClienteDebounce(){
+    clearTimeout(_buscarTimeout);
+    _buscarTimeout = setTimeout(buscarClienteAhora, 350);
+}
+
+async function buscarClienteAhora(){
+    const q = document.getElementById('nr-buscar').value.trim();
+    const cont = document.getElementById('nr-resultados');
+    if (q.length < 3){ cont.classList.remove('show'); cont.innerHTML=''; return; }
+    try {
+        const r = await fetch('/api/soporte/buscar_cliente?q=' + encodeURIComponent(q));
+        const data = await r.json();
+        if (!data.success || !data.clientes.length){
+            cont.innerHTML = '<div class="cliente-item" style="cursor:default;">Sin resultados.</div>';
+            cont.classList.add('show');
+            return;
+        }
+        cont.innerHTML = data.clientes.map(c => `
+            <div class="cliente-item" onclick='seleccionarCliente(${JSON.stringify(c)})'>
+                ${c.nombre} ${c.apellido}
+                <small>Tel: ${c.telefono || '—'} · Código: ${c.codigo_cliente}</small>
+            </div>
+        `).join('');
+        cont.classList.add('show');
+    } catch(e){ toast('Error buscando cliente.', 'error'); }
+}
+
+function seleccionarCliente(c){
+    _clienteSeleccionado = c;
+    document.getElementById('nr-cliente-nombre').textContent = `${c.nombre} ${c.apellido}`;
+    document.getElementById('nr-cliente-detalle').textContent = `Tel: ${c.telefono || '—'} · Código: ${c.codigo_cliente}`;
+    document.getElementById('nr-cliente-sel').classList.add('show');
+    document.getElementById('nr-resultados').classList.remove('show');
+    document.getElementById('nr-resultados').innerHTML = '';
+    document.getElementById('nr-buscar').value = '';
+    cargarContratosCliente(c.usuario_id);
+}
+
+
+function quitarClienteSeleccionado(){
+    _clienteSeleccionado = null;
+    document.getElementById('nr-cliente-sel').classList.remove('show');
+    document.getElementById('nr-contrato-wrap').style.display = 'none';
+    document.getElementById('nr-servicio-manual-wrap').style.display = 'none';
+    document.getElementById('nr-problema-wrap').style.display = 'none';
+    const sel = document.getElementById('nr-contrato');
+    if (sel) sel.innerHTML = '<option value="">Selecciona un contrato…</option>';
+    document.getElementById('nr-contrato-help').textContent = '';
+    const man = document.getElementById('nr-servicio-afectado');
+    if (man) man.value = '';
+    resetProblema();
+}
+
+/* Paso 2: cargar contratos del cliente (reales + temporales). Las fallas
+   TODAVÍA no se muestran en este punto. */
+async function cargarContratosCliente(usuarioId){
+    const wrap = document.getElementById('nr-contrato-wrap');
+    const sel  = document.getElementById('nr-contrato');
+    sel.innerHTML = '<option value="">Selecciona un contrato…</option>';
+    document.getElementById('nr-servicio-manual-wrap').style.display = 'none';
+    document.getElementById('nr-problema-wrap').style.display = 'none';
+    document.getElementById('nr-contrato-help').textContent = '';
+    resetProblema();
+    try {
+        const r = await fetch(`/api/soporte/contratos_cliente/${usuarioId}`);
+        const data = await r.json();
+        if (data.success){
+            data.contratos.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = `${c.origen}:${c.id}`;
+                opt.dataset.tipo = c.tipo_servicio || '';
+                opt.dataset.origen = c.origen;
+                opt.dataset.direccion = c.direccion || '';
+                opt.dataset.telefono  = c.telefono_referencia || c.telefono_factura || '';
+                const etiquetaOrigen = c.origen === 'temporal' ? ' (temporal)' : '';
+                opt.textContent = `${c.numero_contrato} — ${c.tipo_servicio}${etiquetaOrigen}`;
+                sel.appendChild(opt);
+            });
+        }
+    } catch(e){}
+    const optOtro = document.createElement('option');
+    optOtro.value = 'otro';
+    optOtro.textContent = 'Otro / servicio no listado en sus contratos';
+    sel.appendChild(optOtro);
+    wrap.style.display = 'block';
+}
+
+function seleccionarCliente(c){
+    _clienteSeleccionado = c;
+    document.getElementById('nr-cliente-nombre').textContent = `${c.nombre} ${c.apellido}`;
+    document.getElementById('nr-cliente-detalle').textContent = `Tel: ${c.telefono || '—'} · Código: ${c.codigo_cliente}`;
+    document.getElementById('nr-cliente-sel').classList.add('show');
+    document.getElementById('nr-resultados').classList.remove('show');
+    document.getElementById('nr-resultados').innerHTML = '';
+    document.getElementById('nr-buscar').value = '';
+    cargarContratosCliente(c.usuario_id);
+    cargarEstadoCuenta(c.usuario_id);       // ← nuevo
+    cargarHistorialReclamos(c.usuario_id);  // ← nuevo
+}
+
+async function cargarEstadoCuenta(usuarioId){
+    const cont = document.getElementById('nr-alerta-mora');
+    cont.innerHTML = '';
+    try {
+        const r = await fetch(`/api/soporte/estado_cuenta_cliente/${usuarioId}`);
+        const data = await r.json();
+        if (!data.success) return;
+
+        if (data.en_riesgo_corte){
+            cont.innerHTML = `
+                <div class="aviso-mora">
+                    <i class="fas fa-triangle-exclamation"></i>
+                    <div>
+                        <strong>Cliente con facturas vencidas — riesgo de corte por mora</strong>
+                        <div>Deuda total: Bs. ${data.monto_adeudado.toFixed(2)} · ${data.facturas_pendientes.length} factura(s) pendiente(s)</div>
+                    </div>
+                </div>`;
+        } else if (data.estado_cuenta === 'pendiente'){
+            cont.innerHTML = `
+                <div class="aviso-pendiente">
+                    <i class="fas fa-circle-info"></i>
+                    Tiene facturas pendientes por Bs. ${data.monto_adeudado.toFixed(2)} (aún no vencidas).
+                </div>`;
+        }
+    } catch(e){}
+}
+
+async function cargarHistorialReclamos(usuarioId){
+    const cont = document.getElementById('nr-historial-reclamos');
+    cont.innerHTML = '<div class="empty" style="padding:12px;">Cargando historial…</div>';
+    try {
+        const r = await fetch(`/api/soporte/historial_reclamos_cliente/${usuarioId}`);
+        const data = await r.json();
+        if (!data.success || !data.reclamos.length){
+            cont.innerHTML = '<div class="empty" style="padding:12px; font-size:.8rem;">Sin reclamos previos.</div>';
+            return;
+        }
+        cont.innerHTML = data.reclamos.slice(0, 5).map(rc => `
+            <div class="hist-detalle-item">
+                <div class="hist-top">
+                    <strong>#${rc.id} · ${rc.servicio_afectado}</strong>
+                    <span class="badge badge-estado">${rc.estado.replace('_',' ')}</span>
+                </div>
+                <div class="hist-linea"><i class="fas fa-triangle-exclamation"></i> Falla: <b>${rc.problema_especifico}</b> — ${rc.fecha_falla || '—'}</div>
+                ${rc.solucion ? `<div class="hist-linea"><i class="fas fa-check"></i> Solución: ${rc.solucion}</div>` : ''}
+                ${rc.fecha_liberacion ? `<div class="hist-linea"><i class="fas fa-tower-broadcast"></i> Liberado (IVR): ${rc.fecha_liberacion}</div>` : ''}
+                ${rc.fecha_auditoria_calidad ? `<div class="hist-linea"><i class="fas fa-clipboard-check"></i> Auditado por Calidad: ${rc.fecha_auditoria_calidad}${rc.resultado_auditoria ? ' — ' + rc.resultado_auditoria : ''}</div>` : ''}
+            </div>
+        `).join('') + (data.total > 5 ? `<div class="hist-mas">+${data.total - 5} reclamo(s) más en su historial</div>` : '');
+    } catch(e){
+        cont.innerHTML = '<div class="empty" style="padding:12px;">Error al cargar historial.</div>';
+    }
+}
+
+/* al elegir el contrato, RECIÉN AHÍ se cargan y muestran
+   las fallas correspondientes a ESE tipo de servicio — nada antes. */
+function onContratoChange(){
+    const sel = document.getElementById('nr-contrato');
+    const val = sel.value;
+    const manualWrap = document.getElementById('nr-servicio-manual-wrap');
+
+    resetProblema();
+    document.getElementById('nr-problema-wrap').style.display = 'none';
+    document.getElementById('nr-servicio-afectado').value = '';
+    manualWrap.style.display = 'none';
+    document.getElementById('nr-contrato-help').textContent = '';
+
+    if (!val) return;
+
+    if (val === 'otro'){
+        manualWrap.style.display = 'block';
+        return;
+    }
+
+    const opt = sel.options[sel.selectedIndex];
+    const tipo = opt.dataset.tipo || '';
+    document.getElementById('nr-contrato-help').textContent =
+        opt.dataset.origen === 'temporal' ? 'Contrato de prueba (dato temporal).' : '';
+    cargarFallasPorServicio(tipo, `del contrato ${opt.textContent.split(' — ')[0]}`);
+
+    // Autocompleta dirección/teléfono del contrato (si el agente no había
+    // escrito algo distinto ya) y muestra el mapa ubicado por esa dirección.
+    const direccionInput = document.getElementById('nr-direccion');
+    const telefonoInput  = document.getElementById('nr-telefono-referencia');
+    if (!direccionInput.value.trim() && opt.dataset.direccion) direccionInput.value = opt.dataset.direccion;
+    if (!telefonoInput.value.trim() && opt.dataset.telefono) telefonoInput.value = opt.dataset.telefono;
+}
+
+function onServicioManualChange(){
+    const tipo = document.getElementById('nr-servicio-afectado').value;
+    resetProblema();
+    document.getElementById('nr-problema-wrap').style.display = 'none';
+    if (!tipo) return;
+    cargarFallasPorServicio(tipo, `de ${tipo}`);
+}
+
+function resetProblema(){
+    document.getElementById('nr-problema-especifico').innerHTML = '<option value="">Selecciona…</option>';
+    document.getElementById('nr-problema-especifico').disabled = true;
+    document.getElementById('nr-problema-contexto').textContent = '';
+    document.getElementById('nr-solucion-sugerida').style.display = 'none';
+}
+
+/* Carga las fallas específicas de un tipo de servicio. Se eliminan
+   duplicados por nombre (algunos catálogos repiten la misma falla varias
+   veces) para que el listado no se vea redundante, y se ordena
+   alfabéticamente para que sea más fácil de escanear. */
+async function cargarFallasPorServicio(tipoServicio, contexto){
+    if (!tipoServicio) return;
+    const pwrap = document.getElementById('nr-problema-wrap');
+    const psel  = document.getElementById('nr-problema-especifico');
+    psel.innerHTML = '<option value="">Cargando…</option>';
+    psel.disabled = true;
+    document.getElementById('nr-problema-contexto').textContent = contexto ? `(${contexto})` : '';
+    pwrap.style.display = 'block';
+    try {
+        const r = await fetch(`/api/problemas_servicio/${encodeURIComponent(tipoServicio)}`);
+        const data = await r.json();
+
+        // Antes se deduplicaba por nombre_problema (categoría amplia, ej.
+        // "No Sincroniza"), lo que tapaba las fallas específicas reales
+        // (descripcion_problema, ej. "No sale mi nombre de WiFi") y con
+        // ellas su solución puntual. Ahora se muestra cada falla específica
+        // por separado -- solo se deduplica si nombre+descripcion son
+        // EXACTAMENTE iguales (fila realmente repetida en el catálogo).
+        const vistos = new Map();
+        (data || []).forEach(p => {
+            const clave = `${(p[1]||'').trim().toLowerCase()}|${(p[2]||'').trim().toLowerCase()}`;
+            if (!vistos.has(clave)) vistos.set(clave, p);
+        });
+        const problemasUnicos = Array.from(vistos.values())
+            .sort((a, b) => (a[2] || a[1] || '').localeCompare(b[2] || b[1] || '', 'es'));
+
+        psel.innerHTML = '<option value="">Selecciona la falla…</option>';
+        problemasUnicos.forEach(p => {
+            const opt = document.createElement('option');
+            opt.value = p[1];                       // categoría -- se sigue guardando igual en el reclamo
+            opt.textContent = p[2] || p[1];          // pero se MUESTRA la falla específica real
+            opt.dataset.solucion = p[4] || '';
+            psel.appendChild(opt);
+        });
+        psel.disabled = false;
+    } catch(e){
+        psel.innerHTML = '<option value="">Error al cargar fallas</option>';
+    }
+}
+
+/* Muestra la solución sugerida SOLO de la falla específica que se acaba
+   de elegir -- no una lista de todas las soluciones juntas. */
+function mostrarSolucionSugerida(){
+    const psel = document.getElementById('nr-problema-especifico');
+    const box  = document.getElementById('nr-solucion-sugerida');
+    const opt  = psel.options[psel.selectedIndex];
+    const solucion = opt ? (opt.dataset.solucion || '').trim() : '';
+    if (solucion){
+        document.getElementById('nr-solucion-texto').textContent = solucion;
+        box.style.display = 'block';
+    } else {
+        box.style.display = 'none';
+    }
+}
+
+async function enviarNuevoReclamo(){
+    if (!_clienteSeleccionado){
+        toast('Busca y selecciona un cliente primero.', 'error');
+        return;
+    }
+    const titulo = document.getElementById('nr-titulo').value.trim();
+    if (!titulo){
+        toast('El título es obligatorio.', 'error');
+        return;
+    }
+    const contratoVal    = document.getElementById('nr-contrato').value;
+    const servicioManual = document.getElementById('nr-servicio-afectado').value;
+
+    let contratoOrigen = null, contratoId = null;
+    if (contratoVal && contratoVal !== 'otro'){
+        const [origen, id] = contratoVal.split(':');
+        contratoOrigen = origen;
+        contratoId = id;
+    }
+
+    const payload = {
+        usuario_id: _clienteSeleccionado.usuario_id,
+        contrato_id: contratoId,
+        contrato_origen: contratoOrigen,
+        tipo_reclamo: _tipoReclamo,
+        titulo: titulo,
+        descripcion: document.getElementById('nr-descripcion').value.trim(),
+        servicio_afectado: (contratoVal === 'otro') ? servicioManual : '',
+        problema_especifico: document.getElementById('nr-problema-especifico').value,
+        numero_cliente: document.getElementById('nr-numero-cliente').value.trim(),
+        ubicacion_cliente: document.getElementById('nr-direccion').value.trim(),
+        telefono_referencia: document.getElementById('nr-telefono-referencia').value.trim(),
+        telefono_cliente: document.getElementById('nr-telefono-cliente').value.trim(),
+    };
+    try {
+        const r = await fetch('/api/soporte/crear_reclamo_telefonico', {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify(payload)
+        });
+        const data = await r.json();
+        if (data.success){
+            document.getElementById('nr-form-wrap').style.display = 'none';
+            document.getElementById('nr-exito-wrap').style.display = 'block';
+            document.getElementById('nr-exito-id').textContent = `#${data.reclamo_id}`;
+            toast(data.message, 'ok');
+        } else {
+            toast(data.message || 'No se pudo registrar el reclamo.', 'error');
+        }
+    } catch(e){ toast('Error de conexión.', 'error'); }
+}
+
+/* ── Diagnóstico remoto ── */
+let _codigosFallaCargados = false;
+async function cargarCodigosFalla(){
+    if (_codigosFallaCargados) return;
+    try {
+        const r = await fetch('/api/codigos_falla');
+        const data = await r.json();
+        if (data.success){
+            const sel = document.getElementById('dg-codigo-falla');
+            data.codigos.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.id;
+                opt.textContent = `${c.codigo} — ${c.nombre}`;
+                sel.appendChild(opt);
+            });
+            _codigosFallaCargados = true;
+        }
+    } catch(e){}
+}
+
+let _elementosRedCargados = false;
+async function cargarElementosRed(){
+    if (_elementosRedCargados) return;
+    try {
+        const r = await fetch('/api/elementos_red');
+        const data = await r.json();
+        if (data.success){
+            const sel = document.getElementById('dg-elemento-red');
+            data.elementos.forEach(el => {
+                const opt = document.createElement('option');
+                opt.value = el.id;
+                opt.textContent = `${el.codigo} — ${el.nombre}`;
+                sel.appendChild(opt);
+            });
+            _elementosRedCargados = true;
+        }
+    } catch(e){}
+}
+
+let _reclamoActivo = null;
+let _diagnosticoId = null;
+
+/* ── Historial de reclamos resueltos (paginado, no desaparece) ── */
+let _paginaHistorial = 1;
+const ESTADO_BADGE_HIST = {
+    resuelto:'badge-media', resuelto_remoto:'badge-media', resuelto_tecnico:'badge-media',
+    liberado:'badge-baja', cerrado:'badge-baja', auditado:'badge-baja'
+};
+
+async function cargarHistorialResueltos(){
+    const tbody = document.getElementById('historialResueltosBody');
+    tbody.innerHTML = '<tr><td colspan="7" class="empty">Cargando…</td></tr>';
+    try {
+        const r = await fetch(`/api/soporte/reclamos_resueltos?pagina=${_paginaHistorial}`);
+        const data = await r.json();
+        if (!data.success || !data.reclamos.length){
+            tbody.innerHTML = '<tr><td colspan="7" class="empty">Sin reclamos resueltos todavía.</td></tr>';
+        } else {
+            tbody.innerHTML = data.reclamos.map(rc => `
+                <tr>
+                    <td>#${rc.id}</td>
+                    <td>${rc.cliente}</td>
+                    <td>${rc.titulo}</td>
+                    <td>${rc.servicio}</td>
+                    <td><span class="badge ${ESTADO_BADGE_HIST[rc.estado] || 'badge-estado'}">${rc.estado.replace('_',' ')}</span></td>
+                    <td>${rc.fecha_resolucion || '—'}</td>
+                    <td><button class="btn-sm small outline" onclick="abrirVerReclamo(${rc.id}, ${JSON.stringify(rc.cliente)})"><i class="fas fa-eye"></i> Ver</button></td>
+                </tr>`).join('');
+        }
+        const totalPaginas = Math.max(Math.ceil(data.total / data.tam_pagina), 1);
+        document.getElementById('historialPaginaInfo').textContent = `Página ${_paginaHistorial} de ${totalPaginas} (${data.total} en total)`;
+        document.getElementById('btnHistorialAnterior').disabled = _paginaHistorial <= 1;
+        document.getElementById('btnHistorialSiguiente').disabled = _paginaHistorial >= totalPaginas;
+    } catch(e){
+        tbody.innerHTML = '<tr><td colspan="7" class="empty">Error de conexión.</td></tr>';
+    }
+}
+
+function cambiarPaginaHistorial(delta){
+    _paginaHistorial += delta;
+    if (_paginaHistorial < 1) _paginaHistorial = 1;
+    cargarHistorialResueltos();
+}
+
+cargarHistorialResueltos();
+
+/* ── Modal: Ver reclamo (detalle completo antes de actuar) ── */
+const PRIORIDAD_LABEL = {critica:'Crítica', alta:'Alta', media:'Media', baja:'Baja'};
+
+function accionParaEstado(estado, reclamoId, nombreCliente){
+    const nc = JSON.stringify(nombreCliente);
+    if (estado === 'abierto')
+        return `<button class="btn-sm small" onclick='cerrarModales(); abrirDiagnostico(${reclamoId}, ${nc})'>Iniciar diagnóstico</button>`;
+    if (estado === 'en_diagnostico')
+        return `<button class="btn-sm small" onclick='cerrarModales(); continuarDiagnostico(${reclamoId}, ${nc})'>Continuar diagnóstico</button>`;
+    if (estado === 'liberado')
+        return `<button class="btn-sm small outline" onclick='cerrarModales(); abrirCierre(${reclamoId}, ${nc})'>Confirmar cierre</button>`;
+    if (estado === 'falla_masiva')
+        return `<button class="btn-sm small outline" onclick='cerrarModales(); enviarAJefe(${reclamoId})'>Enviar a Jefe 1ra Instancia</button>`;
+    return '';
+}
+
+async function abrirVerReclamo(reclamoId, cliente){
+    document.getElementById('modalVerReclamo').classList.add('open');
+    document.getElementById('vr-loading').style.display = 'block';
+    document.getElementById('vr-contenido').style.display = 'none';
+    document.getElementById('vr-id').textContent = reclamoId;
+    document.getElementById('vr-cliente').textContent = cliente;
+    document.getElementById('vr-accion-container').innerHTML = '';
+
+    try {
+        const [rDet, rHist] = await Promise.all([
+            fetch(`/api/soporte/reclamo/${reclamoId}`),
+            fetch(`/api/soporte/historial_estados/${reclamoId}`)
+        ]);
+        const det  = await rDet.json();
+        const hist = await rHist.json();
+
+        if (!det.success){
+            toast(det.message || 'No se pudo cargar el reclamo.', 'error');
+            cerrarModales();
+            return;
+        }
+        const r = det.reclamo;
+
+        document.getElementById('vr-estado').textContent = (r.estado || '').replace('_',' ');
+        const badgePrioridad = document.getElementById('vr-prioridad');
+        badgePrioridad.textContent = PRIORIDAD_LABEL[r.prioridad] || r.prioridad || '—';
+        badgePrioridad.className = `badge badge-${r.prioridad || ''}`;
+        document.getElementById('vr-servicio').textContent  = r.servicio_afectado || '—';
+        document.getElementById('vr-problema').textContent  = r.problema_especifico || '—';
+        document.getElementById('vr-telefono').textContent  = r.telefono_referencia || '—';
+        document.getElementById('vr-direccion').textContent = r.ubicacion_cliente || '—';
+        document.getElementById('vr-fecha').textContent     = r.fecha_creacion || '—';
+        document.getElementById('vr-asignado').textContent  = r.nombre_asignado || 'Sin asignar';
+        document.getElementById('vr-descripcion').textContent = r.descripcion || 'Sin descripción adicional.';
+
+        const wrapNocturno = document.getElementById('vr-badge-nocturno');
+        const badgeEscalado = document.getElementById('vr-badge-escalado');
+        if (r.es_turno_nocturno){
+            wrapNocturno.style.display = 'block';
+            badgeEscalado.style.display = (r.escalado_a === 'help_desk') ? 'inline-block' : 'none';
+        } else {
+            wrapNocturno.style.display = 'none';
+        }
+
+
+        const histCont = document.getElementById('vr-historial');
+        if (hist.success && hist.historial.length){
+            histCont.innerHTML = hist.historial.map(h => `
+                <div style="font-size:.78rem; border-left:2px solid var(--glass-border); padding-left:8px;">
+                    <strong>${(h.accion || '').replace('_',' ')}</strong> — ${h.actor || 'Sistema'}
+                    <span style="color:var(--text-muted);"> · ${h.fecha || ''}</span>
+                    ${h.descripcion ? `<div style="color:var(--text-muted);">${h.descripcion}</div>` : ''}
+                </div>`).join('');
+        } else {
+            histCont.innerHTML = '<div style="font-size:.78rem; color:var(--text-muted);">Sin historial todavía.</div>';
+        }
+
+        document.getElementById('vr-accion-container').innerHTML =
+            accionParaEstado(r.estado, reclamoId, cliente);
+
+        document.getElementById('vr-loading').style.display = 'none';
+        document.getElementById('vr-contenido').style.display = 'block';
+    } catch(e){
+        toast('Error de conexión al cargar el reclamo.', 'error');
+        cerrarModales();
+    }
+}
+
+async function abrirDiagnostico(reclamoId, cliente){
+    _reclamoActivo = reclamoId;
+    document.getElementById('dg-cliente').textContent = cliente;
+    await cargarCodigosFalla();
+    await cargarElementosRed();
+    document.getElementById('dg-alerta-previa').style.display = 'none';
+
+    // Verificación previa: ¿ya existe una falla masiva activa en la zona,
+    // o la cuenta está en mora? Si es así, no forzamos el checklist completo
+    // — se muestra un aviso y el agente decide cómo cerrar el reclamo.
+    try {
+        const vr = await fetch(`/api/soporte/verificacion_previa/${reclamoId}`);
+        const dataVr = await vr.json();
+        if (dataVr.success && (dataVr.falla_masiva || dataVr.en_mora)) {
+            mostrarAlertaPrevia(reclamoId, dataVr);
+            document.getElementById('modalDiagnostico').classList.add('open');
+            return;
+        }
+    } catch(e){ /* si la verificación falla, seguimos con el flujo normal */ }
+
+    await iniciarDiagnosticoFlujo(reclamoId);
+}
+
+async function iniciarDiagnosticoFlujo(reclamoId){
+    try {
+        const r = await fetch(`/api/soporte/iniciar_diagnostico/${reclamoId}`, { method:'POST' });
+        const data = await r.json();
+        if (data.success){
+            _diagnosticoId = data.diagnostico_id;
+            document.getElementById('modalDiagnostico').classList.add('open');
+        } else {
+            toast(data.message || 'No se pudo iniciar el diagnóstico', 'error');
+        }
+    } catch(e){ toast('Error de conexión.', 'error'); }
+}
+
+function mostrarAlertaPrevia(reclamoId, info){
+    const cont = document.getElementById('dg-alerta-previa');
+    let html = '';
+    if (info.falla_masiva){
+        html += `<div class="alerta-previa-item">
+            <strong>⚠ Falla masiva activa en la zona:</strong> ${info.falla_masiva.codigo} — ${info.falla_masiva.nombre} (${info.falla_masiva.estado})
+            <div class="alerta-previa-botones">
+                <button class="btn-sm small" onclick="asociarYCerrarPorFM(${reclamoId}, ${info.falla_masiva.id})">Asociar a esta falla y cerrar</button>
+            </div>
+        </div>`;
+    }
+    if (info.en_mora){
+        html += `<div class="alerta-previa-item">
+            <strong>⚠ Cuenta en mora:</strong> Bs. ${Number(info.monto_adeudado).toFixed(2)} pendientes.
+            <div class="alerta-previa-botones">
+                <button class="btn-sm small outline" onclick="cerrarPorEstadoCuenta(${reclamoId})">Cerrar informando estado de cuenta</button>
+            </div>
+        </div>`;
+    }
+    html += `<div class="alerta-previa-botones" style="margin-top:4px;">
+        <button class="btn-sm outline" onclick="continuarDiagnosticoIgnorandoAlerta(${reclamoId})">Continuar con diagnóstico de todas formas</button>
+    </div>`;
+    cont.innerHTML = html;
+    cont.style.display = 'block';
+}
+
+function continuarDiagnosticoIgnorandoAlerta(reclamoId){
+    document.getElementById('dg-alerta-previa').style.display = 'none';
+    iniciarDiagnosticoFlujo(reclamoId);
+}
+
+async function asociarYCerrarPorFM(reclamoId, fmId){
+    try {
+        const r = await fetch('/api/soporte/asociar_reclamo_falla_masiva', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({reclamo_id: reclamoId, falla_masiva_id: fmId})
+        });
+        const data = await r.json();
+        if (data.success){
+            toast(data.message, 'success');
+            cerrarModales();
+            setTimeout(() => location.reload(), 1200);
+        } else {
+            toast(data.message || 'No se pudo asociar a la falla masiva.', 'error');
+        }
+    } catch(e){ toast('Error de conexión.', 'error'); }
+}
+
+async function cerrarPorEstadoCuenta(reclamoId){
+    try {
+        const r = await fetch(`/api/soporte/cerrar_por_estado_cuenta/${reclamoId}`, { method: 'POST' });
+        const data = await r.json();
+        if (data.success){
+            toast(data.message, 'success');
+            cerrarModales();
+            setTimeout(() => location.reload(), 1200);
+        } else {
+            toast(data.message || 'No se pudo cerrar el reclamo.', 'error');
+        }
+    } catch(e){ toast('Error de conexión.', 'error'); }
+}
+
+async function continuarDiagnostico(reclamoId, cliente){
+    // Recupera un diagnóstico ya iniciado (estado 'en_diagnostico') sin
+    // crear uno nuevo, precargando el checklist, el elemento de red y
+    // el código de falla que ya se hayan marcado.
+    _reclamoActivo = reclamoId;
+    document.getElementById('dg-cliente').textContent = cliente;
+    await cargarCodigosFalla();
+    await cargarElementosRed();
+    try {
+        const r = await fetch(`/api/soporte/continuar_diagnostico/${reclamoId}`);
+        const data = await r.json();
+        if (!data.success){
+            toast(data.message || 'No se pudo recuperar el diagnóstico en curso.', 'error');
+            return;
+        }
+        _diagnosticoId = data.diagnostico_id;
+        document.getElementById('dg-reinicio-onu').checked        = !!data.reinicio_onu;
+        document.getElementById('dg-validacion-potencia').checked = !!data.validacion_potencia;
+        document.getElementById('dg-reconfiguracion').checked     = !!data.reconfiguracion;
+        document.getElementById('dg-reinicio-puerto').checked     = !!data.reinicio_puerto;
+        document.getElementById('dg-sincronizacion').checked      = !!data.sincronizacion;
+        document.getElementById('dg-cambio-perfil').checked       = !!data.cambio_perfil;
+        document.getElementById('dg-codigo-falla').value   = data.codigo_falla_id || '';
+        document.getElementById('dg-elemento-red').value    = data.elemento_afectado_id || '';
+        document.getElementById('dg-observaciones').value   = data.observaciones || '';
+        document.getElementById('modalDiagnostico').classList.add('open');
+    } catch(e){ toast('Error de conexión.', 'error'); }
+}
+
+function recolectarChecklist(){
+    return {
+        diagnostico_id: _diagnosticoId,
+        reclamo_id: _reclamoActivo,
+        reinicio_onu: document.getElementById('dg-reinicio-onu').checked,
+        validacion_potencia: document.getElementById('dg-validacion-potencia').checked,
+        reconfiguracion: document.getElementById('dg-reconfiguracion').checked,
+        reinicio_puerto: document.getElementById('dg-reinicio-puerto').checked,
+        sincronizacion: document.getElementById('dg-sincronizacion').checked,
+        cambio_perfil: document.getElementById('dg-cambio-perfil').checked,
+        elemento_afectado_id: document.getElementById('dg-elemento-red').value || null,
+        codigo_falla_id: document.getElementById('dg-codigo-falla').value || null,
+        observaciones: document.getElementById('dg-observaciones').value.trim(),
+    };
+}
+
+async function guardarDiagnosticoParcial(){
+    if (!_diagnosticoId) return;
+    try {
+        const r = await fetch('/api/soporte/guardar_diagnostico', {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify(recolectarChecklist())
+        });
+        const data = await r.json();
+        if (data.success) toast('Avance guardado.', 'ok');
+        else toast(data.message || 'Error', 'error');
+    } catch(e){ toast('Error de conexión.', 'error'); }
+}
+
+async function finalizarDiagnostico(resultado){
+    if (!_diagnosticoId) return;
+    if (!document.getElementById('dg-codigo-falla').value){
+        toast('Selecciona el motivo de falla antes de finalizar.', 'error');
+        return;
+    }
+    await guardarDiagnosticoParcial();
+    try {
+        const r = await fetch('/api/soporte/finalizar_diagnostico', {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({
+                diagnostico_id: _diagnosticoId,
+                reclamo_id: _reclamoActivo,
+                resultado: resultado,
+                codigo_falla_id: document.getElementById('dg-codigo-falla').value,
+                observaciones: document.getElementById('dg-observaciones').value.trim(),
+            })
+        });
+        const data = await r.json();
+        if (data.success){ toast(data.message, 'ok'); cerrarModales(); setTimeout(()=>location.reload(), 1400); }
+        else toast(data.message || 'Error', 'error');
+    } catch(e){ toast('Error de conexión.', 'error'); }
+}
+
+let _reclamoCierre = null;
+function abrirCierre(reclamoId, cliente){
+    _reclamoCierre = reclamoId;
+    document.getElementById('cc-cliente').textContent = cliente;
+    document.getElementById('cc-observaciones').value = '';
+    document.getElementById('modalCierre').classList.add('open');
+}
+
+async function confirmarCierre(){
+    if (!_reclamoCierre) return;
+    try {
+        const r = await fetch(`/api/soporte/confirmar_cierre/${_reclamoCierre}`, {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({
+                 observacion: document.getElementById('cc-observaciones').value.trim(), reabrir: false })
+        });
+        const data = await r.json();
+        if (data.success){ toast(data.message, 'ok'); cerrarModales(); setTimeout(()=>location.reload(), 1200); }
+        else toast(data.message || 'Error', 'error');
+    } catch(e){ toast('Error de conexión.', 'error'); }
+}
+
+async function reabrirReclamo(){
+    if (!_reclamoCierre) return;
+    const motivo = document.getElementById('cc-observaciones').value.trim();
+    if (!motivo){ toast('Escribe el motivo de la reapertura.', 'error'); return; }
+    try {
+        const r = await fetch(`/api/soporte/confirmar_cierre/${_reclamoCierre}`, {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ observacion: motivo, reabrir: true })
+        });
+        const data = await r.json();
+        if (data.success){ toast(data.message, 'ok'); cerrarModales(); setTimeout(()=>location.reload(), 1200); }
+        else toast(data.message || 'Error', 'error');
+    } catch(e){ toast('Error de conexión.', 'error'); }
+}
+</script>
+</body>
+</html>

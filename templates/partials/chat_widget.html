@@ -1,0 +1,413 @@
+<!-- ================================================
+     CHAT WIDGET — ASISTENTE COTEL RL
+     ================================================ -->
+
+<!-- Botón flotante -->
+<div id="chat-bubble" onclick="toggleChat()" title="Hablar con el asistente COTEL">
+    <img src="{{ url_for('static', filename='imagenes/asistente_avatar.png') }}"
+         id="chat-bubble-img" alt="Asistente"
+         onerror="this.style.display='none';
+                  document.getElementById('chat-bubble-icon').style.display='flex'">
+    <i class="fas fa-robot" id="chat-bubble-icon"></i>
+    <span id="chat-notif" class="chat-notif">1</span>
+</div>
+
+<!-- Ventana de chat -->
+<div id="chat-window" class="chat-window">
+
+    <!-- Header -->
+    <div class="chat-header">
+        <div class="d-flex align-items-center gap-2">
+            <img src="{{ url_for('static', filename='imagenes/asistente_avatar.png') }}"
+                 alt="Bot" class="chat-header-avatar"
+                 onerror="this.style.display='none'">
+            <div>
+                <div class="fw-bold" style="font-size:.95rem">Asistente COTEL</div>
+                <div class="chat-status">
+                    <span class="status-dot"></span> En línea
+                </div>
+            </div>
+        </div>
+        <button onclick="toggleChat()" class="btn-close btn-close-white btn-sm"></button>
+    </div>
+
+    <!-- Mensajes -->
+    <div id="chat-messages" class="chat-messages">
+        <div class="msg-bot">
+            <img src="{{ url_for('static', filename='imagenes/asistente_avatar.png') }}"
+                 class="msg-avatar" alt="Bot"
+                 onerror="this.style.display='none'">
+            <div class="msg-bubble">
+                ¡Hola, <strong>{{ nombre_usuario }}</strong>! 👋<br>
+                Soy tu asistente COTEL RL. Puedo ayudarte con tus servicios,
+                pagos, trámites o reclamos. ¿En qué te ayudo hoy?
+            </div>
+        </div>
+    </div>
+
+    <!-- Input -->
+    <div class="chat-input-area">
+        <div class="d-flex gap-2 align-items-center">
+            <input type="text" id="chat-input" class="form-control chat-input-field"
+                   placeholder="Escribe tu consulta..."
+                   onkeypress="if(event.key==='Enter' && !event.shiftKey) enviarMensaje()">
+            <button class="btn-send" onclick="enviarMensaje()" id="btn-enviar"
+                    title="Enviar mensaje">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+        <div class="chat-footer-note">
+            Powered by COTEL RL · Soporte inteligente
+        </div>
+    </div>
+</div>
+
+<!-- ── ESTILOS ─────────────────────────────────────────── -->
+<style>
+/* Botón flotante */
+#chat-bubble {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 62px;
+    height: 62px;
+    background: linear-gradient(135deg, var(--accent-color, #f69d00),
+                                        var(--primary-color, #d27300));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 6px 24px rgba(210,115,0,.45);
+    z-index: 1050;
+    transition: transform .2s, box-shadow .2s;
+    overflow: hidden;
+}
+#chat-bubble:hover {
+    transform: scale(1.1);
+    box-shadow: 0 8px 32px rgba(210,115,0,.6);
+}
+#chat-bubble img { width: 100%; height: 100%; object-fit: cover; }
+#chat-bubble-icon {
+    display: none;
+    color: #fff;
+    font-size: 1.6rem;
+}
+.chat-notif {
+    position: absolute;
+    top: 2px; right: 2px;
+    background: #dc3545;
+    color: #fff;
+    border-radius: 50%;
+    width: 20px; height: 20px;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    border: 2px solid #fff;
+    animation: pulse-notif 1.5s infinite;
+}
+@keyframes pulse-notif {
+    0%, 100% { transform: scale(1); }
+    50%       { transform: scale(1.2); }
+}
+
+/* Ventana */
+.chat-window {
+    position: fixed;
+    bottom: 105px;
+    right: 30px;
+    width: 370px;
+    height: 510px;
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 12px 48px rgba(0,0,0,.18);
+    display: none;
+    flex-direction: column;
+    z-index: 1049;
+    overflow: hidden;
+    animation: slideUp .25s ease;
+}
+.chat-window.open { display: flex; }
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Header */
+.chat-header {
+    background: linear-gradient(135deg, var(--accent-color, #f69d00),
+                                        var(--secondary-color, #af5700));
+    color: #fff;
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+}
+.chat-header-avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(255,255,255,.6);
+}
+.chat-status {
+    font-size: .75rem;
+    opacity: .9;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.status-dot {
+    width: 7px; height: 7px;
+    background: #4ade80;
+    border-radius: 50%;
+    display: inline-block;
+    animation: blink-dot 2s infinite;
+}
+@keyframes blink-dot {
+    0%,100% { opacity: 1; }
+    50%     { opacity: .4; }
+}
+
+/* Mensajes */
+.chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background: #fafafa;
+    scroll-behavior: smooth;
+}
+.chat-messages::-webkit-scrollbar { width: 4px; }
+.chat-messages::-webkit-scrollbar-thumb { background: #ddd; border-radius: 4px; }
+
+.msg-bot, .msg-user {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+}
+.msg-user { flex-direction: row-reverse; }
+.msg-avatar {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+.msg-bubble {
+    max-width: 82%;
+    padding: 10px 14px;
+    border-radius: 16px;
+    font-size: .88rem;
+    line-height: 1.5;
+    word-break: break-word;
+}
+.msg-bot .msg-bubble {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-bottom-left-radius: 4px;
+    color: #1f2937;
+    box-shadow: 0 1px 4px rgba(0,0,0,.06);
+}
+.msg-user .msg-bubble {
+    background: linear-gradient(135deg, var(--accent-color, #f69d00),
+                                        var(--primary-color, #d27300));
+    color: #fff;
+    border-bottom-right-radius: 4px;
+    box-shadow: 0 2px 8px rgba(210,115,0,.3);
+}
+
+/* Typing */
+.msg-typing .msg-bubble {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    padding: 12px 16px;
+}
+.typing-dots span {
+    display: inline-block;
+    width: 7px; height: 7px;
+    background: #9ca3af;
+    border-radius: 50%;
+    animation: typing 1.2s infinite;
+    margin: 0 2px;
+}
+.typing-dots span:nth-child(2) { animation-delay: .2s; }
+.typing-dots span:nth-child(3) { animation-delay: .4s; }
+@keyframes typing {
+    0%,80%,100% { transform: scale(.6); opacity: .4; }
+    40%         { transform: scale(1);  opacity: 1; }
+}
+
+/* Input */
+.chat-input-area {
+    padding: 10px 12px 8px;
+    border-top: 1px solid #f0f0f0;
+    background: #fff;
+    flex-shrink: 0;
+}
+.chat-input-field {
+    border-radius: 20px;
+    border: 1.5px solid #e5e7eb;
+    padding: 8px 14px;
+    font-size: .88rem;
+    transition: border-color .2s;
+}
+.chat-input-field:focus {
+    border-color: var(--primary-color, #d27300);
+    box-shadow: 0 0 0 3px rgba(210,115,0,.12);
+}
+.btn-send {
+    background: linear-gradient(135deg, var(--accent-color, #f69d00),
+                                        var(--primary-color, #d27300));
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 38px; height: 38px;
+    min-width: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform .15s;
+    font-size: .85rem;
+}
+.btn-send:hover:not(:disabled) { transform: scale(1.08); }
+.btn-send:disabled { opacity: .5; cursor: not-allowed; }
+.chat-footer-note {
+    font-size: .68rem;
+    color: #9ca3af;
+    text-align: center;
+    margin-top: 4px;
+}
+
+/* Responsive móvil */
+@media (max-width: 480px) {
+    .chat-window {
+        right: 0; bottom: 0;
+        width: 100%; height: 85vh;
+        border-radius: 18px 18px 0 0;
+    }
+    #chat-bubble { bottom: 20px; right: 20px; }
+}
+</style>
+
+<!-- ── JAVASCRIPT ──────────────────────────────────────── -->
+<script>
+(function () {
+    // Session ID único por visita del cliente
+    const CHAT_SESSION = 'cotel_{{ session["usuario_id"] }}_' +
+                         Math.random().toString(36).substr(2, 6);
+    const AVATAR_SRC   = "{{ url_for('static', filename='imagenes/asistente_avatar.png') }}";
+
+    window.toggleChat = function () {
+        const win   = document.getElementById('chat-window');
+        const notif = document.getElementById('chat-notif');
+        win.classList.toggle('open');
+        if (win.classList.contains('open')) {
+            notif.style.display = 'none';
+            scrollToBottom();
+            setTimeout(() =>
+                document.getElementById('chat-input').focus(), 150);
+        }
+    };
+
+    function scrollToBottom () {
+        const el = document.getElementById('chat-messages');
+        el.scrollTop = el.scrollHeight;
+    }
+
+    function addMessage (html, tipo) {
+        const msgs = document.getElementById('chat-messages');
+        const div  = document.createElement('div');
+        div.className = tipo === 'user' ? 'msg-user' : 'msg-bot';
+
+        const avatarHtml = tipo === 'bot'
+            ? `<img src="${AVATAR_SRC}" class="msg-avatar" alt="Bot"
+                    onerror="this.style.display='none'">`
+            : '';
+
+        div.innerHTML = `${avatarHtml}<div class="msg-bubble">${html}</div>`;
+        msgs.appendChild(div);
+        scrollToBottom();
+        return div;
+    }
+
+    function showTyping () {
+        const msgs = document.getElementById('chat-messages');
+        const div  = document.createElement('div');
+        div.className = 'msg-bot msg-typing';
+        div.id = 'typing-indicator';
+        div.innerHTML = `
+            <img src="${AVATAR_SRC}" class="msg-avatar" alt="Bot"
+                 onerror="this.style.display='none'">
+            <div class="msg-bubble">
+                <div class="typing-dots">
+                    <span></span><span></span><span></span>
+                </div>
+            </div>`;
+        msgs.appendChild(div);
+        scrollToBottom();
+    }
+
+    function hideTyping () {
+        const el = document.getElementById('typing-indicator');
+        if (el) el.remove();
+    }
+
+    // Escapar HTML para evitar XSS en respuestas del agente
+    function escapeHtml (text) {
+        const d = document.createElement('div');
+        d.appendChild(document.createTextNode(text));
+        return d.innerHTML;
+    }
+
+    window.enviarMensaje = async function () {
+        const input    = document.getElementById('chat-input');
+        const btnEnviar = document.getElementById('btn-enviar');
+        const mensaje  = input.value.trim();
+        if (!mensaje) return;
+
+        addMessage(escapeHtml(mensaje), 'user');
+        input.value      = '';
+        btnEnviar.disabled = true;
+        showTyping();
+
+        try {
+            const resp = await fetch('/api/agente', {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify({
+                    mensaje:    mensaje,
+                    session_id: CHAT_SESSION
+                })
+            });
+
+            const data = await resp.json();
+            hideTyping();
+
+            if (data.ok) {
+                // Convertir saltos de línea a <br> en la respuesta
+                const textoFormateado = escapeHtml(data.respuesta)
+                    .replace(/\n/g, '<br>');
+                addMessage(textoFormateado, 'bot');
+            } else {
+                addMessage(
+                    '⚠️ ' + escapeHtml(data.respuesta || 'Error desconocido.'),
+                    'bot'
+                );
+            }
+
+        } catch (err) {
+            hideTyping();
+            addMessage('❌ Error de conexión. Por favor intenta de nuevo.', 'bot');
+            console.error('Chat error:', err);
+        } finally {
+            btnEnviar.disabled = false;
+            input.focus();
+        }
+    };
+})();
+</script>

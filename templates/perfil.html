@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mi Perfil — COTEL RL</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<style>
+:root{
+    --bg-dark:#160c02; --bg-dark2:#231202;
+    --orange:#f97316; --orange-deep:#d84315; --orange-soft:#ff8f00; --amber:#ea580c;
+    --green:#34d399; --red:#f87171;
+    --text-light:#fff3e0; --text-muted:#d9b48f;
+    --glass:rgba(255,255,255,0.05); --glass-border:rgba(249,115,22,0.25);
+}
+*{box-sizing:border-box;}
+body{
+    margin:0; font-family:'Segoe UI',system-ui,sans-serif;
+    background:
+        radial-gradient(circle at 15% 20%, rgba(249,115,22,0.18), transparent 45%),
+        radial-gradient(circle at 85% 75%, rgba(216,67,21,0.16), transparent 50%),
+        linear-gradient(160deg, var(--bg-dark), var(--bg-dark2));
+    color:var(--text-light); min-height:100vh; padding:28px 16px 60px;
+}
+.wrap{max-width:760px; margin:0 auto;}
+.topbar{display:flex; align-items:center; justify-content:space-between; margin-bottom:24px;}
+.topbar h1{font-size:1.3rem; margin:0; display:flex; align-items:center; gap:10px;}
+.topbar h1 i{color:var(--orange);}
+.volver{
+    display:inline-flex; align-items:center; gap:6px;
+    color:var(--text-muted); text-decoration:none; font-size:.85rem;
+    border:1px solid var(--glass-border); border-radius:20px; padding:7px 14px;
+}
+.volver:hover{color:var(--text-light); background:rgba(249,115,22,0.08);}
+
+.perfil-header{
+    background:var(--glass); border:1px solid var(--glass-border); border-radius:18px;
+    padding:26px; margin-bottom:20px; display:flex; align-items:center; gap:20px; flex-wrap:wrap;
+}
+.foto-wrap{position:relative; width:96px; height:96px; flex-shrink:0;}
+.foto-perfil{width:96px; height:96px; border-radius:50%; object-fit:cover; border:3px solid var(--orange); background:rgba(255,255,255,0.05);}
+.foto-placeholder{
+    width:96px; height:96px; border-radius:50%; border:3px solid var(--orange);
+    background:linear-gradient(135deg, var(--orange), var(--orange-deep));
+    display:flex; align-items:center; justify-content:center; font-size:2.2rem; font-weight:700; color:#fff;
+}
+.foto-btn{
+    position:absolute; bottom:-2px; right:-2px; width:32px; height:32px; border-radius:50%;
+    background:var(--orange-deep); border:2px solid var(--bg-dark2); color:#fff;
+    display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:.8rem;
+}
+.foto-btn:hover{background:var(--orange);}
+.perfil-info h2{margin:0 0 4px; font-size:1.15rem;}
+.perfil-info .correo{color:var(--text-muted); font-size:.85rem; margin-bottom:8px;}
+.rol-badge{
+    display:inline-block; padding:4px 12px; border-radius:20px; font-size:.72rem;
+    background:rgba(249,115,22,.15); color:var(--orange-soft); font-weight:700;
+}
+
+.panel{background:var(--glass); border:1px solid var(--glass-border); border-radius:16px; padding:22px; margin-bottom:18px;}
+.panel h3{font-size:.95rem; margin:0 0 16px; display:flex; align-items:center; gap:8px;}
+.panel h3 i{color:var(--orange);}
+.field-row{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+.field{margin-bottom:14px;}
+.field label{display:block; font-size:.78rem; color:var(--text-muted); margin-bottom:6px;}
+.field input{
+    width:100%; background:rgba(255,255,255,.04); border:1px solid var(--glass-border); border-radius:8px;
+    color:var(--text-light); padding:10px 12px; font-size:.88rem; font-family:inherit;
+}
+.field input:disabled{opacity:.5; cursor:not-allowed;}
+.field input:focus{outline:none; border-color:var(--orange);}
+
+.zona-actual-box{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    background:rgba(52,211,153,0.08); border:1px solid rgba(52,211,153,.3); border-radius:10px;
+    padding:12px 14px; margin-bottom:14px;
+}
+.zona-actual-box.sin-zona{background:rgba(248,113,113,0.08); border-color:rgba(248,113,113,.3);}
+.zona-actual-box .za-label{font-size:.72rem; color:var(--text-muted); text-transform:uppercase;}
+.zona-actual-box .za-value{font-size:1rem; font-weight:700; color:var(--green);}
+.zona-actual-box.sin-zona .za-value{color:var(--red);}
+
+.aviso-permiso{
+    display:flex; align-items:center; gap:8px; font-size:.78rem; color:var(--amber);
+    background:rgba(234,88,12,.08); border:1px solid rgba(234,88,12,.25); border-radius:8px;
+    padding:9px 12px;
+}
+
+.btn-sm{
+    background:linear-gradient(135deg, var(--orange), var(--orange-deep)); color:#fff;
+    border:none; border-radius:20px; padding:9px 20px; font-size:.85rem; cursor:pointer; font-weight:700; transition:.2s;
+}
+.btn-sm:hover{transform:translateY(-1px); box-shadow:0 4px 12px rgba(249,115,22,.35);}
+
+.toast-box{position:fixed; top:20px; right:20px; z-index:300; display:flex; flex-direction:column; gap:10px;}
+.toast{
+    background:#231202; border:1px solid var(--glass-border); color:var(--text-light);
+    padding:12px 18px; border-radius:10px; font-size:.85rem; box-shadow:0 6px 20px rgba(0,0,0,.4);
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+    <div class="topbar">
+        <h1><i class="fas fa-user-gear"></i> Mi Perfil</h1>
+        <a href="javascript:history.back()" class="volver"><i class="fas fa-arrow-left"></i> Volver a mi panel</a>
+    </div>
+
+    <div class="perfil-header">
+        <div class="foto-wrap">
+            {% if perfil.foto_perfil %}
+            <img src="{{ url_for('static', filename=perfil.foto_perfil) }}" class="foto-perfil" id="fotoPreview">
+            {% else %}
+            <div class="foto-placeholder" id="fotoPreview">{{ perfil.nombre[0] | upper }}{{ perfil.apellido[0] | upper if perfil.apellido else '' }}</div>
+            {% endif %}
+            <label class="foto-btn" for="inputFoto"><i class="fas fa-camera"></i></label>
+            <input type="file" id="inputFoto" accept=".png,.jpg,.jpeg,.webp" style="display:none;" onchange="subirFoto()">
+        </div>
+        <div class="perfil-info">
+            <h2>{{ perfil.nombre }} {{ perfil.apellido }}</h2>
+            <div class="correo"><i class="fas fa-envelope"></i> {{ perfil.correo }}</div>
+            <span class="rol-badge">{{ etiqueta_rol }}</span>
+        </div>
+    </div>
+
+    <!-- Datos personales -->
+    <div class="panel">
+        <h3><i class="fas fa-id-card"></i> Datos personales</h3>
+        <div class="field-row">
+            <div class="field"><label>Nombre</label><input type="text" id="inpNombre" value="{{ perfil.nombre }}"></div>
+            <div class="field"><label>Apellido</label><input type="text" id="inpApellido" value="{{ perfil.apellido }}"></div>
+        </div>
+        <div class="field-row">
+            <div class="field"><label>Teléfono</label><input type="tel" id="inpTelefono" value="{{ perfil.telefono or '' }}"></div>
+            <div class="field"><label>Correo <span style="color:var(--text-muted); font-weight:400;">(no editable)</span></label>
+                <input type="email" value="{{ perfil.correo }}" disabled></div>
+        </div>
+        <button class="btn-sm" onclick="guardarDatos()"><i class="fas fa-floppy-disk"></i> Guardar datos</button>
+    </div>
+
+    <!-- Zona (solo lectura, asignada por el administrador) -->
+    <div class="panel">
+        <h3><i class="fas fa-map-location-dot"></i> Zona / Sucursal</h3>
+        <div class="zona-actual-box {% if not perfil.zona_nombre %}sin-zona{% endif %}">
+            <div>
+                <div class="za-label">Zona asignada</div>
+                <div class="za-value">{{ perfil.zona_nombre or 'Pendiente de asignación' }}</div>
+            </div>
+            <i class="fas fa-location-dot" style="font-size:1.4rem; color:{% if perfil.zona_nombre %}var(--green){% else %}var(--red){% endif %};"></i>
+        </div>
+        <div class="aviso-permiso">
+            <i class="fas fa-info-circle"></i>
+            La zona/sucursal es asignada exclusivamente por el administrador del sistema. Si aún no tienes una, o necesitas un cambio, solicítalo a Recursos Humanos / Administración.
+        </div>
+    </div>
+
+    <!-- Contraseña -->
+    <div class="panel">
+        <h3><i class="fas fa-lock"></i> Cambiar contraseña</h3>
+        <div class="field"><label>Contraseña actual</label><input type="password" id="pwActual" placeholder="••••••••"></div>
+        <div class="field-row">
+            <div class="field"><label>Nueva contraseña</label><input type="password" id="pwNueva" placeholder="8+ car., mayúscula, minúscula, número, símbolo"></div>
+            <div class="field"><label>Confirmar nueva contraseña</label><input type="password" id="pwConfirmar" placeholder="Repite la nueva contraseña"></div>
+        </div>
+        <button class="btn-sm" onclick="cambiarPassword()"><i class="fas fa-key"></i> Actualizar contraseña</button>
+    </div>
+</div>
+
+<div class="toast-box" id="toastBox"></div>
+
+<script>
+function toast(msg, tipo){
+    const box = document.getElementById('toastBox');
+    const el = document.createElement('div');
+    el.className = 'toast';
+    el.style.borderColor = tipo === 'error' ? 'rgba(248,113,113,.5)' : 'rgba(52,211,153,.5)';
+    el.textContent = msg;
+    box.appendChild(el);
+    setTimeout(()=> el.remove(), 4000);
+}
+
+async function guardarDatos(){
+    const payload = {
+        nombre: document.getElementById('inpNombre').value.trim(),
+        apellido: document.getElementById('inpApellido').value.trim(),
+        telefono: document.getElementById('inpTelefono').value.trim(),
+    };
+    if (!payload.nombre || !payload.apellido){ toast('Nombre y apellido son obligatorios.', 'error'); return; }
+    try {
+        const r = await fetch('/api/perfil/actualizar_datos', {
+            method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)
+        });
+        const data = await r.json();
+        toast(data.message || (data.success ? 'Listo.' : 'Error'), data.success ? 'ok' : 'error');
+    } catch(e){ toast('Error de conexión.', 'error'); }
+}
+
+async function cambiarPassword(){
+    const actual = document.getElementById('pwActual').value;
+    const nueva = document.getElementById('pwNueva').value;
+    const confirmar = document.getElementById('pwConfirmar').value;
+    if (!actual || !nueva || !confirmar){ toast('Completa todos los campos de contraseña.', 'error'); return; }
+    try {
+        const r = await fetch('/api/perfil/cambiar_password', {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ actual, nueva, confirmacion: confirmar })
+        });
+        const data = await r.json();
+        if (data.success){
+            toast(data.message, 'ok');
+            document.getElementById('pwActual').value = '';
+            document.getElementById('pwNueva').value = '';
+            document.getElementById('pwConfirmar').value = '';
+        } else { toast(data.message || 'Error', 'error'); }
+    } catch(e){ toast('Error de conexión.', 'error'); }
+}
+
+async function subirFoto(){
+    const input = document.getElementById('inputFoto');
+    if (!input.files.length) return;
+    const formData = new FormData();
+    formData.append('foto', input.files[0]);
+    try {
+        const r = await fetch('/api/perfil/subir_foto', { method:'POST', body: formData });
+        const data = await r.json();
+        if (data.success){
+            toast(data.message, 'ok');
+            const preview = document.getElementById('fotoPreview');
+            const img = document.createElement('img');
+            img.src = data.foto_url + '?t=' + Date.now();
+            img.className = 'foto-perfil';
+            img.id = 'fotoPreview';
+            preview.replaceWith(img);
+        } else { toast(data.message || 'No se pudo subir la foto.', 'error'); }
+    } catch(e){ toast('Error de conexión.', 'error'); }
+}
+</script>
+</body>
+</html>

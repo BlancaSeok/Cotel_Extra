@@ -1,0 +1,302 @@
+<!--
+  dashboard_jefe_especialidad.html
+  ============================================================
+  UN SOLO template para Jefe DRA y Jefe DRC — igual patrón que
+  dashboard_jefe.html (instancia=1/2). Aquí la variable es
+  `especialidad` = 'DRA' | 'DRC'.
+
+  La vista Flask debe pasar:
+    especialidad      -> 'DRA' o 'DRC' (según session['rol'])
+    etiqueta           -> 'Jefe DRA' o 'Jefe DRC'
+    nombre_usuario
+
+  Backend pendiente de construir (aún no existe):
+    GET  /api/jefe_especialidad/reclamos_pendientes?especialidad=DRA|DRC
+         -> reclamos enviados por Jefe Help Desk a esta especialidad,
+            esperando revisión, antes de pasar al Jefe de Instancia
+            (1ra si DRA, 2da si DRC). Incluye zona_cliente (solo
+            lectura, informativa — la zona real se asigna a los
+            técnicos/jefes de forma PERMANENTE, ver abajo).
+    POST /api/jefe_especialidad/aprobar_enviar_instancia/<reclamo_id>
+         -> aprueba el caso y lo envía a Jefe 1ra/2da Instancia.
+    GET  /api/jefe_especialidad/miembros?especialidad=DRA|DRC
+         -> técnicos de esta especialidad, para asignar/rotar zona.
+    POST /api/jefe_especialidad/asignar_zona_miembro/<usuario_id>
+         body: { zona_id }
+         -> asignación PERMANENTE (igual que ya hace el admin), pero
+            aquí la puede rotar el Jefe DRA/DRC de su propio equipo.
+    GET  /api/zonas  (ya existe: obtener_zonas())
+============================================================
+-->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>{{ etiqueta }} — COTEL RL</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+:root{
+  --bg:#1c1108; --panel:rgba(255,255,255,.04); --glass-border:rgba(255,255,255,.08);
+  --text:#f5ede4; --text-muted:#c9b8a3;
+  --orange:#f97316; --orange-dark:#ea580c;
+  --green:#34d399; --amber:#fbbf24; --red:#f87171;
+  --mono:'Consolas',monospace;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0; font-family:'Segoe UI',system-ui,sans-serif;
+  background:radial-gradient(circle at 20% 0%, #2a1608 0%, var(--bg) 55%);
+  color:var(--text); min-height:100vh; padding:24px;
+}
+.topbar{display:flex; justify-content:space-between; align-items:center; margin-bottom:22px;}
+.topbar h1{font-size:1.3rem; margin:0; display:flex; align-items:center; gap:10px;}
+.topbar h1 i{color:var(--orange);}
+.badge-especialidad{
+  font-size:.7rem; padding:3px 10px; border-radius:20px; font-weight:700; margin-left:8px;
+}
+.badge-especialidad.dra{background:rgba(52,211,153,.15); color:var(--green);}
+.badge-especialidad.drc{background:rgba(52,152,211,.15); color:#5db8ee;}
+.topbar .user{font-size:.85rem; color:var(--text-muted);}
+
+.stats{display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:14px; margin-bottom:22px;}
+.stat-card{background:var(--panel); border:1px solid var(--glass-border); border-radius:12px; padding:16px; backdrop-filter:blur(6px);}
+.stat-card .num{font-size:1.7rem; font-weight:700;}
+.stat-card .label{font-size:.78rem; color:var(--text-muted); margin-top:2px;}
+.stat-card.sin-zona .num{color:var(--amber);}
+
+.panel{background:var(--panel); border:1px solid var(--glass-border); border-radius:14px; padding:18px; backdrop-filter:blur(6px); margin-bottom:20px;}
+.panel h2{font-size:1rem; margin:0 0 14px; display:flex; align-items:center; gap:8px;}
+
+table{width:100%; border-collapse:collapse; font-size:.85rem;}
+th{text-align:left; color:var(--text-muted); font-weight:600; font-size:.75rem; text-transform:uppercase; letter-spacing:.03em; padding:8px 10px; border-bottom:1px solid var(--glass-border);}
+td{padding:10px; border-bottom:1px solid rgba(255,255,255,.04); vertical-align:middle;}
+tr:hover td{background:rgba(255,255,255,.02);}
+
+.badge{display:inline-block; padding:3px 10px; border-radius:20px; font-size:.72rem; font-weight:600;}
+.badge-critica{background:rgba(248,113,113,.15); color:var(--red);}
+.badge-alta{background:rgba(251,191,36,.15); color:var(--amber);}
+.badge-media{background:rgba(52,211,153,.15); color:var(--green);}
+.badge-baja{background:rgba(255,255,255,.08); color:var(--text-muted);}
+
+.timer-badge{
+  display:inline-flex; align-items:center; gap:6px; font-family:var(--mono); font-weight:700;
+  font-size:.78rem; padding:5px 11px; border-radius:20px; white-space:nowrap;
+  color:var(--green); background:rgba(52,211,153,.1); border:1px solid rgba(52,211,153,.3);
+  transition:background-color .4s,color .4s,border-color .4s;
+}
+.timer-badge::before{content:''; width:6px; height:6px; border-radius:50%; background:currentColor;}
+.timer-badge.alerta{color:var(--amber); background:rgba(251,191,36,.14); border-color:rgba(251,191,36,.4);}
+.timer-badge.urgente{color:var(--red); background:rgba(248,113,113,.14); border-color:rgba(248,113,113,.45); animation:parpadeo 1.2s infinite;}
+@keyframes parpadeo{0%,100%{box-shadow:0 0 0 0 rgba(248,113,113,.4);}50%{box-shadow:0 0 0 5px rgba(248,113,113,0);}}
+
+select.zona-select{
+  background:rgba(255,255,255,.05); border:1px solid var(--glass-border); border-radius:8px;
+  color:var(--text); padding:6px 8px; font-size:.8rem; min-width:150px;
+}
+select.zona-select.sin-asignar{border-color:rgba(251,191,36,.5);}
+
+.btn{border:1px solid var(--glass-border); background:rgba(255,255,255,.03); color:var(--text); padding:6px 12px; border-radius:8px; font-size:.78rem; cursor:pointer; transition:.2s;}
+.btn:hover:not(:disabled){background:rgba(255,255,255,.08);}
+.btn.primary{background:var(--orange); border-color:var(--orange); color:#2a1608; font-weight:600;}
+.btn.primary:hover:not(:disabled){background:var(--orange-dark);}
+.btn:disabled{opacity:.4; cursor:not-allowed;}
+
+.empty{text-align:center; color:var(--text-muted); padding:30px 0; font-size:.85rem;}
+
+.miembro-row{display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid rgba(255,255,255,.04);}
+.miembro-row:last-child{border-bottom:none;}
+.miembro-info .nombre{font-weight:600; font-size:.85rem;}
+.miembro-info .rol{font-size:.72rem; color:var(--text-muted);}
+
+.toast{position:fixed; bottom:24px; right:24px; padding:12px 18px; border-radius:10px; background:#241608; border:1px solid var(--glass-border); font-size:.85rem; z-index:200; opacity:0; transform:translateY(10px); transition:.25s;}
+.toast.show{opacity:1; transform:translateY(0);}
+.toast.success{border-color:rgba(52,211,153,.4); color:var(--green);}
+.toast.error{border-color:rgba(248,113,113,.4); color:var(--red);}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>
+    <i class="fas fa-user-shield"></i> {{ etiqueta }}
+    <span class="badge-especialidad {{ 'dra' if especialidad == 'DRA' else 'drc' }}">{{ especialidad }}</span>
+  </h1>
+  <div class="user">{{ nombre_usuario }}</div>
+</div>
+
+<div class="stats">
+  <div class="stat-card"><div class="num" id="st-pendientes">--</div><div class="label">Pendientes de revisión</div></div>
+  <div class="stat-card sin-zona"><div class="num" id="st-sin-zona">--</div><div class="label">Miembros del equipo sin zona</div></div>
+  <div class="stat-card"><div class="num" id="st-enviados-hoy">--</div><div class="label">Enviados a instancia hoy</div></div>
+</div>
+
+<div class="panel">
+  <h2><i class="fas fa-clipboard-check"></i> Reclamos pendientes de revisión</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th><th>Cliente</th><th>Servicio</th><th>Prioridad</th>
+        <th>Zona del cliente</th><th>Tiempo en esta etapa</th><th>Acción</th>
+      </tr>
+    </thead>
+    <tbody id="tabla-reclamos">
+      <tr><td colspan="7" class="empty">Cargando reclamos…</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="panel">
+  <h2><i class="fas fa-users"></i> Mi equipo — asignar/rotar zona</h2>
+  <div class="sub" style="font-size:.78rem; color:var(--text-muted); margin:-8px 0 14px;">
+    La zona aquí es permanente para el técnico hasta que se rote por sugerencia del jefe de área.
+  </div>
+  <div id="lista-miembros">
+    <div class="empty">Cargando equipo…</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const ESPECIALIDAD = "{{ especialidad }}";
+let _reclamos = [];
+let _zonas = [];
+
+function toast(msg, tipo='success'){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast show ${tipo}`;
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function formatDuracion(ms){
+  if (ms < 0) ms = 0;
+  const totalSec = Math.floor(ms/1000);
+  const dias = Math.floor(totalSec/86400);
+  const horas = Math.floor((totalSec%86400)/3600);
+  const min = Math.floor((totalSec%3600)/60);
+  const seg = totalSec%60;
+  const pad = n => String(n).padStart(2,'0');
+  return dias > 0 ? `${dias}d ${pad(horas)}:${pad(min)}:${pad(seg)}` : `${pad(horas)}:${pad(min)}:${pad(seg)}`;
+}
+function actualizarTimers(){
+  document.querySelectorAll('.timer-badge[data-inicio]').forEach(el => {
+    const inicio = el.getAttribute('data-inicio');
+    if (!inicio) { el.textContent = '—'; return; }
+    const elapsed = Date.now() - new Date(inicio).getTime();
+    const horas = elapsed / 3600000;
+    el.textContent = formatDuracion(elapsed);
+    el.classList.toggle('alerta', horas >= 2 && horas < 4);
+    el.classList.toggle('urgente', horas >= 4);
+  });
+}
+setInterval(actualizarTimers, 1000);
+
+async function cargarZonas(){
+  try {
+    const r = await fetch('/api/zonas');
+    const data = await r.json();
+    _zonas = data.zonas || data || [];
+  } catch(e){ _zonas = []; }
+}
+
+async function cargarReclamos(){
+  try {
+    const r = await fetch(`/api/jefe_especialidad/reclamos_pendientes?especialidad=${ESPECIALIDAD}`);
+    const data = await r.json();
+    if (!data.success){ toast(data.message || 'Error al cargar reclamos', 'error'); return; }
+    _reclamos = data.reclamos || [];
+    renderTabla();
+    document.getElementById('st-pendientes').textContent = _reclamos.length;
+    document.getElementById('st-enviados-hoy').textContent = data.enviados_hoy ?? '--';
+  } catch(e){ toast('Error de conexión al cargar reclamos.', 'error'); }
+}
+
+function opcionesZona(zonaIdActual){
+  const base = '<option value="">Sin asignar</option>';
+  return base + _zonas.map(z =>
+    `<option value="${z.id}" ${z.id === zonaIdActual ? 'selected' : ''}>${z.nombre}</option>`
+  ).join('');
+}
+
+function renderTabla(){
+  const tbody = document.getElementById('tabla-reclamos');
+  if (!_reclamos.length){
+    tbody.innerHTML = '<tr><td colspan="7" class="empty">No hay reclamos pendientes de revisión.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = _reclamos.map(r => `
+    <tr>
+      <td>#${r.id}</td>
+      <td>${r.cliente}</td>
+      <td>${r.servicio || '—'}</td>
+      <td><span class="badge badge-${r.prioridad}">${r.prioridad.charAt(0).toUpperCase()+r.prioridad.slice(1)}</span></td>
+      <td>${r.zona_cliente || '— sin zona —'}</td>
+      <td><span class="timer-badge" data-inicio="${r.fecha_inicio_etapa || ''}">--:--:--</span></td>
+      <td>
+        <button class="btn primary" onclick="aprobarEnviarInstancia(${r.id})">
+          <i class="fas fa-paper-plane"></i> Aprobar y enviar
+        </button>
+      </td>
+    </tr>
+  `).join('');
+  actualizarTimers();
+}
+
+async function aprobarEnviarInstancia(reclamoId){
+  try {
+    const r = await fetch(`/api/jefe_especialidad/aprobar_enviar_instancia/${reclamoId}`, { method:'POST' });
+    const data = await r.json();
+    if (data.success){ toast(data.message, 'success'); cargarReclamos(); }
+    else toast(data.message || 'No se pudo enviar a instancia.', 'error');
+  } catch(e){ toast('Error de conexión.', 'error'); }
+}
+
+async function cargarMiembros(){
+  const cont = document.getElementById('lista-miembros');
+  try {
+    const r = await fetch(`/api/jefe_especialidad/miembros?especialidad=${ESPECIALIDAD}`);
+    const data = await r.json();
+    if (!data.success || !data.miembros || !data.miembros.length){
+      cont.innerHTML = '<div class="empty">No hay miembros registrados en este equipo.</div>';
+      document.getElementById('st-sin-zona').textContent = 0;
+      return;
+    }
+    document.getElementById('st-sin-zona').textContent = data.miembros.filter(m => !m.zona_id).length;
+    cont.innerHTML = data.miembros.map(m => `
+      <div class="miembro-row">
+        <div class="miembro-info">
+          <div class="nombre">${m.nombre_completo}</div>
+          <div class="rol">${m.rol}</div>
+        </div>
+        <select class="zona-select ${!m.zona_id ? 'sin-asignar' : ''}" onchange="asignarZonaMiembro(${m.usuario_id}, this.value)">
+          ${opcionesZona(m.zona_id)}
+        </select>
+      </div>
+    `).join('');
+  } catch(e){ cont.innerHTML = '<div class="empty">Error de conexión.</div>'; }
+}
+
+async function asignarZonaMiembro(usuarioId, zonaId){
+  if (!zonaId) return;
+  try {
+    const r = await fetch(`/api/jefe_especialidad/asignar_zona_miembro/${usuarioId}`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ zona_id: Number(zonaId) })
+    });
+    const data = await r.json();
+    if (data.success) toast(data.message, 'success');
+    else toast(data.message || 'No se pudo asignar la zona.', 'error');
+  } catch(e){ toast('Error de conexión.', 'error'); }
+}
+
+(async function init(){
+  await cargarZonas();
+  await cargarReclamos();
+  await cargarMiembros();
+})();
+setInterval(cargarReclamos, 20000);
+</script>
+</body>
+</html>

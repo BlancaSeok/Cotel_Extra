@@ -1,0 +1,677 @@
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    text-decoration: none;
+    font-family: 'Roboto', sans-serif;
+}
+
+/* =============================================
+   FONDO ANIMADO EN TONOS NARANJA
+   ============================================= */
+
+body{
+    min-height: 100vh;
+    background: linear-gradient(135deg,
+        #E65100,
+        #F57C00,
+        #FF9800,
+        #FFB74D,
+        #FF7043,
+        #EF6C00
+    );
+    background-size: 400% 400%;
+    animation: gradientShift 10s ease infinite;
+    position: relative;
+    overflow-x: hidden;
+}
+
+@keyframes gradientShift {
+    0%   { background-position: 0% 50%; }
+    25%  { background-position: 100% 0%; }
+    50%  { background-position: 100% 100%; }
+    75%  { background-position: 0% 100%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* Orbes flotantes animados sobre el fondo */
+body::before,
+body::after {
+    content: '';
+    position: fixed;
+    border-radius: 50%;
+    opacity: 0.3;
+    pointer-events: none;
+    z-index: 0;
+    animation: floatOrb linear infinite;
+}
+
+body::before {
+    width: 300px;
+    height: 300px;
+    background: #FFCC80;
+    top: 10%;
+    left: 5%;
+    animation-duration: 14s;
+}
+
+body::after {
+    width: 200px;
+    height: 200px;
+    background: #E65100;
+    top: 60%;
+    right: 8%;
+    animation-duration: 11s;
+    animation-delay: -5s;
+}
+
+@keyframes floatOrb {
+    0%   { transform: translateY(0)     translateX(0)    scale(1);    }
+    33%  { transform: translateY(-50px) translateX(25px) scale(1.08); }
+    66%  { transform: translateY(25px)  translateX(-20px)scale(0.95); }
+    100% { transform: translateY(0)     translateX(0)    scale(1);    }
+}
+
+/* =============================================
+   LAYOUT PRINCIPAL
+   ============================================= */
+
+main{
+    width: 100%;
+    padding: 20px;
+    margin: auto;
+    margin-top: 100px;
+    position: relative;
+    z-index: 1;
+}
+
+.contenedor__todo{
+    width: 100%;
+    max-width: 800px;
+    margin: auto;
+    position: relative;
+}
+
+/* =============================================
+   CAJA TRASERA  (panel lateral de bienvenida)
+   ============================================= */
+
+.caja__trasera{
+    width: 100%;
+    padding: 10px 20px;
+    display: flex;
+    justify-content: center;
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    background-color: rgba(230, 81, 0, 0.50);   /* #E65100 semitransparente */
+    top: 160px;
+    position: relative;
+}
+
+.caja__trasera div{
+    margin: 100px 40px;
+    color: #FFF3E0;                              /* naranja muy suave, casi blanco */
+    transition: all 500ms;
+}
+
+.caja__trasera div p,
+.caja__trasera button{
+    margin-top: 30px;
+}
+
+.caja__trasera div h3{
+    font-weight: 400;
+    font-size: 26px;
+}
+
+.caja__trasera div p{
+    font-size: 16px;
+    font-weight: 300;
+}
+
+.caja__trasera button{
+    padding: 10px 40px;
+    border: 2px solid #FFF3E0;
+    font-size: 14px;
+    background: transparent;
+    font-weight: 600;
+    cursor: pointer;
+    color: #FFF3E0;
+    outline: none;
+    transition: all 300ms;
+}
+
+.caja__trasera button:hover{
+    background: #FFF3E0;
+    color: #E65100;
+}
+
+/* =============================================
+   FORMULARIOS
+   ============================================= */
+
+.contenedor__login-register{
+    display: flex;
+    align-items: center;
+    width: 100%;
+    max-width: 380px;
+    position: relative;
+    top: -0px;
+    left: 10px;
+    transition: left 500ms cubic-bezier(0.175, 0.885, 0.320, 1.275);
+}
+
+.contenedor__login-register form{
+    width: 100%;
+    padding: 80px 20px;
+    background: white;
+    position: absolute;
+    border-radius: 20px;
+    box-shadow: 0 8px 30px rgba(230, 81, 0, 0.2);
+}
+
+.contenedor__login-register form h2{
+    font-size: 30px;
+    text-align: center;
+    margin-bottom: 20px;
+    color: #FF7043;                              /* naranja principal */
+}
+
+.contenedor__login-register form input{
+    width: 100%;
+    margin-top: 20px;
+    padding: 10px;
+    border: 1px solid #FFCC80;
+    background: #FFF3E0;                         /* naranja muy claro */
+    font-size: 16px;
+    outline: none;
+    border-radius: 5px;
+    transition: border-color 0.2s, background 0.2s;
+}
+
+.contenedor__login-register form input:focus{
+    border-color: #FF7043;
+    background: #FFE0B2;
+}
+
+.contenedor__login-register form button{
+    padding: 10px 40px;
+    margin-top: 40px;
+    border: none;
+    font-size: 14px;
+    background: #FF7043;                         /* naranja intenso */
+    font-weight: 600;
+    cursor: pointer;
+    color: white;
+    outline: none;
+    border-radius: 5px;
+    transition: background 0.3s;
+}
+
+.contenedor__login-register form button:hover{
+    background: #E65100;
+}
+
+/* =============================================
+   CAMPOS SELECT
+   ============================================= */
+
+.select__field {
+    width: 100%;
+    margin-top: 20px;
+    padding: 10px;
+    border: 1px solid #FFCC80;
+    background: #FFF3E0;
+    font-size: 16px;
+    outline: none;
+    border-radius: 5px;
+    color: #4E342E;
+    cursor: pointer;
+    transition: border-color 0.3s ease, background-color 0.3s ease;
+}
+
+.select__field:focus {
+    border: 2px solid #FF7043;
+    background: #FFE0B2;
+}
+
+.formulario__register select {
+    margin-bottom: 20px;
+}
+
+/* =============================================
+   BOTÓN SUBMIT
+   ============================================= */
+
+.btn__submit {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    margin-top: 20px;
+    background: #FF7043;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.btn__submit:hover {
+    background: #E65100;
+}
+
+/* =============================================
+   ESTADO FORMULARIOS (login visible / register oculto)
+   ============================================= */
+
+.formulario__login{
+    opacity: 1;
+    display: block;
+}
+.formulario__register{
+    display: none;
+}
+
+/* =============================================
+   BOTÓN INVITADO
+   ============================================= */
+
+.btn__guest {
+    display: block;
+    text-align: center;
+    margin-top: 10px;
+    background: #FFA726;                         /* naranja suave */
+    color: #fff;
+    text-decoration: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-size: 1rem;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+}
+
+.btn__guest:hover {
+    background-color: #FB8C00;
+}
+
+/* =============================================
+   CONTENEDOR CONTRASEÑA
+   ============================================= */
+
+.password-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-container .input__field {
+    flex: 1;
+    padding-right: 40px;
+}
+
+.password-container .toggle-password {
+    position: absolute;
+    right: 10px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+    color: #FF7043;
+}
+
+.password-container .toggle-password:focus {
+    outline: none;
+}
+
+.password-errors {
+    margin-top: 5px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #E65100;
+}
+
+.password-errors p {
+    margin: 0;
+}
+
+/* =============================================
+   VERIFICAR CÓDIGO
+   ============================================= */
+
+.verificar-codigo-container {
+    width: 100%;
+    max-width: 400px;
+    margin: auto;
+    margin-top: 100px;
+    padding: 20px;
+    background: rgba(230, 81, 0, 0.85);          /* naranja intenso semitransparente */
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    color: #FFF3E0;
+    position: relative;
+    z-index: 1;
+}
+
+.verificar-codigo-container h2 {
+    font-size: 24px;
+    text-align: center;
+    margin-bottom: 20px;
+    color: #FFF3E0;
+}
+
+.verificar-codigo-container .form-group {
+    margin-bottom: 20px;
+}
+
+.verificar-codigo-container .form-control {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #FFCC80;
+    border-radius: 5px;
+    background: #FFF3E0;
+    font-size: 16px;
+    outline: none;
+    transition: border-color 0.3s ease, background-color 0.3s ease;
+}
+
+.verificar-codigo-container .form-control:focus {
+    border: 2px solid #FF7043;
+    background: #FFE0B2;
+}
+
+.verificar-codigo-container .btn-primary {
+    width: 100%;
+    padding: 10px;
+    background: #FF7043;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.verificar-codigo-container .btn-primary:hover {
+    background: #E65100;
+}
+
+.verificar-codigo-container .alert {
+    margin-top: 10px;
+    font-size: 14px;
+    color: #4E342E;
+    border-radius: 5px;
+    background: #FFF3E0;
+    padding: 10px;
+}
+
+/* ==============================================
+   VERSIÓN MÓVIL
+   ============================================== */
+
+@media screen and (max-width: 850px){
+
+    html {
+        height: 100%;
+    }
+
+    body {
+        min-height: 100vh;
+        min-height: 100dvh;
+        width: 100%;
+        -webkit-text-size-adjust: 100%;
+        -ms-text-size-adjust: 100%;
+        text-size-adjust: 100%;
+    }
+
+    main {
+        width: 100%;
+        min-height: 100vh;
+        min-height: 100dvh;
+        padding: 10px;
+        margin: 0;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+        scroll-behavior: smooth;
+        overscroll-behavior: contain;
+    }
+
+    .contenedor__todo {
+        position: static;
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
+        padding: 0;
+        display: block;
+    }
+
+    .caja__trasera {
+        position: static;
+        width: 100%;
+        margin: 10px 0;
+        padding: 15px 10px;
+        flex-direction: column;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        background-color: rgba(230, 81, 0, 0.75);
+    }
+
+    .caja__trasera div {
+        margin: 10px 5px;
+        text-align: center;
+        transition: all 200ms ease;
+    }
+
+    .caja__trasera div h3 {
+        font-size: 18px;
+        margin-bottom: 8px;
+    }
+
+    .caja__trasera div p {
+        font-size: 12px;
+        margin-top: 5px;
+        margin-bottom: 10px;
+    }
+
+    .caja__trasera button {
+        margin-top: 5px;
+        padding: 8px 20px;
+        font-size: 12px;
+        transition: all 200ms ease;
+    }
+
+    .contenedor__login-register {
+        position: static !important;
+        top: 0 !important;
+        left: 0 !important;
+        transform: none !important;
+        width: 100%;
+        max-width: 100%;
+        margin: 20px 0;
+        padding: 0 10px;
+        display: block;
+        transition: opacity 300ms ease;
+    }
+
+    .contenedor__login-register form {
+        position: static !important;
+        transform: none !important;
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
+        padding: 25px 15px;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 2px 16px rgba(230, 81, 0, 0.25);
+    }
+
+    .contenedor__login-register form h2 {
+        font-size: 20px;
+        margin-bottom: 15px;
+        text-align: center;
+    }
+
+    .contenedor__login-register form input,
+    .select__field {
+        width: 100% !important;
+        box-sizing: border-box !important;
+        margin-top: 12px;
+        padding: 12px;
+        font-size: 16px !important;
+        border: 1px solid #FFCC80;
+        border-radius: 8px;
+        background: #FFF3E0;
+        min-height: 44px;
+        -webkit-appearance: none;
+        -moz-appearance: textfield;
+        appearance: none;
+        transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+        position: relative;
+        display: block;
+    }
+
+    .contenedor__login-register form input:focus,
+    .select__field:focus {
+        border: 2px solid #FF7043 !important;
+        background: #FFE0B2;
+        outline: none !important;
+        box-shadow: 0 0 0 3px rgba(255, 112, 67, 0.15);
+    }
+
+    .contenedor__login-register form button,
+    .btn__submit {
+        width: 100%;
+        margin-top: 20px;
+        padding: 12px;
+        min-height: 44px;
+        font-size: 16px;
+        font-weight: bold;
+        border: none;
+        border-radius: 8px;
+        background: #FF7043;
+        color: white;
+        cursor: pointer;
+        transition: background-color 0.2s ease, transform 0.1s ease;
+        position: relative;
+        display: block;
+    }
+
+    .contenedor__login-register form button:active {
+        transform: translateY(1px);
+    }
+
+    .password-container {
+        position: relative;
+        width: 100%;
+        margin-top: 12px;
+        display: block;
+    }
+
+    .password-container .input__field {
+        width: 100% !important;
+        padding: 12px 45px 12px 12px !important;
+        margin-top: 0 !important;
+        box-sizing: border-box;
+        position: relative;
+        display: block;
+        font-size: 16px !important;
+        min-height: 44px;
+        border: 1px solid #FFCC80;
+        border-radius: 8px;
+        background: #FFF3E0;
+        transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .password-container .input__field:focus {
+        border: 2px solid #FF7043 !important;
+        background: #FFE0B2;
+        outline: none !important;
+        box-shadow: 0 0 0 3px rgba(255, 112, 67, 0.15);
+    }
+
+    .password-container .toggle-password {
+        position: absolute;
+        right: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 35px;
+        height: 35px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 16px;
+        color: #FF7043;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10;
+        transition: color 0.2s ease;
+        pointer-events: auto;
+    }
+
+    .password-container .toggle-password:hover {
+        color: #E65100;
+    }
+
+    .formulario__login,
+    .formulario__register {
+        position: static !important;
+        transform: none !important;
+        opacity: 1 !important;
+        display: block;
+        visibility: visible;
+        height: auto;
+        overflow: visible;
+        transition: opacity 0.3s ease;
+    }
+
+    .formulario__register[style*="display: none"],
+    .formulario__login[style*="display: none"] {
+        display: none !important;
+    }
+
+    .btn__guest {
+        display: block;
+        width: 100%;
+        text-align: center;
+        margin-top: 15px;
+        padding: 12px 20px;
+        min-height: 44px;
+        background: #FFA726;
+        color: #fff;
+        text-decoration: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: bold;
+        transition: background-color 0.2s ease;
+        position: relative;
+        box-sizing: border-box;
+    }
+
+    .btn__guest:hover {
+        background-color: #FB8C00;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="tel"],
+    input[type="number"],
+    select,
+    textarea {
+        font-size: 16px !important;
+        min-height: 44px !important;
+        -webkit-text-size-adjust: 100%;
+        text-size-adjust: 100%;
+    }
+
+    .contenedor__login-register {
+        transition-duration: 0.3s !important;
+    }
+
+    .caja__trasera div {
+        transition-duration: 0.2s !important;
+    }
+}

@@ -1,0 +1,531 @@
+<!--
+  dashboard_jefe_helpdesk.html
+  ============================================================
+  Rol nuevo: Jefe Help Desk (login separado, tabla roles).
+
+  Backend pendiente de construir (aún no existe):
+    GET  /api/jefe_helpdesk/reclamos_pendientes
+         -> reclamos ya diagnosticados por Help Desk, esperando
+            que Jefe Help Desk decida prioridad y destino.
+    POST /api/jefe_helpdesk/enviar_instancia/<reclamo_id>
+         body: { instancia: 1|2 }
+         -> envía el reclamo a revisión de Jefe DRA (instancia=1)
+            o Jefe DRC (instancia=2), ANTES de llegar al Jefe de
+            Instancia (ver dashboard_jefe_especialidad.html).
+    GET  /api/jefe_helpdesk/tecnicos_disponibles
+    POST /api/jefe_helpdesk/asignar_tecnico_directo/<reclamo_id>
+         body: { tecnico_id }
+         -> salta instancia por completo, para casos urgentes/simples.
+
+  La vista (dashboard_jefe_helpdesk) debe pasar: nombre_usuario.
+  Todo lo demás se carga por AJAX desde el backend de arriba.
+============================================================
+-->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Jefe Help Desk — COTEL RL</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+:root{
+  --bg-dark:#160c02; --bg-dark2:#231202;
+  --orange:#f97316; --orange-deep:#d84315; --orange-soft:#ff8f00; --amber:#ea580c;
+  --green:#34d399; --red:#f87171;
+  --text-light:#fff3e0; --text-muted:#d9b48f;
+  --glass:rgba(255,255,255,0.05); --glass-border:rgba(249,115,22,0.25);
+  --mono:'Consolas',monospace;
+  /* alias de compatibilidad con el resto del CSS de este archivo */
+  --text:var(--text-light); --panel:var(--glass); --orange-dark:var(--orange-deep); --amber:#fbbf24;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0; font-family:'Segoe UI',system-ui,sans-serif;
+  background:
+    radial-gradient(circle at 15% 20%, rgba(249,115,22,0.18), transparent 45%),
+    radial-gradient(circle at 85% 75%, rgba(216,67,21,0.16), transparent 50%),
+    linear-gradient(160deg, var(--bg-dark), var(--bg-dark2));
+  color:var(--text-light); min-height:100vh; overflow-x:hidden;
+}
+
+/* Fondo animado: bolitas flotantes naranjas */
+.bg-anim{ position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden; }
+.bg-anim span{
+  position:absolute; bottom:-10%; border-radius:50%;
+  background:radial-gradient(circle at 30% 30%, rgba(249,115,22,0.55), rgba(216,67,21,0.05));
+  animation:flotar linear infinite;
+}
+@keyframes flotar{
+  0%   { transform:translateY(0) translateX(0) scale(0.8); opacity:0; }
+  10%  { opacity:0.7; }
+  90%  { opacity:0.4; }
+  100% { transform:translateY(-115vh) translateX(30px) scale(1.15); opacity:0; }
+}
+@media (prefers-reduced-motion: reduce){ .bg-anim span{ animation:none; opacity:0.15; } }
+
+.wrap{position:relative; z-index:1; max-width:1300px; margin:0 auto; padding:28px 22px 60px;}
+
+.topbar{display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; flex-wrap:wrap; gap:14px;}
+.brand{display:flex; align-items:center; gap:12px;}
+.brand-icon{
+  width:46px; height:46px; border-radius:14px;
+  background:linear-gradient(135deg, var(--orange), var(--orange-deep));
+  display:flex; align-items:center; justify-content:center;
+  box-shadow:0 6px 18px rgba(249,115,22,0.35); overflow:hidden;
+}
+.brand-icon img{ width:100%; height:100%; object-fit:cover; }
+.brand h1{font-size:1.3rem; margin:0; letter-spacing:.3px;}
+.brand small{color:var(--text-muted); display:block; font-size:.78rem;}
+
+.top-actions{display:flex; align-items:center; gap:14px; flex-wrap:wrap;}
+.perfil-mini{ display:flex; align-items:center; gap:10px; }
+.perfil-mini-foto{
+  width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  font-weight:700; color:#fff; background:linear-gradient(135deg, var(--orange), var(--orange-deep));
+  border:2px solid var(--orange); flex-shrink:0;
+}
+.perfil-mini-nombre{ font-size:.85rem; font-weight:600; }
+.perfil-mini-rol{ font-size:.72rem; color:var(--orange-soft); display:flex; align-items:center; gap:4px; }
+
+.btn-logout{
+  color:var(--text-light); text-decoration:none; padding:9px 18px;
+  border:1px solid var(--glass-border); border-radius:30px; font-size:.85rem;
+  background:var(--glass); transition:.2s; display:inline-flex; align-items:center; gap:6px; cursor:pointer;
+}
+.btn-logout:hover{background:rgba(249,115,22,0.18); color:#fff;}
+
+.stats{display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:14px; margin-bottom:22px;}
+.stat-card{
+  background:var(--panel); border:1px solid var(--glass-border); border-radius:12px;
+  padding:16px; backdrop-filter:blur(6px);
+}
+.stat-card .num{font-size:1.7rem; font-weight:700;}
+.stat-card .label{font-size:.78rem; color:var(--text-muted); margin-top:2px;}
+.stat-card.urgentes .num{color:var(--red);}
+
+.panel{
+  background:var(--panel); border:1px solid var(--glass-border); border-radius:14px;
+  padding:18px; backdrop-filter:blur(6px);
+}
+.panel h2{font-size:1rem; margin:0 0 14px; display:flex; align-items:center; gap:8px;}
+
+table{width:100%; border-collapse:collapse; font-size:.85rem;}
+th{text-align:left; color:var(--text-muted); font-weight:600; font-size:.75rem;
+   text-transform:uppercase; letter-spacing:.03em; padding:8px 10px; border-bottom:1px solid var(--glass-border);}
+td{padding:10px; border-bottom:1px solid rgba(255,255,255,.04); vertical-align:middle;}
+tr:hover td{background:rgba(255,255,255,.02);}
+
+.badge{display:inline-block; padding:3px 10px; border-radius:20px; font-size:.72rem; font-weight:600;}
+.badge-critica{background:rgba(248,113,113,.15); color:var(--red);}
+.badge-alta{background:rgba(251,191,36,.15); color:var(--amber);}
+.badge-media{background:rgba(52,211,153,.15); color:var(--green);}
+.badge-baja{background:rgba(255,255,255,.08); color:var(--text-muted);}
+
+.timer-badge{
+  display:inline-flex; align-items:center; gap:6px; font-family:var(--mono); font-weight:700;
+  font-size:.78rem; padding:5px 11px; border-radius:20px; white-space:nowrap;
+  color:var(--green); background:rgba(52,211,153,.1); border:1px solid rgba(52,211,153,.3);
+  transition:background-color .4s,color .4s,border-color .4s;
+}
+.timer-badge::before{content:''; width:6px; height:6px; border-radius:50%; background:currentColor;}
+.timer-badge.alerta{color:var(--amber); background:rgba(251,191,36,.14); border-color:rgba(251,191,36,.4);}
+.timer-badge.urgente{color:var(--red); background:rgba(248,113,113,.14); border-color:rgba(248,113,113,.45); animation:parpadeo 1.2s infinite;}
+@keyframes parpadeo{0%,100%{box-shadow:0 0 0 0 rgba(248,113,113,.4);}50%{box-shadow:0 0 0 5px rgba(248,113,113,0);}}
+
+.acciones{display:flex; gap:6px; flex-wrap:wrap;}
+.btn{
+  border:1px solid var(--glass-border); background:rgba(255,255,255,.03); color:var(--text);
+  padding:6px 12px; border-radius:8px; font-size:.78rem; cursor:pointer; transition:.2s;
+}
+.btn:hover{background:rgba(255,255,255,.08);}
+.btn.primary{background:var(--orange); border-color:var(--orange); color:#2a1608; font-weight:600;}
+.btn.primary:hover{background:var(--orange-dark);}
+.btn.outline-red{border-color:rgba(248,113,113,.4); color:var(--red);}
+
+.empty{text-align:center; color:var(--text-muted); padding:30px 0; font-size:.85rem;}
+
+.modal-overlay{
+  display:none; position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:100;
+  align-items:center; justify-content:center; padding:20px;
+}
+.modal-overlay.open{display:flex;}
+.modal{
+  background:#241608; border:1px solid var(--glass-border); border-radius:14px;
+  width:100%; max-width:440px; padding:22px; max-height:85vh; overflow-y:auto;
+}
+.modal h3{margin:0 0 6px; font-size:1.05rem;}
+.modal .sub{font-size:.8rem; color:var(--text-muted); margin-bottom:16px;}
+.field{margin-bottom:14px;}
+.field label{display:block; font-size:.8rem; color:var(--text-muted); margin-bottom:6px;}
+.field select, .field input, .field textarea{
+  width:100%; background:rgba(255,255,255,.04); border:1px solid var(--glass-border);
+  border-radius:8px; padding:9px 10px; color:var(--text); font-size:.85rem;
+}
+.tecnico-list{max-height:260px; overflow-y:auto; display:flex; flex-direction:column; gap:8px; margin-bottom:14px;}
+.tecnico-item{
+  display:flex; justify-content:space-between; align-items:center; padding:10px 12px;
+  border:1px solid var(--glass-border); border-radius:8px; cursor:pointer; transition:.2s;
+}
+.tecnico-item:hover{border-color:var(--orange);}
+.tecnico-item.selected{border-color:var(--orange); background:rgba(249,115,22,.08);}
+.tecnico-item .carga{font-size:.72rem; color:var(--text-muted);}
+.modal-actions{display:flex; justify-content:flex-end; gap:10px; margin-top:10px;}
+
+.toast{
+  position:fixed; bottom:24px; right:24px; padding:12px 18px; border-radius:10px;
+  background:#241608; border:1px solid var(--glass-border); font-size:.85rem; z-index:200;
+  opacity:0; transform:translateY(10px); transition:.25s;
+}
+.toast.show{opacity:1; transform:translateY(0);}
+.toast.success{border-color:rgba(52,211,153,.4); color:var(--green);}
+.toast.error{border-color:rgba(248,113,113,.4); color:var(--red);}
+</style>
+</head>
+<body>
+
+<div class="bg-anim" id="bgAnim"></div>
+
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-icon">
+        <img src="{{ url_for('static', filename='imagenes/Fibrito.png') }}" alt="COTEL RL">
+      </div>
+      <div>
+        <h1 style="font-size:1.3rem; margin:0; display:flex; align-items:center; gap:8px;">Jefe Help Desk</h1>
+        <small>Triage y priorización de reclamos diagnosticados</small>
+      </div>
+    </div>
+    <div class="top-actions">
+      <div class="perfil-mini">
+        <div class="perfil-mini-foto">{{ nombre_usuario[0]|upper if nombre_usuario else 'J' }}</div>
+        <div>
+          <div class="perfil-mini-nombre">{{ nombre_usuario }}</div>
+          <div class="perfil-mini-rol"><i class="fas fa-headset"></i> Jefe Help Desk</div>
+        </div>
+      </div>
+      <a href="{{ url_for('perfil') }}" class="btn-logout"><i class="fas fa-user-circle"></i> Mi Perfil</a>
+      <a href="{{ url_for('cerrar_sesion') }}" class="btn-logout"><i class="fas fa-sign-out-alt"></i> Salir</a>
+    </div>
+  </div>
+
+<div class="stats" id="stats-grid">
+  <div class="stat-card"><div class="num" id="st-pendientes">--</div><div class="label">Pendientes de triage</div></div>
+  <div class="stat-card urgentes"><div class="num" id="st-urgentes">--</div><div class="label">Urgentes (&gt;4h esperando)</div></div>
+  <div class="stat-card"><div class="num" id="st-instancia-hoy">--</div><div class="label">Enviados a instancia hoy</div></div>
+  <div class="stat-card"><div class="num" id="st-directo-hoy">--</div><div class="label">Asignados directo a técnico hoy</div></div>
+</div>
+
+<div class="panel">
+  <h2><i class="fas fa-list-check"></i> Reclamos pendientes de triage</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th><th>Cliente</th><th>Servicio</th><th>Prioridad</th>
+        <th>Tiempo esperando</th><th>Estado</th><th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody id="tabla-reclamos">
+      <tr><td colspan="7" class="empty">Cargando reclamos…</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="panel" style="margin-top:18px">
+  <h2><i class="fas fa-list"></i> Todos los reclamos</h2>
+  <div class="sub" style="font-size:.78rem; color:var(--text-muted); margin:-8px 0 14px;">
+    Misma vista que Help Desk — reclamos activos y resueltos en las últimas 24h.
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th><th>Cliente</th><th>Servicio</th><th>Título</th>
+        <th>Prioridad</th><th>Estado</th><th>Agente</th><th>Creado</th>
+      </tr>
+    </thead>
+    <tbody id="tabla-todos-reclamos">
+      <tr><td colspan="8" class="empty">Cargando…</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="panel" style="margin-top:18px">
+  <h2><i class="fas fa-map-location-dot"></i> Fallas por zona — todas las áreas</h2>
+  <div class="sub" style="font-size:.78rem; color:var(--text-muted); margin:-8px 0 14px;">
+    Vista general de conteo por zona. El detalle de cada reclamo lo maneja Help Desk.
+  </div>
+  <table>
+    <thead>
+      <tr><th>Zona</th><th>Total de fallas</th><th>En proceso</th></tr>
+    </thead>
+    <tbody id="tabla-fallas-zona">
+      <tr><td colspan="3" class="empty">Cargando…</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ── Modal: Enviar a Instancia (pasa primero por Jefe DRA/DRC) ── -->
+<div class="modal-overlay" id="modalInstancia" onclick="if(event.target===this) cerrarModales()">
+  <div class="modal">
+    <h3><i class="fas fa-diagram-project"></i> Enviar a instancia</h3>
+    <div class="sub">El reclamo #<span id="mi-reclamo-id"></span> pasará primero por el Jefe de la especialidad correspondiente para revisión y asignación de zona.</div>
+    <div class="field">
+      <label>Instancia destino</label>
+      <select id="mi-instancia">
+        <option value="1">1ra Instancia — revisa Jefe DRA</option>
+        <option value="2">2da Instancia — revisa Jefe DRC</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Nota (opcional)</label>
+      <textarea id="mi-nota" rows="2" placeholder="Contexto adicional para el jefe de especialidad…"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="cerrarModales()">Cancelar</button>
+      <button class="btn primary" id="mi-confirmar" onclick="confirmarEnviarInstancia()">Enviar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modal: Asignar Técnico Directo (salta instancia) ── -->
+<div class="modal-overlay" id="modalTecnicoDirecto" onclick="if(event.target===this) cerrarModales()">
+  <div class="modal">
+    <h3><i class="fas fa-bolt"></i> Asignar técnico directo</h3>
+    <div class="sub">Reclamo #<span id="td-reclamo-id"></span> — se salta la instancia. Úsalo solo para casos urgentes o simples.</div>
+    <div id="td-lista-tecnicos" class="tecnico-list">
+      <div class="empty">Cargando técnicos…</div>
+    </div>
+    <div class="field">
+      <label>Nota para el técnico (opcional)</label>
+      <textarea id="td-nota" rows="2" placeholder="Instrucciones puntuales…"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="cerrarModales()">Cancelar</button>
+      <button class="btn primary" id="td-confirmar" onclick="confirmarAsignarDirecto()">Asignar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let _reclamos = [];
+let _tecnicos = [];
+let _reclamoActivo = null;
+let _tecnicoSeleccionado = null;
+
+function toast(msg, tipo='success'){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast show ${tipo}`;
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function cerrarModales(){
+  document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('open'));
+  _reclamoActivo = null;
+  _tecnicoSeleccionado = null;
+}
+
+/* ── Timer de etapa (mismo patrón usado en Help Desk / Jefe de Instancia) ── */
+function formatDuracion(ms){
+  if (ms < 0) ms = 0;
+  const totalSec = Math.floor(ms/1000);
+  const dias = Math.floor(totalSec/86400);
+  const horas = Math.floor((totalSec%86400)/3600);
+  const min = Math.floor((totalSec%3600)/60);
+  const seg = totalSec%60;
+  const pad = n => String(n).padStart(2,'0');
+  return dias > 0 ? `${dias}d ${pad(horas)}:${pad(min)}:${pad(seg)}` : `${pad(horas)}:${pad(min)}:${pad(seg)}`;
+}
+function actualizarTimers(){
+  document.querySelectorAll('.timer-badge[data-inicio]').forEach(el => {
+    const inicio = el.getAttribute('data-inicio');
+    if (!inicio) { el.textContent = '—'; return; }
+    const elapsed = Date.now() - new Date(inicio).getTime();
+    const horas = elapsed / 3600000;
+    el.textContent = formatDuracion(elapsed);
+    el.classList.toggle('alerta', horas >= 2 && horas < 4);
+    el.classList.toggle('urgente', horas >= 4);
+  });
+}
+setInterval(actualizarTimers, 1000);
+
+/* ── Carga de datos ── */
+async function cargarReclamos(){
+  try {
+    const r = await fetch('/api/jefe_helpdesk/reclamos_pendientes');
+    const data = await r.json();
+    if (!data.success) { toast(data.message || 'Error al cargar reclamos', 'error'); return; }
+    _reclamos = data.reclamos || [];
+    renderTabla();
+    document.getElementById('st-pendientes').textContent = _reclamos.length;
+    document.getElementById('st-urgentes').textContent =
+      _reclamos.filter(r => (Date.now() - new Date(r.fecha_inicio_etapa).getTime()) >= 4*3600000).length;
+    document.getElementById('st-instancia-hoy').textContent = data.enviados_instancia_hoy ?? '--';
+    document.getElementById('st-directo-hoy').textContent = data.asignados_directo_hoy ?? '--';
+  } catch(e){ toast('Error de conexión al cargar reclamos.', 'error'); }
+}
+
+function renderTabla(){
+  const tbody = document.getElementById('tabla-reclamos');
+  if (!_reclamos.length){
+    tbody.innerHTML = '<tr><td colspan="7" class="empty">No hay reclamos pendientes de triage.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = _reclamos.map(r => `
+    <tr>
+      <td>#${r.id}</td>
+      <td>${r.cliente}</td>
+      <td>${r.servicio || '—'}</td>
+      <td><span class="badge badge-${r.prioridad}">${r.prioridad.charAt(0).toUpperCase()+r.prioridad.slice(1)}</span></td>
+      <td><span class="timer-badge" data-inicio="${r.fecha_inicio_etapa || ''}">--:--:--</span></td>
+      <td>${(r.estado || '').replace('_',' ')}</td>
+      <td class="acciones">
+        <button class="btn" onclick="abrirModalInstancia(${r.id})"><i class="fas fa-diagram-project"></i> A instancia</button>
+        <button class="btn outline-red" onclick="abrirModalDirecto(${r.id})"><i class="fas fa-bolt"></i> Directo a técnico</button>
+      </td>
+    </tr>
+  `).join('');
+  actualizarTimers();
+}
+
+/* ── Modal: Enviar a instancia ── */
+function abrirModalInstancia(reclamoId){
+  _reclamoActivo = reclamoId;
+  document.getElementById('mi-reclamo-id').textContent = reclamoId;
+  document.getElementById('mi-nota').value = '';
+  document.getElementById('modalInstancia').classList.add('open');
+}
+async function confirmarEnviarInstancia(){
+  if (!_reclamoActivo) return;
+  const instancia = document.getElementById('mi-instancia').value;
+  const nota = document.getElementById('mi-nota').value.trim();
+  try {
+    const r = await fetch(`/api/jefe_helpdesk/enviar_instancia/${_reclamoActivo}`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ instancia: Number(instancia), nota })
+    });
+    const data = await r.json();
+    if (data.success){ toast(data.message, 'success'); cerrarModales(); cargarReclamos(); }
+    else toast(data.message || 'No se pudo enviar a instancia.', 'error');
+  } catch(e){ toast('Error de conexión.', 'error'); }
+}
+
+/* ── Modal: Asignar técnico directo ── */
+async function abrirModalDirecto(reclamoId){
+  _reclamoActivo = reclamoId;
+  _tecnicoSeleccionado = null;
+  document.getElementById('td-reclamo-id').textContent = reclamoId;
+  document.getElementById('td-nota').value = '';
+  document.getElementById('modalTecnicoDirecto').classList.add('open');
+  await cargarTecnicos();
+}
+async function cargarTecnicos(){
+  const cont = document.getElementById('td-lista-tecnicos');
+  cont.innerHTML = '<div class="empty">Cargando técnicos…</div>';
+  try {
+    const r = await fetch('/api/jefe_helpdesk/tecnicos_disponibles');
+    const data = await r.json();
+    if (!data.success){ cont.innerHTML = `<div class="empty">${data.message || 'No se pudo cargar la lista.'}</div>`; return; }
+    _tecnicos = data.tecnicos || [];
+    if (!_tecnicos.length){ cont.innerHTML = '<div class="empty">No hay técnicos disponibles.</div>'; return; }
+    cont.innerHTML = _tecnicos.map(t => `
+      <div class="tecnico-item" data-id="${t.id}" onclick="seleccionarTecnico(${t.id})">
+        <div><strong>${t.nombre_completo}</strong><br><span class="carga">${t.tipo_tecnico || '—'} · ${t.reclamos_activos} activos</span></div>
+        <i class="fas fa-check" style="opacity:0"></i>
+      </div>
+    `).join('');
+  } catch(e){ cont.innerHTML = '<div class="empty">Error de conexión.</div>'; }
+}
+function seleccionarTecnico(id){
+  _tecnicoSeleccionado = id;
+  document.querySelectorAll('.tecnico-item').forEach(el => {
+    el.classList.toggle('selected', Number(el.dataset.id) === id);
+    el.querySelector('i').style.opacity = Number(el.dataset.id) === id ? 1 : 0;
+  });
+}
+async function confirmarAsignarDirecto(){
+  if (!_reclamoActivo) return;
+  if (!_tecnicoSeleccionado){ toast('Selecciona un técnico primero.', 'error'); return; }
+  const nota = document.getElementById('td-nota').value.trim();
+  try {
+    const r = await fetch(`/api/jefe_helpdesk/asignar_tecnico_directo/${_reclamoActivo}`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ tecnico_id: _tecnicoSeleccionado, nota })
+    });
+    const data = await r.json();
+    if (data.success){ toast(data.message, 'success'); cerrarModales(); cargarReclamos(); }
+    else toast(data.message || 'No se pudo asignar el técnico.', 'error');
+  } catch(e){ toast('Error de conexión.', 'error'); }
+}
+
+cargarReclamos();
+setInterval(cargarReclamos, 20000);
+
+/* ── Todos los reclamos (misma vista que Help Desk) ── */
+async function cargarTodosReclamos(){
+  const tbody = document.getElementById('tabla-todos-reclamos');
+  try {
+    const r = await fetch('/api/soporte/fallas_recientes');
+    const data = await r.json();
+    if (!data.success){ tbody.innerHTML = `<tr><td colspan="8" class="empty">${data.message || 'No se pudo cargar.'}</td></tr>`; return; }
+    if (!data.reclamos.length){ tbody.innerHTML = '<tr><td colspan="8" class="empty">No hay reclamos registrados.</td></tr>'; return; }
+    tbody.innerHTML = data.reclamos.map(r => `
+      <tr>
+        <td>#${r.id}</td>
+        <td>${r.nombre} ${r.apellido}</td>
+        <td>${r.servicio || '—'}</td>
+        <td>${r.titulo || '—'}</td>
+        <td><span class="badge badge-${r.prioridad}">${r.prioridad.charAt(0).toUpperCase()+r.prioridad.slice(1)}</span></td>
+        <td>${(r.estado || '').replace('_',' ')}</td>
+        <td>${r.agente || '—'}</td>
+        <td>${r.fecha_creacion ? new Date(r.fecha_creacion).toLocaleString('es-BO') : '—'}</td>
+      </tr>
+    `).join('');
+  } catch(e){ tbody.innerHTML = '<tr><td colspan="8" class="empty">Error de conexión.</td></tr>'; }
+}
+cargarTodosReclamos();
+setInterval(cargarTodosReclamos, 20000);
+
+/* ── Fallas por zona (solo conteo, sin detalle) ── */
+async function cargarFallasPorZona(){
+  const tbody = document.getElementById('tabla-fallas-zona');
+  try {
+    const r = await fetch('/api/soporte/fallas_por_zona');
+    const data = await r.json();
+    if (!data.success){ tbody.innerHTML = `<tr><td colspan="3" class="empty">${data.message || 'No se pudo cargar.'}</td></tr>`; return; }
+    const entradas = Object.entries(data.zonas || {});
+    if (!entradas.length){ tbody.innerHTML = '<tr><td colspan="3" class="empty">Sin datos por zona.</td></tr>'; return; }
+    tbody.innerHTML = entradas.map(([zona, info]) => `
+      <tr>
+        <td>${zona}</td>
+        <td>${info.total}</td>
+        <td>${info.en_proceso}</td>
+      </tr>
+    `).join('');
+  } catch(e){ tbody.innerHTML = '<tr><td colspan="3" class="empty">Error de conexión.</td></tr>'; }
+}
+cargarFallasPorZona();
+setInterval(cargarFallasPorZona, 30000);
+
+/* ── Fondo animado: bolitas flotantes ── */
+(function(){
+  const cont = document.getElementById('bgAnim');
+  if(!cont) return;
+  for(let i=0;i<18;i++){
+    const s = document.createElement('span');
+    const size = 8 + Math.random()*26;
+    s.style.width = size+'px';
+    s.style.height = size+'px';
+    s.style.left = Math.random()*100+'%';
+    s.style.animationDuration = (16+Math.random()*18)+'s';
+    s.style.animationDelay = (Math.random()*12)+'s';
+    cont.appendChild(s);
+  }
+})();
+</script>
+</div>
+</body>
+</html>

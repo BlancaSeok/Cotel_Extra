@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Administrador - COTEL RL</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<style>
+:root{
+    --bg-dark:#160c02;
+    --bg-dark2:#231202;
+    --orange:#f97316;
+    --orange-deep:#d84315;
+    --green:#34d399;
+    --red:#f87171;
+    --text-light:#fff3e0;
+    --text-muted:#d9b48f;
+    --glass:rgba(255,255,255,0.04);
+    --glass-border:rgba(249,115,22,0.25);
+}
+*{box-sizing:border-box;}
+body{
+    margin:0; font-family:'Segoe UI',system-ui,sans-serif;
+    background:
+        radial-gradient(circle at 10% 10%, rgba(249,115,22,0.14), transparent 45%),
+        radial-gradient(circle at 90% 90%, rgba(79,70,229,0.16), transparent 50%),
+        linear-gradient(160deg, var(--bg-dark), var(--bg-dark2));
+    color:var(--text-light); min-height:100vh; overflow-x:hidden;
+}
+/* Fondo animado: líneas de señal diagonales */
+.bg-anim{position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden; opacity:.35;}
+.bg-anim span{
+    position:absolute; width:2px; height:160px;
+    background:linear-gradient(180deg, transparent, var(--orange), transparent);
+    transform:rotate(35deg);
+    animation:deslizar linear infinite;
+}
+@keyframes deslizar{
+    0%{ transform:translateX(-10vw) translateY(-20vh) rotate(35deg); opacity:0; }
+    15%{ opacity:1; }
+    85%{ opacity:.6; }
+    100%{ transform:translateX(110vw) translateY(120vh) rotate(35deg); opacity:0; }
+}
+@media (prefers-reduced-motion: reduce){ .bg-anim span{ animation:none; opacity:0; } }
+
+.wrap{position:relative; z-index:1; max-width:1400px; margin:0 auto; padding:28px 22px 60px;}
+.topbar{display:flex; align-items:center; justify-content:space-between; margin-bottom:28px; flex-wrap:wrap; gap:14px;}
+.brand{display:flex; align-items:center; gap:12px;}
+.brand-icon{
+    width:46px; height:46px; border-radius:14px;
+    background:linear-gradient(135deg, var(--orange), var(--orange-deep));
+    display:flex; align-items:center; justify-content:center; font-size:1.3rem;
+    box-shadow:0 6px 18px rgba(249,115,22,0.35);
+}
+.brand h1{font-size:1.3rem; margin:0; letter-spacing:.3px;}
+.brand small{color:var(--text-muted); display:block; font-size:.78rem;}
+.btn-logout{
+    color:var(--text-light); text-decoration:none; padding:9px 18px;
+    border:1px solid var(--glass-border); border-radius:30px; font-size:.85rem;
+    background:var(--glass); transition:.2s;
+}
+.btn-logout:hover{background:rgba(249,115,22,0.18); color:#fff;}
+
+.stats-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:14px; margin-bottom:22px;}
+.stat-card{
+    background:var(--glass); border:1px solid var(--glass-border); border-radius:16px;
+    padding:16px 18px; backdrop-filter:blur(6px);
+}
+.stat-num{font-size:1.7rem; font-weight:700; color:var(--orange);}
+.stat-label{font-size:.76rem; color:var(--text-muted); margin-top:4px;}
+
+.roles-strip{display:flex; flex-wrap:wrap; gap:10px; margin-bottom:28px;}
+.role-chip{
+    background:var(--glass); border:1px solid var(--glass-border); border-radius:20px;
+    padding:8px 16px; font-size:.8rem; display:flex; align-items:center; gap:8px;
+}
+.role-chip b{color:var(--orange);}
+
+.panel{
+    background:var(--glass); border:1px solid var(--glass-border); border-radius:18px;
+    padding:22px; margin-bottom:24px; backdrop-filter:blur(6px);
+}
+.panel h2{font-size:1.05rem; margin:0 0 16px; display:flex; align-items:center; gap:10px; color:var(--text-light);}
+.panel h2 i{color:var(--orange);}
+.panel-actions{display:flex; justify-content:flex-end; margin-bottom:14px;}
+
+.search-row{display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap;}
+.search-row input, .search-row select{
+    background:rgba(255,255,255,.04); border:1px solid var(--glass-border); border-radius:8px;
+    color:var(--text-light); padding:8px 12px; font-size:.85rem;
+}
+.search-row input{flex:1; min-width:180px;}
+
+table{width:100%; border-collapse:collapse; font-size:.85rem;}
+th{
+    text-align:left; padding:10px 12px; color:var(--text-muted); border-bottom:1px solid var(--glass-border);
+    font-weight:600; font-size:.76rem; text-transform:uppercase; letter-spacing:.03em;
+}
+td{padding:10px 12px; border-bottom:1px solid rgba(255,255,255,0.05); vertical-align:middle;}
+tr:hover td{background:rgba(249,115,22,0.06);}
+
+.badge{display:inline-block; padding:3px 10px; border-radius:20px; font-size:.72rem; font-weight:600;}
+.badge-activo{background:rgba(52,211,153,.18); color:#6ee7b7;}
+.badge-inactivo{background:rgba(248,113,113,.18); color:#fca5a5;}
+.badge-rol{background:rgba(249,115,22,.18); color:#c7d2fe;}
+
+.btn-sm{
+    background:linear-gradient(135deg, var(--orange), var(--orange-deep)); color:#fff;
+    border:none; border-radius:20px; padding:6px 14px; font-size:.78rem; cursor:pointer; font-weight:600; transition:.2s;
+}
+.btn-sm:hover{transform:translateY(-1px); box-shadow:0 4px 12px rgba(249,115,22,.35);}
+.btn-sm.outline{background:transparent; border:1px solid var(--glass-border); color:var(--text-light);}
+.btn-sm.danger{background:linear-gradient(135deg,#f87171,#dc2626);}
+.btn-sm.small{padding:5px 12px; font-size:.72rem;}
+
+.empty{text-align:center; padding:30px; color:var(--text-muted);}
+
+.modal-overlay{
+    display:none; position:fixed; inset:0; z-index:200; background:rgba(4,4,10,.75);
+    backdrop-filter:blur(4px); align-items:center; justify-content:center; padding:20px;
+}
+.modal-overlay.open{display:flex;}
+.modal-box{
+    width:100%; max-width:520px; max-height:90vh; overflow-y:auto;
+    background:#231202; border:1px solid var(--glass-border); border-radius:16px; padding:24px;
+    box-shadow:0 20px 60px rgba(0,0,0,.5);
+}
+.modal-box h3{margin:0 0 16px; font-size:1.15rem;}
+.field{margin-bottom:14px;}
+.field label{display:block; font-size:.78rem; color:var(--text-muted); margin-bottom:6px;}
+.field input, .field select{
+    width:100%; background:rgba(255,255,255,.04); border:1px solid var(--glass-border); border-radius:8px;
+    color:var(--text-light); padding:10px 12px; font-size:.88rem; font-family:inherit;
+}
+.field input:focus, .field select:focus{outline:none; border-color:var(--orange);}
+.field-row{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+.modal-actions{display:flex; justify-content:flex-end; gap:10px; margin-top:18px;}
+
+.toast-box{position:fixed; top:20px; right:20px; z-index:300; display:flex; flex-direction:column; gap:10px;}
+.toast{
+    background:#231202; border:1px solid var(--glass-border); color:var(--text-light);
+    padding:12px 18px; border-radius:10px; font-size:.85rem; box-shadow:0 6px 20px rgba(0,0,0,.4);
+    animation:slidein .25s ease;
+}
+@keyframes slidein{from{transform:translateX(30px); opacity:0;} to{transform:translateX(0); opacity:1;}}
+</style>
+</head>
+<body>
+
+<div class="bg-anim" id="bgAnim"></div>
+
+<div class="wrap">
+    <div class="topbar">
+        <div class="brand">
+            <div class="brand-icon"><i class="fas fa-user-shield"></i></div>
+            <div>
+                <h1>Panel de Administrador</h1>
+                <small>Gestión de usuarios y roles &middot; {{ nombre_usuario }}</small>
+            </div>
+        </div>
+        <a href="{{ url_for('cerrar_sesion') }}" class="btn-logout"><i class="fas fa-sign-out-alt"></i> Salir</a>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card"><div class="stat-num">{{ stats.usuarios_activos or 0 }}</div><div class="stat-label">Usuarios activos</div></div>
+        <div class="stat-card"><div class="stat-num">{{ stats.usuarios_inactivos or 0 }}</div><div class="stat-label">Usuarios inactivos</div></div>
+        <div class="stat-card"><div class="stat-num">{{ stats.reclamos_activos or 0 }}</div><div class="stat-label">Reclamos activos</div></div>
+        <div class="stat-card"><div class="stat-num">{{ stats.reclamos_resueltos or 0 }}</div><div class="stat-label">Reclamos resueltos</div></div>
+        <div class="stat-card"><div class="stat-num">{{ stats.fallas_masivas_activas or 0 }}</div><div class="stat-label">Fallas masivas activas</div></div>
+    </div>
+
+    {% if stats.usuarios_por_rol %}
+    <div class="roles-strip">
+        {% for rol, cantidad in stats.usuarios_por_rol %}
+        <div class="role-chip">{{ rol|replace('_',' ')|title }}: <b>{{ cantidad }}</b></div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="panel">
+        <div class="panel-actions">
+            <button class="btn-sm" onclick="abrirCrearStaff()"><i class="fas fa-user-plus"></i> Crear cuenta de empleado</button>
+        </div>
+
+        <h2><i class="fas fa-users"></i> Usuarios del sistema</h2>
+        <div class="search-row">
+            <input type="text" id="filtro-texto" placeholder="Buscar por nombre o correo…" oninput="filtrarUsuarios()">
+            <select id="filtro-rol" onchange="filtrarUsuarios()">
+                <option value="">Todos los roles</option>
+                {% for r in roles_disponibles %}
+                <option value="{{ r[1]|lower }}">{{ r[1]|replace('_',' ')|title }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        {% if usuarios %}
+        <div style="overflow-x:auto;">
+        <table id="tabla-usuarios">
+            <thead>
+                <tr><th>Nombre</th><th>Correo</th><th>Rol</th><th>Tipo Téc.</th><th>Estado</th><th>Registrado</th><th>Acción</th></tr>
+            </thead>
+            <tbody>
+                {% for u in usuarios %}
+                <tr data-nombre="{{ (u[1]+' '+u[2]+' '+u[3])|lower }}" data-rol="{{ (u[5] or '')|lower }}">
+                    <td>{{ u[1] }} {{ u[2] }}</td>
+                    <td>{{ u[3] }}</td>
+                    <td><span class="badge badge-rol">{{ u[5]|replace('_',' ')|title }}</span></td>
+                    <td>
+                        {% if u[5]|lower == 'tecnico' %}
+                            {{ u[9] or '—' }}
+                        {% else %}—{% endif %}
+                    </td>
+                    <td>
+                        {% if u[6] %}<span class="badge badge-activo">Activo</span>
+                        {% else %}<span class="badge badge-inactivo">Inactivo</span>{% endif %}
+                    </td>
+                    <td>{{ u[8].strftime('%d/%m/%Y') if u[8] else '—' }}</td>
+                    <td>
+                        <button class="btn-sm small {{ 'danger' if u[6] else '' }}" onclick="toggleUsuario({{ u[0] }})">
+                            {{ 'Desactivar' if u[6] else 'Activar' }}
+                        </button>
+                        {% if u[5]|lower == 'tecnico' %}
+                        <button class="btn-sm small outline" onclick="abrirClasificarTecnico({{ u[0] }}, {{ (u[1]+' '+u[2])|tojson }})">Clasificar</button>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+        {% else %}
+        <div class="empty">No hay usuarios registrados todavía.</div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- MODAL: Crear cuenta de empleado -->
+<div class="modal-overlay" id="modalCrearStaff" onclick="if(event.target===this) cerrarModales()">
+    <div class="modal-box">
+        <h3><i class="fas fa-user-plus"></i> Crear cuenta de empleado</h3>
+        <div class="field-row">
+            <div class="field"><label>Nombres</label><input type="text" id="cs-nombre"></div>
+            <div class="field"><label>Apellidos</label><input type="text" id="cs-apellido"></div>
+        </div>
+        <div class="field"><label>Correo</label><input type="email" id="cs-correo"></div>
+        <div class="field"><label>Teléfono</label><input type="text" id="cs-telefono"></div>
+        <div class="field"><label>Rol</label>
+            <select id="cs-rol" onchange="toggleTipoTecnico()">
+                <option value="">Selecciona un rol</option>
+                {% for r in roles_disponibles %}
+                {% if r[1]|lower != 'cliente' %}
+                <option value="{{ r[0] }}" data-nombre="{{ r[1]|lower }}">{{ r[1]|replace('_',' ')|title }}</option>
+                {% endif %}
+                {% endfor %}
+            </select>
+        </div>
+        <div class="field" id="cs-campo-tipo-tecnico" style="display:none;">
+            <label>Tipo de técnico</label>
+            <select id="cs-tipo-tecnico">
+                <option value="">Selecciona</option>
+                <option value="RA">RA — Redes de Acceso</option>
+                <option value="RC">RC — Redes de Cableado</option>
+            </select>
+        </div>
+        <div class="field"><label>Contraseña temporal (8+ car., mayúscula, minúscula, número, símbolo)</label><input type="text" id="cs-contrasena"></div>
+        <div class="modal-actions">
+            <button class="btn-sm outline" onclick="cerrarModales()">Cancelar</button>
+            <button class="btn-sm" onclick="crearStaff()">Crear cuenta</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: Clasificar técnico -->
+<div class="modal-overlay" id="modalClasificarTecnico" onclick="if(event.target===this) cerrarModales()">
+    <div class="modal-box">
+        <h3><i class="fas fa-diagram-project"></i> Clasificar técnico — <span id="ct-nombre"></span></h3>
+        <div class="field">
+            <label>Servicio</label>
+            <select id="ct-servicio" onchange="toggleMedioTecnico()">
+                <option value="internet">Internet</option>
+                <option value="tv_cable">TV Cable</option>
+                <option value="telefonia">Telefonía</option>
+                <option value="transmisiones">Transmisiones (2da instancia)</option>
+            </select>
+        </div>
+        <div class="field" id="ct-campo-medio">
+            <label>Medio físico</label>
+            <select id="ct-medio">
+                <option value="fibra_optica">Fibra Óptica</option>
+                <option value="coaxial">Coaxial (EoC)</option>
+                <option value="cobre">Cobre</option>
+            </select>
+        </div>
+        <div class="field">
+            <label>Instancia</label>
+            <select id="ct-instancia">
+                <option value="1">1ra Instancia (DRA / Planta Externa)</option>
+                <option value="2">2da Instancia (DRC / Transmisiones)</option>
+            </select>
+        </div>
+        <div class="modal-actions">
+            <button class="btn-sm outline" onclick="cerrarModales()">Cancelar</button>
+            <button class="btn-sm" onclick="confirmarClasificar()">Guardar clasificación</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast-box" id="toastBox"></div>
+
+<script>
+(function(){
+    const cont = document.getElementById('bgAnim');
+    const n = window.innerWidth < 700 ? 8 : 16;
+    for (let i=0;i<n;i++){
+        const s = document.createElement('span');
+        s.style.left = (Math.random()*100) + '%';
+        s.style.animationDelay = (Math.random()*8) + 's';
+        s.style.animationDuration = (5 + Math.random()*4) + 's';
+        cont.appendChild(s);
+    }
+})();
+
+function toast(msg, tipo){
+    const box = document.getElementById('toastBox');
+    const el = document.createElement('div');
+    el.className = 'toast';
+    el.style.borderColor = tipo === 'error' ? 'rgba(248,113,113,.5)' : 'rgba(249,115,22,.5)';
+    el.textContent = msg;
+    box.appendChild(el);
+    setTimeout(()=> el.remove(), 4000);
+}
+function cerrarModales(){ document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('open')); }
+
+function filtrarUsuarios(){
+    const texto = document.getElementById('filtro-texto').value.toLowerCase();
+    const rol   = document.getElementById('filtro-rol').value.toLowerCase();
+    document.querySelectorAll('#tabla-usuarios tbody tr').forEach(tr => {
+        const coincideTexto = tr.dataset.nombre.includes(texto);
+        const coincideRol   = !rol || tr.dataset.rol === rol;
+        tr.style.display = (coincideTexto && coincideRol) ? '' : 'none';
+    });
+}
+
+async function toggleUsuario(id){
+    try {
+        const r = await fetch(`/api/admin/toggle_usuario/${id}`, { method:'POST' });
+        const data = await r.json();
+        if (data.success){ toast(data.message, 'ok'); setTimeout(()=>location.reload(), 900); }
+        else toast(data.message || 'Error', 'error');
+    } catch(e){ toast('Error de conexión.', 'error'); }
+}
+
+function abrirCrearStaff(){
+    ['cs-nombre','cs-apellido','cs-correo','cs-telefono','cs-contrasena'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('cs-rol').value = '';
+    document.getElementById('cs-campo-tipo-tecnico').style.display = 'none';
+    document.getElementById('modalCrearStaff').classList.add('open');
+}
+
+function toggleTipoTecnico(){
+    const sel = document.getElementById('cs-rol');
+    const opt = sel.options[sel.selectedIndex];
+    const esTecnico = opt && opt.dataset.nombre === 'tecnico';
+    document.getElementById('cs-campo-tipo-tecnico').style.display = esTecnico ? 'block' : 'none';
+}
+
+async function crearStaff(){
+    const idRol = document.getElementById('cs-rol').value;
+    const sel = document.getElementById('cs-rol');
+    const opt = sel.options[sel.selectedIndex];
+    const esTecnico = opt && opt.dataset.nombre === 'tecnico';
+
+    const payload = {
+        nombre: document.getElementById('cs-nombre').value.trim(),
+        apellido: document.getElementById('cs-apellido').value.trim(),
+        correo: document.getElementById('cs-correo').value.trim(),
+        telefono: document.getElementById('cs-telefono').value.trim(),
+        'contraseña': document.getElementById('cs-contrasena').value,
+        id_rol: idRol,
+        tipo_tecnico: esTecnico ? document.getElementById('cs-tipo-tecnico').value : null,
+    };
+    if (!payload.nombre || !payload.apellido || !payload.correo || !payload.telefono || !payload['contraseña'] || !idRol){
+        toast('Completa todos los campos.', 'error'); return;
+    }
+    try {
+        const r = await fetch('/api/admin/crear_staff', {
+            method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)
+        });
+        const data = await r.json();
+        if (data.success){ toast(data.message, 'ok'); cerrarModales(); setTimeout(()=>location.reload(), 1500); }
+        else toast(data.message || 'Error', 'error');
+    } catch(e){ toast('Error de conexión.', 'error'); }
+}
+
+let _tecnicoId = null;
+function abrirClasificarTecnico(id, nombre){
+    _tecnicoId = id;
+    document.getElementById('ct-nombre').textContent = nombre;
+    toggleMedioTecnico();
+    document.getElementById('modalClasificarTecnico').classList.add('open');
+}
+function toggleMedioTecnico(){
+    const esTransmisiones = document.getElementById('ct-servicio').value === 'transmisiones';
+    document.getElementById('ct-campo-medio').style.display = esTransmisiones ? 'none' : 'block';
+}
+async function confirmarClasificar(){
+    if (!_tecnicoId) return;
+    try {
+        const r = await fetch(`/api/admin/clasificar_tecnico/${_tecnicoId}`, {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({
+                servicio_tecnico: document.getElementById('ct-servicio').value,
+                medio_tecnico: document.getElementById('ct-servicio').value === 'transmisiones' ? null : document.getElementById('ct-medio').value,
+                instancia_tecnico: document.getElementById('ct-instancia').value,
+            })
+        });
+        const data = await r.json();
+        if (data.success){ toast(data.message, 'ok'); cerrarModales(); }
+        else toast(data.message || 'Error', 'error');
+    } catch(e){ toast('Error de conexión.', 'error'); }
+}
+</script>
+</body>
+</html>

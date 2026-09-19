@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Pagos - COTEL RL</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #d27300;
+            --secondary-color: #af5700;
+            --accent-color: #f69d00;
+            --light-color: #fff1e0;
+            --cream-color: #ffe4c7;
+        }
+        body { background: linear-gradient(135deg, var(--light-color), #ffffff); min-height: 100vh; }
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            box-shadow: 0 2px 10px rgba(175, 87, 0, 0.3);
+        }
+        .card { border: none; border-radius: 16px; box-shadow: 0 5px 15px rgba(210, 115, 0, 0.1); }
+        .text-primary { color: var(--primary-color) !important; }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-color), var(--primary-color));
+            border: none; border-radius: 25px; padding: 8px 18px; font-weight: 600;
+        }
+        .btn-primary:hover{ transform: scale(1.03); }
+
+        .resumen-card{
+            background: linear-gradient(135deg, var(--accent-color), var(--primary-color));
+            color:#fff; border-radius:16px;
+        }
+        .resumen-card .num{ font-size:2.2rem; font-weight:700; }
+        .resumen-card.deuda{ background: linear-gradient(135deg, #ef5350, #c62828); }
+        .resumen-card.aldia{ background: linear-gradient(135deg, #43a047, #2e7d32); }
+
+        .simulacion-banner{
+            background: repeating-linear-gradient(45deg, #fff3cd, #fff3cd 10px, #ffe8a1 10px, #ffe8a1 20px);
+            border: 2px dashed #b45309; border-radius: 12px;
+            padding: 12px 16px; margin-bottom: 20px; color: #7c4a03; font-weight: 600; font-size: .88rem;
+            display:flex; align-items:center; gap:10px;
+        }
+        .factura-row.pagado { opacity:.65; }
+        .badge-vencido{ background:#d84315 !important; }
+        .badge-pendiente{ background:#f69d00 !important; color:#fff; }
+        .badge-pagado{ background:#2e7d32 !important; }
+        .table thead{ background: var(--cream-color); }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="{{ url_for('dashboard_cliente') }}">
+                <img src="{{ url_for('static', filename='imagenes/Logo1Cotel.png') }}" alt="Logo" height="40" class="me-2">
+                COTEL RL
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="{{ url_for('dashboard_cliente') }}"><i class="fas fa-home me-1"></i>Dashboard</a>
+                <a class="nav-link" href="{{ url_for('perfil_cliente') }}"><i class="fas fa-user-circle me-1"></i>Mi Perfil</a>
+                <a class="nav-link" href="{{ url_for('cerrar_sesion') }}"><i class="fas fa-sign-out-alt me-1"></i>Salir</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4 mb-5">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show">
+                    {{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <h1 class="text-primary mb-1"><i class="fas fa-credit-card me-2"></i>Mis Pagos</h1>
+        <p class="text-muted mb-4">Revisa tus facturas y realiza el pago simulado para pruebas del sistema.</p>
+
+        <div class="simulacion-banner">
+            <i class="fas fa-flask fa-lg"></i>
+            <div>
+                <strong>Entorno de prueba:</strong> los pagos aquí son simulados y no representan transacciones reales.
+                Se usan únicamente para validar el sistema.
+            </div>
+        </div>
+
+        <!-- Resumen -->
+        <div class="row mb-4">
+            <div class="col-md-4 mb-3">
+                <div class="card resumen-card">
+                    <div class="card-body text-center">
+                        <div class="num">{{ facturas|length }}</div>
+                        <div>Facturas totales</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card resumen-card deuda">
+                    <div class="card-body text-center">
+                        <div class="num">Bs. {{ "%.2f"|format(total_adeudado) }}</div>
+                        <div>Total pendiente / vencido</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card resumen-card aldia">
+                    <div class="card-body text-center">
+                        <div class="num">{{ facturas_pagadas }}</div>
+                        <div>Facturas pagadas</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header bg-white"><h5 class="mb-0"><i class="fas fa-file-invoice me-2"></i>Historial de facturas</h5></div>
+            <div class="card-body">
+                {% if facturas %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>N° Factura</th>
+                                <th>Emisión</th>
+                                <th>Vencimiento</th>
+                                <th>Total</th>
+                                <th>Estado</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for f in facturas %}
+                            <tr class="factura-row {% if f[5] == 'pagado' %}pagado{% endif %}">
+                                <td>{{ f[1] }}</td>
+                                <td>{{ f[2].strftime('%d/%m/%Y') if f[2] else '-' }}</td>
+                                <td>{{ f[3].strftime('%d/%m/%Y') if f[3] else '-' }}</td>
+                                <td>Bs. {{ "%.2f"|format(f[4]) }}</td>
+                                <td>
+                                    {% if f[5] == 'pagado' %}
+                                        <span class="badge badge-pagado">Pagado</span>
+                                    {% elif f[5] == 'vencido' %}
+                                        <span class="badge badge-vencido">Vencido</span>
+                                    {% else %}
+                                        <span class="badge badge-pendiente">Pendiente</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if f[5] != 'pagado' %}
+                                    <button class="btn btn-primary btn-sm" onclick="simularPago({{ f[0] }}, this)">
+                                        <i class="fas fa-flask me-1"></i>Pagar (simulado)
+                                    </button>
+                                    {% else %}
+                                    <small class="text-muted"><i class="fas fa-check-circle text-success me-1"></i>{{ f[6].strftime('%d/%m/%Y %H:%M') if f[6] else '' }}</small>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-file-invoice fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">No tienes facturas registradas.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container position-fixed top-0 end-0 p-3" id="toastBox"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function toast(msg, tipo){
+            const box = document.getElementById('toastBox');
+            const el = document.createElement('div');
+            el.className = 'alert ' + (tipo === 'error' ? 'alert-danger' : 'alert-success');
+            el.style.minWidth = '260px';
+            el.textContent = msg;
+            box.appendChild(el);
+            setTimeout(()=> el.remove(), 4000);
+        }
+
+        async function simularPago(facturaId, btn){
+            btn.disabled = true;
+            try {
+                const r = await fetch(`/api/pagos/simular_pago/${facturaId}`, { method: 'POST' });
+                const data = await r.json();
+                if (data.success){
+                    toast(data.message, 'ok');
+                    setTimeout(() => location.reload(), 1200);
+                } else {
+                    toast(data.message || 'No se pudo procesar.', 'error');
+                    btn.disabled = false;
+                }
+            } catch(e){
+                toast('Error de conexión.', 'error');
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>

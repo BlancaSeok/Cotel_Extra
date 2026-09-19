@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nodo Internet - COTEL RL</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<style>
+:root{
+    --bg-dark:#160c02;
+    --bg-dark2:#231202;
+    --orange:#f97316;
+    --orange-deep:#d84315;
+    --green:#34d399;
+    --amber:#fbbf24;
+    --red:#f87171;
+    --text-light:#fff3e0;
+    --text-muted:#d9b48f;
+    --glass:rgba(255,255,255,0.04);
+    --glass-border:rgba(249,115,22,0.25);
+}
+*{box-sizing:border-box;}
+body{
+    margin:0; font-family:'Segoe UI',system-ui,sans-serif;
+    background:
+        radial-gradient(circle at 15% 15%, rgba(249,115,22,0.14), transparent 45%),
+        radial-gradient(circle at 85% 80%, rgba(8,145,178,0.16), transparent 50%),
+        linear-gradient(160deg, var(--bg-dark), var(--bg-dark2));
+    color:var(--text-light); min-height:100vh; overflow-x:hidden;
+}
+/* Fondo animado: puntos de red parpadeantes (nodos) */
+.bg-anim{position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden;}
+.bg-anim span{
+    position:absolute; width:6px; height:6px; border-radius:50%;
+    background:var(--orange); box-shadow:0 0 10px 2px rgba(249,115,22,.7);
+    animation:parpadeo 3.2s ease-in-out infinite;
+}
+@keyframes parpadeo{
+    0%,100%{ opacity:.15; transform:scale(.8); }
+    50%{ opacity:.9; transform:scale(1.3); }
+}
+@media (prefers-reduced-motion: reduce){ .bg-anim span{ animation:none; opacity:.25; } }
+
+.wrap{position:relative; z-index:1; max-width:1300px; margin:0 auto; padding:28px 22px 60px;}
+.topbar{display:flex; align-items:center; justify-content:space-between; margin-bottom:28px; flex-wrap:wrap; gap:14px;}
+.brand{display:flex; align-items:center; gap:12px;}
+.brand-icon{
+    width:46px; height:46px; border-radius:14px;
+    background:linear-gradient(135deg, var(--orange), var(--orange-deep));
+    display:flex; align-items:center; justify-content:center; font-size:1.3rem; color:#2b0e00;
+    box-shadow:0 6px 18px rgba(249,115,22,0.35);
+}
+.brand h1{font-size:1.3rem; margin:0; letter-spacing:.3px;}
+.brand small{color:var(--text-muted); display:block; font-size:.78rem;}
+.btn-logout{
+    color:var(--text-light); text-decoration:none; padding:9px 18px;
+    border:1px solid var(--glass-border); border-radius:30px; font-size:.85rem;
+    background:var(--glass); transition:.2s;
+}
+.btn-logout:hover{background:rgba(249,115,22,0.18); color:#fff;}
+
+.stats-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:16px; margin-bottom:28px;}
+.stat-card{
+    background:var(--glass); border:1px solid var(--glass-border); border-radius:16px;
+    padding:18px 20px; backdrop-filter:blur(6px); position:relative; overflow:hidden;
+}
+.stat-num{font-size:2rem; font-weight:700; color:var(--orange);}
+.stat-label{font-size:.82rem; color:var(--text-muted); margin-top:4px;}
+
+.panel{
+    background:var(--glass); border:1px solid var(--glass-border); border-radius:18px;
+    padding:22px; margin-bottom:24px; backdrop-filter:blur(6px);
+}
+.panel h2{font-size:1.05rem; margin:0 0 16px; display:flex; align-items:center; gap:10px; color:var(--text-light);}
+.panel h2 i{color:var(--orange);}
+.panel-actions{display:flex; justify-content:flex-end; margin-bottom:14px;}
+
+table{width:100%; border-collapse:collapse; font-size:.88rem;}
+th{
+    text-align:left; padding:10px 12px; color:var(--text-muted); border-bottom:1px solid var(--glass-border);
+    font-weight:600; font-size:.78rem; text-transform:uppercase; letter-spacing:.03em;
+}
+td{padding:10px 12px; border-bottom:1px solid rgba(255,255,255,0.05); vertical-align:middle;}
+tr:hover td{background:rgba(249,115,22,0.06);}
+
+.badge{display:inline-block; padding:3px 10px; border-radius:20px; font-size:.72rem; font-weight:600;}
+.badge-activa{background:rgba(248,113,113,.18); color:#fca5a5;}
+.badge-en_reparacion{background:rgba(251,191,36,.18); color:#fde68a;}
+.badge-resuelta{background:rgba(52,211,153,.18); color:#6ee7b7;}
+
+.btn-sm{
+    background:linear-gradient(135deg, var(--orange), var(--orange-deep)); color:#2b0e00;
+    border:none; border-radius:20px; padding:7px 16px; font-size:.8rem; cursor:pointer; font-weight:600; transition:.2s;
+}
+.btn-sm:hover{transform:translateY(-1px); box-shadow:0 4px 12px rgba(249,115,22,.35);}
+.btn-sm.outline{background:transparent; border:1px solid var(--glass-border); color:var(--text-light);}
+.btn-sm.danger{background:linear-gradient(135deg,#f87171,#dc2626); color:#fff;}
+.btn-sm:disabled{opacity:.5; cursor:not-allowed;}
+
+.empty{text-align:center; padding:30px; color:var(--text-muted);}
+
+/* Modal */
+.modal-overlay{
+    display:none; position:fixed; inset:0; z-index:200; background:rgba(2,10,12,.75);
+    backdrop-filter:blur(4px); align-items:center; justify-content:center; padding:20px;
+}
+.modal-overlay.open{display:flex;}
+.modal-box{
+    width:100%; max-width:520px; max-height:90vh; overflow-y:auto;
+    background:#231202; border:1px solid var(--glass-border); border-radius:16px; padding:24px;
+    box-shadow:0 20px 60px rgba(0,0,0,.5);
+}
+.modal-box h3{margin:0 0 16px; font-size:1.2rem;}
+.field{margin-bottom:14px;}
+.field label{display:block; font-size:.78rem; color:var(--text-muted); margin-bottom:6px;}
+.field input, .field textarea, .field select{
+    width:100%; background:rgba(255,255,255,.04); border:1px solid var(--glass-border); border-radius:8px;
+    color:var(--text-light); padding:10px 12px; font-size:.88rem; font-family:inherit;
+}
+.field input:focus, .field textarea:focus, .field select:focus{outline:none; border-color:var(--orange);}
+.modal-actions{display:flex; justify-content:flex-end; gap:10px; margin-top:18px;}
+
+.toast-box{position:fixed; top:20px; right:20px; z-index:300; display:flex; flex-direction:column; gap:10px;}
+.toast{
+    background:#231202; border:1px solid var(--glass-border); color:var(--text-light);
+    padding:12px 18px; border-radius:10px; font-size:.85rem; box-shadow:0 6px 20px rgba(0,0,0,.4);
+    animation:slidein .25s ease;
+}
+@keyframes slidein{from{transform:translateX(30px); opacity:0;} to{transform:translateX(0); opacity:1;}}
+
+.tabs{display:flex; gap:8px; margin-bottom:18px; flex-wrap:wrap;}
+.tab-btn{
+    background:var(--glass); border:1px solid var(--glass-border); color:var(--text-muted);
+    padding:8px 16px; border-radius:20px; font-size:.82rem; cursor:pointer; transition:.2s;
+}
+.tab-btn.active{background:linear-gradient(135deg, var(--orange), var(--orange-deep)); color:#2b0e00; font-weight:600;}
+</style>
+</head>
+<body>
+
+<div class="bg-anim" id="bgAnim"></div>
+
+<div class="wrap">
+    <div class="topbar">
+        <div class="brand">
+            <div class="brand-icon"><i class="fas fa-network-wired"></i></div>
+            <div>
+                <h1>Nodo Internet</h1>
+                <small>Fallas masivas &middot; {{ nombre_usuario }}</small>
+            </div>
+        </div>
+        <a href="{{ url_for('cerrar_sesion') }}" class="btn-logout"><i class="fas fa-sign-out-alt"></i> Salir</a>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card"><div class="stat-num">{{ stats.activas or 0 }}</div><div class="stat-label">Fallas activas</div></div>
+        <div class="stat-card"><div class="stat-num">{{ stats.en_reparacion or 0 }}</div><div class="stat-label">En reparación</div></div>
+        <div class="stat-card"><div class="stat-num">{{ stats.resueltas or 0 }}</div><div class="stat-label">Resueltas</div></div>
+        <div class="stat-card"><div class="stat-num">{{ stats.total_clientes or 0 }}</div><div class="stat-label">Clientes afectados (total)</div></div>
+        <div class="stat-card"><div class="stat-num">{{ stats.reclamos_sin_asignar or 0 }}</div><div class="stat-label">Reclamos sin asociar</div></div>
+    </div>
+
+    <div class="panel">
+        <div class="panel-actions">
+            <button class="btn-sm" onclick="abrirCrearFalla()"><i class="fas fa-plus"></i> Registrar falla masiva</button>
+        </div>
+
+        <h2><i class="fas fa-triangle-exclamation"></i> Fallas Activas</h2>
+        {% if fallas_activas %}
+        <div style="overflow-x:auto;">
+        <table>
+            <thead><tr><th>Código</th><th>Nombre</th><th>Nodo</th><th>Sector</th><th>Clientes</th><th>Inicio</th><th>Cuadrilla</th><th>Acción</th></tr></thead>
+            <tbody>
+                {% for f in fallas_activas %}
+                <tr>
+                    <td><span class="badge badge-activa">{{ f[1] }}</span></td>
+                    <td>{{ f[2] }}</td>
+                    <td>{{ f[3] or '—' }}</td>
+                    <td>{{ f[4] or '—' }}</td>
+                    <td>{{ f[5] or 0 }}</td>
+                    <td>{{ f[6].strftime('%d/%m %H:%M') if f[6] else '—' }}</td>
+                    <td>{{ f[7] or '—' }}</td>
+                    <td><button class="btn-sm outline" onclick="abrirActualizar({{ f[0] }}, {{ f[2]|tojson }}, 'en_reparacion')">Enviar cuadrilla</button></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+        {% else %}
+        <div class="empty"><i class="fas fa-check-circle fa-2x" style="color:var(--green);"></i><p>No hay fallas masivas activas.</p></div>
+        {% endif %}
+    </div>
+
+    <div class="panel">
+        <h2><i class="fas fa-truck-fast"></i> En Reparación</h2>
+        {% if fallas_en_reparacion %}
+        <div style="overflow-x:auto;">
+        <table>
+            <thead><tr><th>Código</th><th>Nombre</th><th>Nodo</th><th>Clientes</th><th>Cuadrilla</th><th>Duración</th><th>Acción</th></tr></thead>
+            <tbody>
+                {% for f in fallas_en_reparacion %}
+                <tr>
+                    <td><span class="badge badge-en_reparacion">{{ f[1] }}</span></td>
+                    <td>{{ f[2] }}</td>
+                    <td>{{ f[3] or '—' }}</td>
+                    <td>{{ f[5] or 0 }}</td>
+                    <td>{{ f[7] or '—' }}</td>
+                    <td>{{ f[9] or 0 }} min</td>
+                    <td><button class="btn-sm" onclick="abrirResolver({{ f[0] }}, {{ f[2]|tojson }})">Marcar resuelta</button></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+        {% else %}
+        <div class="empty">No hay fallas en reparación en este momento.</div>
+        {% endif %}
+    </div>
+
+    <div class="panel">
+        <h2><i class="fas fa-clock-rotate-left"></i> Resueltas (últimas 24h)</h2>
+        {% if fallas_resueltas %}
+        <div style="overflow-x:auto;">
+        <table>
+            <thead><tr><th>Código</th><th>Nombre</th><th>Nodo</th><th>Clientes</th><th>Duración total</th><th>Resuelta</th></tr></thead>
+            <tbody>
+                {% for f in fallas_resueltas %}
+                <tr>
+                    <td><span class="badge badge-resuelta">{{ f[1] }}</span></td>
+                    <td>{{ f[2] }}</td>
+                    <td>{{ f[3] or '—' }}</td>
+                    <td>{{ f[4] or 0 }}</td>
+                    <td>{{ f[7] or 0 }} min</td>
+                    <td>{{ f[6].strftime('%d/%m %H:%M') if f[6] else '—' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+        {% else %}
+        <div class="empty">Sin fallas resueltas en las últimas 24 horas.</div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- MODAL: Registrar falla masiva -->
+<div class="modal-overlay" id="modalCrear" onclick="if(event.target===this) cerrarModales()">
+    <div class="modal-box">
+        <h3><i class="fas fa-plus-circle"></i> Nueva falla masiva</h3>
+        <div class="field"><label>Nombre de la falla</label><input type="text" id="cf-nombre" placeholder="Ej: Corte de fibra troncal Zona Sur"></div>
+        <div class="field"><label>Nodo</label><input type="text" id="cf-nodo" placeholder="Ej: OLT-CENTRAL-04"></div>
+        <div class="field"><label>Sector</label><input type="text" id="cf-sector" placeholder="Ej: Zona Sur / Calacoto"></div>
+        <div class="field"><label>Descripción</label><textarea id="cf-descripcion" rows="3" placeholder="Detalle de la falla…"></textarea></div>
+        <div class="modal-actions">
+            <button class="btn-sm outline" onclick="cerrarModales()">Cancelar</button>
+            <button class="btn-sm" onclick="crearFalla()">Registrar</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: Actualizar falla (enviar cuadrilla) -->
+<div class="modal-overlay" id="modalActualizar" onclick="if(event.target===this) cerrarModales()">
+    <div class="modal-box">
+        <h3><i class="fas fa-truck-fast"></i> Enviar cuadrilla — <span id="au-nombre"></span></h3>
+        <div class="field"><label>Cuadrilla asignada</label><input type="text" id="au-cuadrilla" placeholder="Ej: Cuadrilla 3 - Zona Sur"></div>
+        <div class="field"><label>Fecha estimada de solución</label><input type="datetime-local" id="au-fecha"></div>
+        <div class="field"><label>Observaciones</label><textarea id="au-observaciones" rows="2"></textarea></div>
+        <div class="modal-actions">
+            <button class="btn-sm outline" onclick="cerrarModales()">Cancelar</button>
+            <button class="btn-sm" onclick="actualizarFalla()">Confirmar</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: Resolver falla -->
+<div class="modal-overlay" id="modalResolver" onclick="if(event.target===this) cerrarModales()">
+    <div class="modal-box">
+        <h3><i class="fas fa-check-circle"></i> Resolver — <span id="re-nombre"></span></h3>
+        <p style="color:var(--text-muted); font-size:.85rem;">
+            Se liberará automáticamente por IVR a todos los reclamos asociados a esta falla masiva.
+        </p>
+        <div class="field"><label>Observaciones de cierre</label><textarea id="re-observaciones" rows="3" placeholder="Qué se hizo para resolver la falla…"></textarea></div>
+        <div class="modal-actions">
+            <button class="btn-sm outline" onclick="cerrarModales()">Cancelar</button>
+            <button class="btn-sm" onclick="resolverFalla()">Confirmar resolución</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast-box" id="toastBox"></div>
+
+<script>
+// Fondo animado
+(function(){
+    const cont = document.getElementById('bgAnim');
+    const n = window.innerWidth < 700 ? 18 : 35;
+    for (let i=0;i<n;i++){
+        const s = document.createElement('span');
+        s.style.left = Math.random()*100 + '%';
+        s.style.top  = Math.random()*100 + '%';
+        s.style.animationDelay = (Math.random()*3.2) + 's';
+        s.style.animationDuration = (2.4 + Math.random()*2.4) + 's';
+        cont.appendChild(s);
+    }
+})();
+
+function toast(msg, tipo){
+    const box = document.getElementById('toastBox');
+    const el = document.createElement('div');
+    el.className = 'toast';
+    el.style.borderColor = tipo === 'error' ? 'rgba(248,113,113,.5)' : 'rgba(249,115,22,.5)';
+    el.textContent = msg;
+    box.appendChild(el);
+    setTimeout(()=> el.remove(), 4000);
+}
+
+function cerrarModales(){
+    document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('open'));
+}
+
+function abrirCrearFalla(){
+    document.getElementById('cf-nombre').value = '';
+    document.getElementById('cf-nodo').value = '';
+    document.getElementById('cf-sector').value = '';
+    document.getElementById('cf-descripcion').value = '';
+    document.getElementById('modalCrear').classList.add('open');
+}
+
+async function crearFalla(){
+    const nombre = document.getElementById('cf-nombre').value.trim();
+    if (!nombre){ toast('El nombre de la falla es obligatorio.', 'error'); return; }
+    try {
+        const r = await fetch('/api/soporte/crear_falla_masiva', {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({
+                nombre: nombre,
+                nodo: document.getElementById('cf-nodo').value.trim(),
+                sector: document.getElementById('cf-sector').value.trim(),
+                descripcion: document.getElementById('cf-descripcion').value.trim(),
+            })
+        });
+        const data = await r.json();
+        if (data.success){ toast(data.message, 'ok'); cerrarModales(); setTimeout(()=>location.reload(), 1200); }
+        else toast(data.message || 'Error', 'error');
+    } catch(e){ toast('Error de conexión.', 'error'); }
+}
+
+let _fmId = null;
+function abrirActualizar(id, nombre){
+    _fmId = id;
+    document.getElementById('au-nombre').textContent = nombre;
+    document.getElementById('au-cuadrilla').value = '';
+    document.getElementById('au-fecha').value = '';
+    document.getElementById('au-observaciones').value = '';
+    document.getElementById('modalActualizar').classList.add('open');
+}
+
+async function actualizarFalla(){
+    if (!_fmId) return;
+    try {
+        const r = await fetch(`/api/nodo/actualizar_falla_masiva/${_fmId}`, {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({
+                estado: 'en_reparacion',
+                cuadrilla: document.getElementById('au-cuadrilla').value.trim(),
+                fecha_estimada: document.getElementById('au-fecha').value || null,
+                observaciones: document.getElementById('au-observaciones').value.trim(),
+            })
+        });
+        const data = await r.json();
+        if (data.success){ toast(data.message, 'ok'); cerrarModales(); setTimeout(()=>location.reload(), 1200); }
+        else toast(data.message || 'Error', 'error');
+    } catch(e){ toast('Error de conexión.', 'error'); }
+}
+
+function abrirResolver(id, nombre){
+    _fmId = id;
+    document.getElementById('re-nombre').textContent = nombre;
+    document.getElementById('re-observaciones').value = '';
+    document.getElementById('modalResolver').classList.add('open');
+}
+
+async function resolverFalla(){
+    if (!_fmId) return;
+    try {
+        const r = await fetch(`/api/nodo/resolver_falla_masiva/${_fmId}`, {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ observaciones: document.getElementById('re-observaciones').value.trim() })
+        });
+        const data = await r.json();
+        if (data.success){ toast(data.message, 'ok'); cerrarModales(); setTimeout(()=>location.reload(), 1200); }
+        else toast(data.message || 'Error', 'error');
+    } catch(e){ toast('Error de conexión.', 'error'); }
+}
+</script>
+</body>
+</html>

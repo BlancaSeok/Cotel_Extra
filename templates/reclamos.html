@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reclamos - COTEL RL</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #d27300;
+            --secondary-color: #af5700;
+            --accent-color: #f69d00;
+
+            --soft-orange: #fff1e0;
+            --cream-color: #ffe4c7;
+            --dark-text: #5a2e00;
+            --border-color: #f1ba6a;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #fff1e0, #ffffff);
+            min-height: 100vh;
+        }
+        
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            box-shadow: 0 4px 15px rgba(175, 87, 0, 0.3);
+        }
+        
+        .card {
+            border: none;
+            border-radius: 18px;
+            box-shadow: 0 6px 18px rgba(210, 115, 0, 0.12);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px rgba(210, 115, 0, 0.2);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-color), var(--primary-color));
+            border: none;
+            border-radius: 30px;
+            padding: 10px 20px;
+            font-weight: 600;
+            box-shadow: 0 4px 10px rgba(246, 157, 0, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: scale(1.05);
+        }
+
+        .table {
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .badge {
+            font-size: 0.8rem;
+        }
+
+        .priority-badge {
+            font-size: 0.7rem;
+            padding: 0.25em 0.5em;
+        }
+
+        .service-info {
+            background: var(--soft-orange);
+            border-left: 5px solid var(--primary-color);
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+        }
+
+        .contrato-card {
+            background: #fff;
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 12px 14px;
+            cursor: pointer;
+            transition: all .2s ease;
+            height: 100%;
+        }
+        .contrato-card:hover {
+            border-color: var(--accent-color);
+            box-shadow: 0 4px 14px rgba(246,157,0,.2);
+        }
+        .contrato-card.selected {
+            border-color: var(--primary-color);
+            background: var(--soft-orange);
+            box-shadow: 0 4px 14px rgba(210,115,0,.25);
+        }
+        .contrato-card input[type="radio"] { display: none; }
+        .contrato-tipo-icon {
+            width: 38px; height: 38px; border-radius: 10px;
+            background: var(--cream-color); color: var(--primary-color);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1rem; flex-shrink: 0;
+        }
+        .contrato-numero { font-family: monospace; font-size: .78rem; color: var(--dark-text); letter-spacing: .5px; }
+        .autofill-field {
+            background: var(--soft-orange) !important;
+            border-color: var(--border-color) !important;
+            color: var(--dark-text);
+            font-weight: 500;
+        }
+        
+        .table thead {
+            background: var(--cream-color);
+        }
+
+        .table-hover tbody tr:hover {
+            background-color: #fff5e6;
+        }
+        
+        .badge.bg-danger {
+            background-color: #d84315 !important;
+        }
+
+        .badge.bg-warning {
+            background-color: #f69d00 !important;
+            color: #fff;
+        }
+
+        .badge.bg-success {
+            background-color: #2e7d32 !important;
+        }
+
+        .badge.bg-primary {
+            background-color: var(--primary-color) !important;
+        }
+
+        .badge.bg-info {
+            background-color: #6d4c00 !important;
+        }
+        .alert-info {
+            background: #fff3cd;
+            border: none;
+            color: #8a4b00;
+        }
+
+        .alert-warning {
+            background: #ffe0b2;
+            border: none;
+            color: #6d3b00;
+        }
+        .text-primary {
+        color: var(--primary-color) !important;
+    }
+
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('dashboard_cliente') }}">
+                <i class="fas fa-satellite-dish me-2"></i>
+                COTEL RL
+            </a>
+            
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="{{ url_for('dashboard_cliente') }}">
+                    <i class="fas fa-home me-1"></i>
+                    Dashboard
+                </a>
+                <a class="nav-link" href="{{ url_for('perfil_cliente') }}">
+                    <i class="fas fa-user-circle me-1"></i>
+                    Mi Perfil
+                </a>
+                <a class="nav-link" href="{{ url_for('cerrar_sesion') }}">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Salir
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Alerts -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <h1 class="text-primary">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Gestión de Reclamos
+                </h1>
+                <p class="text-muted">Presenta tus reclamos y consultas sobre nuestros servicios</p>
+            </div>
+            <div class="col-md-4 text-end">
+                {% if estado_cuenta == 'mora' %}
+                <button class="btn btn-primary" disabled title="No puedes crear reclamos mientras tengas facturas vencidas">
+                    <i class="fas fa-lock me-2"></i>
+                    Nuevo Reclamo
+                </button>
+                {% else %}
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#nuevoReclamoModal">
+                    <i class="fas fa-plus me-2"></i>
+                    Nuevo Reclamo
+                </button>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if estado_cuenta == 'mora' %}
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="alert alert-danger d-flex align-items-start gap-2">
+                    <i class="fas fa-triangle-exclamation fa-lg mt-1"></i>
+                    <div>
+                        <strong>No puedes registrar un reclamo mientras tengas facturas vencidas</strong>
+                        (Bs. {{ "%.2f"|format(monto_adeudado) }} pendientes).
+                        Regulariza tu pago para volver a habilitar tus contratos.
+                        <a href="{{ url_for('pagos') }}" class="fw-bold">Ir a Pagos →</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Información importante -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Información importante:</strong> Los reclamos son atendidos según su prioridad. 
+                    Recibirás notificaciones por correo sobre el progreso de tu reclamo.
+                </div>
+            </div>
+        </div>
+
+        <!-- Reclamos List -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-list me-2"></i>
+                            Mis Reclamos
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% if reclamos %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>N° Reclamo</th>
+                                            <th>Servicio</th>
+                                            <th>Problema</th>
+                                            <th>Estado</th>
+                                            <th>N° Contrato</th>
+                                            <th>Fecha Creación</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for reclamo in reclamos %}
+                                        <tr>
+                                            <td><strong>#{{ reclamo[0] }}</strong></td>
+                                            <td>
+                                                <span class="badge bg-info">{{ reclamo[7] or 'N/A' }}</span>
+                                            </td>
+                                            <td>
+                                                <small class="text-muted">{{ reclamo[8][:20] if reclamo[8] else 'N/A' }}{% if reclamo[8] and reclamo[8]|length > 20 %}...{% endif %}</small>
+                                            </td>
+                                            <td>
+                                                {% if reclamo[4] == 'abierto' %}
+                                                    <span class="badge bg-danger">Abierto</span>
+                                                {% elif reclamo[4] == 'en_diagnostico' %}
+                                                    <span class="badge bg-primary">En diagnóstico</span>
+                                                {% elif reclamo[4] in ('pendiente_asignacion', 'en_proceso') %}
+                                                    <span class="badge bg-warning">En Proceso</span>
+                                                {% elif reclamo[4] == 'falla_masiva' %}
+                                                    <span class="badge bg-primary">Reparación en tu zona</span>
+                                                {% elif reclamo[4] in ('resuelto', 'resuelto_remoto', 'resuelto_tecnico', 'liberado') %}
+                                                    <span class="badge bg-success">Resuelto</span>
+                                                {% elif reclamo[4] in ('cerrado', 'auditado') %}
+                                                    <span class="badge bg-secondary">Cerrado</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">{{ reclamo[4]|replace('_',' ')|title }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td><small class="contrato-numero">{{ reclamo[10] or 'N/A' }}</small></td>
+                                            <td>{{ reclamo[5].strftime('%d/%m/%Y') if reclamo[5] else '-' }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-5">
+                                <i class="fas fa-exclamation-triangle fa-4x text-muted mb-3"></i>
+                                <h4 class="text-muted">No tienes reclamos registrados</h4>
+                                <p class="text-muted">Si tienes alguna queja o sugerencia, puedes crear un nuevo reclamo</p>
+                                {% if estado_cuenta == 'mora' %}
+                                <button class="btn btn-primary" disabled title="No puedes crear reclamos mientras tengas facturas vencidas">
+                                    <i class="fas fa-lock me-2"></i>
+                                    Nuevo Reclamo bloqueado por mora
+                                </button>
+                                {% else %}
+                                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#nuevoReclamoModal">
+                                    <i class="fas fa-plus me-2"></i>
+                                    Crear Mi Primer Reclamo
+                                </button>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Estadísticas rápidas -->
+        {% if reclamos %}
+        <div class="row mt-4">
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card bg-danger text-white">
+                    <div class="card-body text-center">
+                        <h3>{{ stats_reclamos.abiertos }}</h3>
+                        <p class="mb-0">Abiertos</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card bg-warning text-white">
+                    <div class="card-body text-center">
+                        <h3>{{ stats_reclamos.en_progreso }}</h3>
+                        <p class="mb-0">En Proceso</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body text-center">
+                        <h3>{{ stats_reclamos.resueltos }}</h3>
+                        <p class="mb-0">Resueltos</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card bg-primary text-white">
+                    <div class="card-body text-center">
+                        <h3>{{ reclamos | length }}</h3>
+                        <p class="mb-0">Total</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Modal Nuevo Reclamo -->
+    <div class="modal fade" id="nuevoReclamoModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <form method="POST" action="{{ url_for('crear_reclamo') }}" id="formNuevoReclamo">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Nuevo Reclamo
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+
+                        <!-- PASO 1: Elegir el contrato que está fallando -->
+                        <div class="service-info">
+                            <h6><i class="fas fa-file-contract me-2"></i>¿Cuál de tus contratos está fallando?</h6>
+                            {% if contratos and contratos|length > 0 %}
+                            <div class="row g-2 mt-1" id="contratosGrid">
+                                {% for c in contratos %}
+                                {# c: id, numero_contrato, tipo_servicio, direccion, telefono_referencia, telefono_factura, zona #}
+                                <div class="col-md-6 col-lg-4">
+                                    <label class="contrato-card d-flex align-items-center gap-2" for="contrato_{{ c[0] }}">
+                                        <input type="radio" name="contrato_id_radio" id="contrato_{{ c[0] }}"
+                                               value="{{ c[0] }}"
+                                               data-tipo="{{ c[2] }}"
+                                               data-numero="{{ c[1] }}"
+                                               data-direccion="{{ c[3] or 'No registrada, contacta a soporte' }}"
+                                               data-telefono="{{ c[4] or c[5] or '' }}"
+                                               onclick="seleccionarContrato(this)" required>
+                                        <div class="contrato-tipo-icon">
+                                            <i class="fas fa-{% if 'internet' in c[2]|lower %}wifi{% elif 'tv' in c[2]|lower or 'cable' in c[2]|lower %}tv{% elif 'tel' in c[2]|lower %}phone{% else %}globe{% endif %}"></i>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <div class="fw-bold" style="font-size:.88rem">{{ c[2] }}</div>
+                                            <div class="text-muted" style="font-size:.75rem">{{ c[6] or 'Zona sin asignar' }}</div>
+                                            <div class="contrato-numero">Contrato N° {{ c[1] }}</div>
+                                        </div>
+                                    </label>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <div class="alert alert-warning mb-0 mt-2">
+                                <i class="fas fa-exclamation-circle me-1"></i>
+                                No encontramos contratos activos en tu cuenta. Comunícate con soporte para verificar tu registro.
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Campo oculto real que viaja al backend -->
+                        <input type="hidden" name="contrato_id" id="contrato_id">
+
+                        <div class="row">
+                            <!-- Datos autocompletados (solo lectura) -->
+                            <div class="col-12 mb-3">
+                                <div class="service-info">
+                                    <h6><i class="fas fa-map-marker-alt me-2"></i>Datos del contrato seleccionado</h6>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <label class="form-label">Número de Contrato</label>
+                                            <input type="text" class="form-control autofill-field" id="numero_contrato_display" readonly
+                                                   placeholder="Selecciona un contrato arriba">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">Ubicación de instalación</label>
+                                            <input type="text" class="form-control autofill-field" id="ubicacion_display" readonly
+                                                   placeholder="Se completa automáticamente">
+                                        </div>
+                                    </div>
+                                    <div class="form-text">
+                                        <i class="fas fa-lock me-1"></i>
+                                        Estos datos vienen de tu contrato y no se pueden editar aquí. Si están desactualizados, avísale a soporte.
+                                    </div>
+
+                                </div>
+                            </div>
+
+                            <!-- Teléfono de referencia (obligatorio para el backend) -->
+                            <div class="col-12 mb-3">
+                                <div class="service-info">
+                                    <label for="telefono_referencia" class="form-label">
+                                        <i class="fas fa-phone me-1"></i>Teléfono de referencia
+                                    </label>
+                                    <input type="tel" class="form-control" id="telefono_referencia" name="telefono_referencia"
+                                           placeholder="Ej: 71234567" required>
+                                    <div class="form-text">
+                                        Se completa con el teléfono de tu contrato, pero puedes cambiarlo si prefieres que te contactemos a otro número.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Problema específico -->
+                            <div class="col-12 mb-3">
+                                <div class="service-info">
+                                    <h6><i class="fas fa-satellite-dish me-2"></i>¿Qué problema tienes?</h6>
+                                    <label for="problema_especifico" class="form-label">Problema Específico</label>
+                                    <select class="form-select" id="problema_especifico" name="problema_especifico" required disabled>
+                                        <option value="">Primero selecciona un contrato</option>
+                                    </select>
+                                    <div class="form-text">
+                                        Elige primero la causa general y luego el síntoma que más se parece a lo que te pasa.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Categoría fija: se envía automáticamente como "Servicio Técnico" -->
+                            <input type="hidden" name="tipo_reclamo" value="Servicio Técnico">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="descripcion" class="form-label">
+                                Descripción Detallada del Problema
+                                <span class="badge bg-secondary" style="font-size:.68rem">Opcional</span>
+                            </label>
+                            <textarea class="form-control" id="descripcion" name="descripcion" rows="5"
+                                      placeholder="Si quieres, cuéntanos más: ¿cuándo comenzó?, ¿con qué frecuencia ocurre?, algún código de error, etc. (no es obligatorio)"></textarea>
+                            <div class="form-text">
+                                <i class="fas fa-lightbulb me-1"></i>
+                                No es obligatorio, pero cualquier detalle adicional ayuda a resolver tu reclamo más rápido.
+                            </div>
+                        </div>
+
+                        <!-- Información de Estado de Cuenta -->
+                        <div class="alert alert-info">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    <strong>Estado de tu cuenta:</strong> 
+                                    <span id="estado-cuenta-info">Se verificará automáticamente al crear el reclamo</span>
+                                </div>
+                                <div class="col-md-4 text-end">
+                                    <button type="button" class="btn btn-outline-info btn-sm" onclick="verificarEstadoCuenta()">
+                                        <i class="fas fa-refresh me-1"></i>
+                                        Verificar Estado
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Importante:</strong> Una vez enviado el reclamo, recibirás un <strong>número de reclamo</strong> de seguimiento. 
+                            Los reclamos se atienden según su prioridad:
+                            <ul class="mb-0 mt-2">
+                                <li><span class="badge bg-danger">Crítica</span> - Sin servicio, problemas de pago</li>
+                                <li><span class="badge bg-warning">Alta</span> - Servicios intermitentes</li>
+                                <li><span class="badge bg-primary">Media</span> - Problemas de calidad</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times me-1"></i>
+                            Cancelar
+                        </button>
+                        <button type="submit" class="btn btn-primary" id="btnEnviarReclamo" disabled>
+                            <i class="fas fa-paper-plane me-1"></i>
+                            Enviar Reclamo
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // ── PASO 1: seleccionar contrato -> autocompletar todo ──
+        function seleccionarContrato(radio) {
+            document.querySelectorAll('.contrato-card').forEach(c => c.classList.remove('selected'));
+            radio.closest('.contrato-card').classList.add('selected');
+
+            const tipo       = radio.dataset.tipo;
+            const numero     = radio.dataset.numero;
+            const direccion  = radio.dataset.direccion;
+            const telefono   = radio.dataset.telefono;
+
+            document.getElementById('contrato_id').value = radio.value;
+
+            document.getElementById('numero_contrato_display').value = numero;
+            document.getElementById('ubicacion_display').value = direccion;
+            document.getElementById('telefono_referencia').value = telefono || '';
+
+            cargarProblemas(tipo);
+            document.getElementById('btnEnviarReclamo').disabled = false;
+
+        }
+
+        // Cargar problemas específicos según el tipo de servicio del contrato elegido
+        // Los agrupamos por causa/código de falla (VEL, NSI, INT, CTA, OTR...)
+        // usando <optgroup>, para que el cliente vea primero la causa general
+        // y luego elija el síntoma específico dentro de ella.
+        function cargarProblemas(servicio) {
+            const problemaSelect = document.getElementById('problema_especifico');
+            problemaSelect.disabled = true;
+            problemaSelect.innerHTML = '<option value="">Cargando problemas...</option>';
+
+            if (!servicio) {
+                problemaSelect.innerHTML = '<option value="">Primero selecciona un contrato</option>';
+                return;
+            }
+
+            fetch(`/api/problemas_servicio/${encodeURIComponent(servicio)}`)
+                .then(response => response.json())
+                .then(problemas => {
+                    problemaSelect.disabled = false;
+                    problemaSelect.innerHTML = '<option value="">Selecciona el problema específico</option>';
+
+                    if (problemas.length === 0) {
+                        problemaSelect.innerHTML += '<option value="Problema General">Problema General</option>';
+                        return;
+                    }
+
+                    // problema = [id, nombre_problema(causa), descripcion_problema(síntoma), categoria(código)]
+                    // Deduplicamos por síntoma para no repetir opciones idénticas.
+                    const grupos = new Map(); // clave: "CODIGO||CAUSA" -> Set(descripciones)
+                    problemas.forEach(problema => {
+                        const causa   = problema[1] || 'Otros';
+                        const sintoma = problema[2] || causa;
+                        const codigo  = problema[3] || '';
+                        const clave   = `${codigo}||${causa}`;
+                        if (!grupos.has(clave)) grupos.set(clave, new Set());
+                        grupos.get(clave).add(sintoma);
+                    });
+
+                    grupos.forEach((sintomas, clave) => {
+                        const [codigo, causa] = clave.split('||');
+                        const optgroup = document.createElement('optgroup');
+                        optgroup.label = codigo ? `${causa} (${codigo})` : causa;
+                        Array.from(sintomas).sort((a,b) => a.localeCompare(b, 'es')).forEach(sintoma => {
+                            const option = document.createElement('option');
+                            option.value = sintoma;
+                            option.textContent = sintoma;
+                            optgroup.appendChild(option);
+                        });
+                        problemaSelect.appendChild(optgroup);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error al cargar problemas:', error);
+                    problemaSelect.disabled = false;
+                    problemaSelect.innerHTML = '<option value="">Error al cargar. Intenta nuevamente</option>';
+                });
+        }
+
+        // Verificar estado de cuenta (simulado - puedes implementar una API real)
+        function verificarEstadoCuenta() {
+            const infoElement = document.getElementById('estado-cuenta-info');
+            infoElement.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Verificando...';
+            
+            setTimeout(() => {
+                infoElement.innerHTML = 'Cuenta al día - Sin facturas pendientes';
+            }, 1500);
+        }
+
+        // Auto-hide alerts
+        setTimeout(function() {
+            const alerts = document.querySelectorAll('.alert-dismissible');
+            alerts.forEach(function(alert) {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            });
+        }, 8000);
+
+        // Al cerrar el modal, reinicia la selección para la próxima vez que se abra
+        document.getElementById('nuevoReclamoModal').addEventListener('hidden.bs.modal', function () {
+            document.getElementById('formNuevoReclamo').reset();
+            document.querySelectorAll('.contrato-card').forEach(c => c.classList.remove('selected'));
+            document.getElementById('numero_contrato_display').value = '';
+            document.getElementById('ubicacion_display').value = '';
+            document.getElementById('problema_especifico').innerHTML = '<option value="">Primero selecciona un contrato</option>';
+            document.getElementById('problema_especifico').disabled = true;
+            document.getElementById('btnEnviarReclamo').disabled = true;
+
+        });
+    </script>
+</body>
+</html>

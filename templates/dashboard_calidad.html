@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gestión de Calidad - COTEL RL</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<style>
+:root{
+    --bg-dark:#160c02;
+    --bg-dark2:#231202;
+    --orange:#f97316;
+    --orange-deep:#d84315;
+    --green:#34d399;
+    --amber:#fbbf24;
+    --red:#f87171;
+    --text-light:#fff3e0;
+    --text-muted:#d9b48f;
+    --glass:rgba(255,255,255,0.04);
+    --glass-border:rgba(249,115,22,0.25);
+}
+*{box-sizing:border-box;}
+body{
+    margin:0; font-family:'Segoe UI',system-ui,sans-serif;
+    background:
+        radial-gradient(circle at 20% 20%, rgba(249,115,22,0.16), transparent 45%),
+        radial-gradient(circle at 80% 80%, rgba(147,51,234,0.16), transparent 50%),
+        linear-gradient(160deg, var(--bg-dark), var(--bg-dark2));
+    color:var(--text-light); min-height:100vh; overflow-x:hidden;
+}
+/* Fondo animado: radar sweep */
+.bg-anim{position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden; opacity:.5;}
+.radar{
+    position:absolute; top:50%; left:50%; width:900px; height:900px; margin:-450px 0 0 -450px;
+    border-radius:50%; border:1px solid rgba(249,115,22,.12);
+}
+.radar::before{
+    content:''; position:absolute; inset:0; border-radius:50%;
+    background:conic-gradient(from 0deg, rgba(249,115,22,.35), transparent 35%);
+    animation:sweep 5s linear infinite;
+}
+.radar::after{
+    content:''; position:absolute; inset:120px; border-radius:50%; border:1px solid rgba(249,115,22,.10);
+}
+@keyframes sweep{ to{ transform:rotate(360deg); } }
+@media (prefers-reduced-motion: reduce){ .radar::before{ animation:none; } }
+
+.wrap{position:relative; z-index:1; max-width:1300px; margin:0 auto; padding:28px 22px 60px;}
+.topbar{display:flex; align-items:center; justify-content:space-between; margin-bottom:28px; flex-wrap:wrap; gap:14px;}
+.brand{display:flex; align-items:center; gap:12px;}
+.brand-icon{
+    width:46px; height:46px; border-radius:14px;
+    background:linear-gradient(135deg, var(--orange), var(--orange-deep));
+    display:flex; align-items:center; justify-content:center; font-size:1.3rem;
+    box-shadow:0 6px 18px rgba(249,115,22,0.35);
+}
+.brand h1{font-size:1.3rem; margin:0; letter-spacing:.3px;}
+.brand small{color:var(--text-muted); display:block; font-size:.78rem;}
+.btn-logout{
+    color:var(--text-light); text-decoration:none; padding:9px 18px;
+    border:1px solid var(--glass-border); border-radius:30px; font-size:.85rem;
+    background:var(--glass); transition:.2s;
+}
+.btn-logout:hover{background:rgba(249,115,22,0.18); color:#fff;}
+
+.stats-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:14px; margin-bottom:28px;}
+.stat-card{
+    background:var(--glass); border:1px solid var(--glass-border); border-radius:16px;
+    padding:16px 18px; backdrop-filter:blur(6px); position:relative; overflow:hidden;
+}
+.stat-num{font-size:1.7rem; font-weight:700; color:var(--orange);}
+.stat-label{font-size:.76rem; color:var(--text-muted); margin-top:4px;}
+
+.panel{
+    background:var(--glass); border:1px solid var(--glass-border); border-radius:18px;
+    padding:22px; margin-bottom:24px; backdrop-filter:blur(6px);
+}
+.panel h2{font-size:1.05rem; margin:0 0 16px; display:flex; align-items:center; gap:10px; color:var(--text-light);}
+.panel h2 i{color:var(--orange);}
+
+table{width:100%; border-collapse:collapse; font-size:.86rem;}
+th{
+    text-align:left; padding:10px 12px; color:var(--text-muted); border-bottom:1px solid var(--glass-border);
+    font-weight:600; font-size:.76rem; text-transform:uppercase; letter-spacing:.03em;
+}
+td{padding:10px 12px; border-bottom:1px solid rgba(255,255,255,0.05); vertical-align:middle;}
+tr:hover td{background:rgba(249,115,22,0.06);}
+
+.badge{display:inline-block; padding:3px 10px; border-radius:20px; font-size:.72rem; font-weight:600;}
+.badge-sla-ok{background:rgba(52,211,153,.18); color:#6ee7b7;}
+.badge-sla-no{background:rgba(248,113,113,.18); color:#fca5a5;}
+.badge-conforme{background:rgba(52,211,153,.18); color:#6ee7b7;}
+.badge-reincidencia{background:rgba(248,113,113,.18); color:#fca5a5;}
+.badge-mala_atencion{background:rgba(251,191,36,.18); color:#fde68a;}
+.badge-fuera_tiempo{background:rgba(251,146,60,.18); color:#fdba74;}
+
+.btn-sm{
+    background:linear-gradient(135deg, var(--orange), var(--orange-deep)); color:#fff;
+    border:none; border-radius:20px; padding:6px 14px; font-size:.78rem; cursor:pointer; font-weight:600; transition:.2s;
+}
+.btn-sm:hover{transform:translateY(-1px); box-shadow:0 4px 12px rgba(249,115,22,.35);}
+.btn-sm.outline{background:transparent; border:1px solid var(--glass-border); color:var(--text-light);}
+
+.empty{text-align:center; padding:30px; color:var(--text-muted);}
+
+.modal-overlay{
+    display:none; position:fixed; inset:0; z-index:200; background:rgba(10,2,12,.75);
+    backdrop-filter:blur(4px); align-items:center; justify-content:center; padding:20px;
+}
+.modal-overlay.open{display:flex;}
+.modal-box{
+    width:100%; max-width:480px; background:#231202; border:1px solid var(--glass-border);
+    border-radius:16px; padding:24px; box-shadow:0 20px 60px rgba(0,0,0,.5);
+}
+.modal-box h3{margin:0 0 16px; font-size:1.15rem;}
+.field{margin-bottom:14px;}
+.field label{display:block; font-size:.78rem; color:var(--text-muted); margin-bottom:6px;}
+.field select, .field textarea{
+    width:100%; background:rgba(255,255,255,.04); border:1px solid var(--glass-border); border-radius:8px;
+    color:var(--text-light); padding:10px 12px; font-size:.88rem; font-family:inherit;
+}
+.field select:focus, .field textarea:focus{outline:none; border-color:var(--orange);}
+.modal-actions{display:flex; justify-content:flex-end; gap:10px; margin-top:18px;}
+.result-options{display:flex; flex-direction:column; gap:8px;}
+.result-radio{
+    display:flex; align-items:center; gap:8px; padding:8px 12px; border-radius:8px;
+    border:1px solid var(--glass-border); cursor:pointer; font-size:.85rem;
+}
+.result-radio:has(input:checked){border-color:var(--orange); background:rgba(249,115,22,.1);}
+
+.toast-box{position:fixed; top:20px; right:20px; z-index:300; display:flex; flex-direction:column; gap:10px;}
+.toast{
+    background:#231202; border:1px solid var(--glass-border); color:var(--text-light);
+    padding:12px 18px; border-radius:10px; font-size:.85rem; box-shadow:0 6px 20px rgba(0,0,0,.4);
+    animation:slidein .25s ease;
+}
+@keyframes slidein{from{transform:translateX(30px); opacity:0;} to{transform:translateX(0); opacity:1;}}
+</style>
+</head>
+<body>
+
+<div class="bg-anim"><div class="radar"></div></div>
+
+<div class="wrap">
+    <div class="topbar">
+        <div class="brand">
+            <div class="brand-icon"><i class="fas fa-magnifying-glass-chart"></i></div>
+            <div>
+                <h1>Gestión de Calidad</h1>
+                <small>Auditoría de reclamos &middot; {{ nombre_usuario }}</small>
+            </div>
+        </div>
+        <a href="{{ url_for('cerrar_sesion') }}" class="btn-logout"><i class="fas fa-sign-out-alt"></i> Salir</a>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card"><div class="stat-num">{{ stats.pendientes_auditoria or 0 }}</div><div class="stat-label">Pendientes de auditar</div></div>
+        <div class="stat-card"><div class="stat-num">{{ stats.total_auditados or 0 }}</div><div class="stat-label">Auditados (24h)</div></div>
+        <div class="stat-card"><div class="stat-num">{{ stats.conformes or 0 }}</div><div class="stat-label">Conformes</div></div>
+        <div class="stat-card"><div class="stat-num">{{ stats.reincidencias or 0 }}</div><div class="stat-label">Reincidencias</div></div>
+        <div class="stat-card"><div class="stat-num">{{ stats.dentro_sla or 0 }}</div><div class="stat-label">Dentro de SLA</div></div>
+        <div class="stat-card"><div class="stat-num">{{ stats.tiempo_prom or 0 }} min</div><div class="stat-label">Tiempo promedio</div></div>
+    </div>
+
+    <div class="panel">
+        <h2><i class="fas fa-clipboard-list"></i> Reclamos pendientes de auditoría</h2>
+        <p style="color:var(--text-muted); font-size:.82rem; margin-top:-10px;">
+            SLA de referencia: {{ stats.sla_minutos or 1440 }} minutos.
+        </p>
+        {% if reclamos_pendientes %}
+        <div style="overflow-x:auto;">
+        <table>
+            <thead>
+                <tr><th>ID</th><th>Cliente</th><th>Título</th><th>Técnico</th><th>Falla</th><th>Tiempo resolución</th><th>SLA</th><th>Auditar</th></tr>
+            </thead>
+            <tbody>
+                {% for r in reclamos_pendientes %}
+                <tr>
+                    <td>#{{ r[0] }}</td>
+                    <td>{{ r[1] }} {{ r[2] }}</td>
+                    <td>{{ r[4][:30] }}{% if r[4]|length > 30 %}…{% endif %}</td>
+                    <td>{{ r[14] or '—' }}</td>
+                    <td>{{ r[9] or '—' }}</td>
+                    <td>{{ r[8] or 0 }} min</td>
+                    <td>
+                        {% if r[13] %}<span class="badge badge-sla-ok">Dentro</span>
+                        {% else %}<span class="badge badge-sla-no">Fuera</span>{% endif %}
+                    </td>
+                    <td><button class="btn-sm" onclick="abrirAuditar({{ r[0] }}, {{ (r[1]+' '+r[2])|tojson }})">Auditar</button></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+        {% else %}
+        <div class="empty"><i class="fas fa-check-circle fa-2x" style="color:var(--green);"></i><p>No hay reclamos pendientes de auditar.</p></div>
+        {% endif %}
+    </div>
+
+    <div class="panel">
+        <h2><i class="fas fa-clock-rotate-left"></i> Auditorías recientes</h2>
+        {% if auditorias_recientes %}
+        <div style="overflow-x:auto;">
+        <table>
+            <thead><tr><th>Reclamo</th><th>Resultado</th><th>Técnico</th><th>Auditor</th><th>Tiempo</th><th>Fecha</th></tr></thead>
+            <tbody>
+                {% for a in auditorias_recientes %}
+                <tr>
+                    <td>#{{ a[1] }}</td>
+                    <td><span class="badge badge-{{ a[2] }}">{{ a[2]|replace('_',' ')|title }}</span></td>
+                    <td>{{ a[7] or '—' }}</td>
+                    <td>{{ a[9] }}</td>
+                    <td>{{ a[3] or 0 }} min</td>
+                    <td>{{ a[6].strftime('%d/%m/%Y %H:%M') if a[6] else '—' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+        {% else %}
+        <div class="empty">Todavía no hay auditorías registradas.</div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- MODAL: Auditar reclamo -->
+<div class="modal-overlay" id="modalAuditar" onclick="if(event.target===this) cerrarModales()">
+    <div class="modal-box">
+        <h3><i class="fas fa-stamp"></i> Auditar reclamo — <span id="aq-cliente"></span></h3>
+        <div class="field">
+            <label>Resultado de la auditoría</label>
+            <div class="result-options">
+                <label class="result-radio"><input type="radio" name="resultado" value="conforme" checked> ✅ Conforme</label>
+                <label class="result-radio"><input type="radio" name="resultado" value="reincidencia"> 🔁 Reincidencia</label>
+                <label class="result-radio"><input type="radio" name="resultado" value="mala_atencion"> ⚠️ Mala atención</label>
+                <label class="result-radio"><input type="radio" name="resultado" value="fuera_tiempo"> ⏱️ Fuera de tiempo</label>
+            </div>
+        </div>
+        <div class="field"><label>Observaciones</label><textarea id="aq-observaciones" rows="3" placeholder="Comentario de la auditoría (opcional)…"></textarea></div>
+        <div class="modal-actions">
+            <button class="btn-sm outline" onclick="cerrarModales()">Cancelar</button>
+            <button class="btn-sm" onclick="confirmarAuditoria()">Registrar auditoría</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast-box" id="toastBox"></div>
+
+<script>
+function toast(msg, tipo){
+    const box = document.getElementById('toastBox');
+    const el = document.createElement('div');
+    el.className = 'toast';
+    el.style.borderColor = tipo === 'error' ? 'rgba(248,113,113,.5)' : 'rgba(249,115,22,.5)';
+    el.textContent = msg;
+    box.appendChild(el);
+    setTimeout(()=> el.remove(), 4000);
+}
+function cerrarModales(){ document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('open')); }
+
+let _reclamoAuditar = null;
+function abrirAuditar(id, cliente){
+    _reclamoAuditar = id;
+    document.getElementById('aq-cliente').textContent = cliente;
+    document.getElementById('aq-observaciones').value = '';
+    document.querySelector('input[name="resultado"][value="conforme"]').checked = true;
+    document.getElementById('modalAuditar').classList.add('open');
+}
+
+async function confirmarAuditoria(){
+    if (!_reclamoAuditar) return;
+    const resultado = document.querySelector('input[name="resultado"]:checked').value;
+    try {
+        const r = await fetch('/api/calidad/auditar_reclamo', {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({
+                reclamo_id: _reclamoAuditar,
+                resultado: resultado,
+                observaciones: document.getElementById('aq-observaciones').value.trim(),
+            })
+        });
+        const data = await r.json();
+        if (data.success){ toast(data.message, 'ok'); cerrarModales(); setTimeout(()=>location.reload(), 1200); }
+        else toast(data.message || 'Error', 'error');
+    } catch(e){ toast('Error de conexión.', 'error'); }
+}
+</script>
+</body>
+</html>

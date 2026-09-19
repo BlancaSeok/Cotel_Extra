@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>COTEL RL — Turno Planta Interna</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<style>
+  :root{
+    --rojo:#f97316; --rojo-dark:#d84315; --rojo-bg:rgba(249,115,22,0.10);
+    --verde:#34d399; --verde-bg:rgba(52,211,153,0.10);
+    --amber:#ff8f00; --amber-bg:rgba(255,143,0,0.10);
+    --morado:#a78bfa; --morado-bg:rgba(167,139,250,0.10);
+    --gris-900:#fff3e0; --gris-600:#d9b48f; --gris-400:#b8886a;
+    --gris-100:rgba(255,255,255,0.06); --gris-50:#160c02; --borde:rgba(249,115,22,0.25);
+    --rojo-alerta:#f87171; --amber2:#ea580c;
+    --radio:10px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:radial-gradient(circle at 20% 0%, #2a1608 0%, var(--gris-50) 55%);
+    color:var(--gris-900);
+    font-family:'Inter',system-ui,-apple-system,sans-serif; -webkit-font-smoothing:antialiased;
+  }
+  .mono{font-family:'JetBrains Mono',ui-monospace,monospace;}
+
+  header.top{
+    background:linear-gradient(120deg,var(--rojo-dark),var(--rojo));
+    color:#fff; padding:18px 28px; display:flex; align-items:center; justify-content:space-between;
+    box-shadow:0 2px 10px rgba(107,26,26,.25); position:sticky; top:0; z-index:30;
+  }
+  header.top .left{display:flex; align-items:center; gap:12px;}
+  header.top .moon-icon{
+    width:38px; height:38px; border-radius:50%; background:rgba(255,255,255,.15);
+    display:flex; align-items:center; justify-content:center; font-size:1.1rem;
+  }
+  header.top h1{font-size:1.05rem; font-weight:700; margin:0;}
+  header.top .sub{font-size:.74rem; opacity:.8; margin-top:1px;}
+  header.top .right{display:flex; align-items:center; gap:16px; font-size:.85rem;}
+  header.top .right a{color:#fff; opacity:.85; text-decoration:none;}
+  header.top .right a:hover{opacity:1; text-decoration:underline;}
+  .badge-turno{
+    background:rgba(255,255,255,.18); padding:4px 12px; border-radius:20px;
+    font-size:.72rem; font-weight:700; display:flex; align-items:center; gap:6px;
+  }
+
+  main{max-width:980px; margin:0 auto; padding:24px 24px 70px;}
+
+  .flash{padding:12px 16px; border-radius:var(--radio); margin-bottom:16px; font-size:.88rem;}
+  .flash-success{background:var(--verde-bg); color:var(--verde); border:1px solid rgba(52,211,153,.35);}
+  .flash-danger{background:var(--rojo-bg); color:var(--rojo); border:1px solid rgba(249,115,22,.35);}
+  .flash-warning{background:var(--amber-bg); color:var(--amber); border:1px solid rgba(255,143,0,.35);}
+
+  .stats{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:14px; margin-bottom:22px;}
+  .stat-card{
+    background:var(--gris-100); border:1px solid var(--borde); border-radius:14px;
+    padding:16px 18px;
+  }
+  .stat-card .num{font-size:1.6rem; font-weight:800; color:var(--gris-900);}
+  .stat-card .lbl{font-size:.76rem; color:var(--gris-600); margin-top:2px;}
+  .stat-card.alerta .num{color:var(--rojo);}
+
+  .tabs{display:flex; gap:8px; margin-bottom:18px; border-bottom:1px solid var(--borde);}
+  .tab{
+    padding:10px 16px; font-size:.84rem; font-weight:600; color:var(--gris-600);
+    cursor:pointer; border-bottom:2px solid transparent; user-select:none;
+  }
+  .tab.active{color:var(--rojo); border-bottom-color:var(--rojo);}
+  .tab .count{
+    background:var(--gris-100); border-radius:10px; padding:1px 7px; font-size:.7rem; margin-left:6px;
+  }
+
+  .hint{
+    background:var(--gris-100); border:1px solid var(--borde); border-left:4px solid var(--morado);
+    border-radius:var(--radio); padding:12px 16px; font-size:.82rem; color:var(--gris-600);
+    margin-bottom:20px; display:flex; gap:10px; align-items:flex-start;
+  }
+
+  .lista-vacia{
+    text-align:center; padding:50px 20px; color:var(--gris-600);
+  }
+  .lista-vacia i{font-size:2.2rem; opacity:.5; display:block; margin-bottom:10px;}
+
+  .reclamo-card{
+    background:var(--gris-100); border:1px solid var(--borde); border-radius:14px;
+    padding:20px 22px; margin-bottom:16px; position:relative;
+  }
+  .reclamo-card.prioridad-alta{border-left:4px solid var(--rojo);}
+  .reclamo-card .top-row{
+    display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:10px;
+  }
+  .reclamo-card .rid{font-weight:800; font-size:1rem; color:var(--gris-900);}
+  .reclamo-card .cliente{font-size:.82rem; color:var(--gris-600); margin-top:2px;}
+  .badges{display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end;}
+  .badge{
+    padding:3px 10px; border-radius:20px; font-size:.7rem; font-weight:700; white-space:nowrap;
+  }
+  .badge-nocturno{background:var(--morado-bg); color:var(--morado);}
+  .badge-prioridad-alta{background:var(--rojo-bg); color:var(--rojo);}
+  .badge-prioridad-media{background:var(--amber-bg); color:var(--amber);}
+  .badge-hora{background:var(--gris-100); color:var(--gris-600); border:1px solid var(--borde);}
+  .badge-estado{background:rgba(255,255,255,.08); color:var(--gris-600);}
+
+  .reclamo-card .descripcion{
+    font-size:.86rem; color:var(--gris-900); line-height:1.5; margin:8px 0 14px;
+  }
+  .reclamo-card .meta-row{
+    display:flex; gap:18px; flex-wrap:wrap; font-size:.78rem; color:var(--gris-600); margin-bottom:14px;
+  }
+  .reclamo-card .meta-row span{display:flex; align-items:center; gap:5px;}
+
+  .acciones{display:flex; gap:10px; flex-wrap:wrap;}
+  .btn{
+    border:none; border-radius:9px; padding:10px 18px; font-size:.83rem; font-weight:700;
+    cursor:pointer; display:inline-flex; align-items:center; gap:6px;
+  }
+  .btn-resolver{background:var(--verde); color:#0b2b1f;}
+  .btn-resolver:hover{filter:brightness(1.08);}
+  .btn-escalar{background:var(--amber); color:#2a1608;}
+  .btn-escalar:hover{filter:brightness(1.08);}
+  .btn-ghost{background:var(--gris-100); color:var(--gris-600); border:1px solid var(--borde);}
+  .btn-ghost:hover{background:rgba(255,255,255,.1);}
+
+  /* Modal simple */
+  .modal-overlay{
+    display:none; position:fixed; inset:0; background:rgba(10,5,0,.6); z-index:100;
+    align-items:center; justify-content:center; padding:20px;
+  }
+  .modal-overlay.show{display:flex;}
+  .modal-box{
+    background:#1f1206; border:1px solid var(--borde); border-radius:16px; padding:26px;
+    max-width:460px; width:100%;
+  }
+  .modal-box h3{margin:0 0 6px; font-size:1rem; color:var(--gris-900);}
+  .modal-box .sub{font-size:.8rem; color:var(--gris-600); margin-bottom:16px;}
+  .modal-box textarea{
+    width:100%; min-height:90px; padding:10px 12px; border:1px solid var(--borde); border-radius:8px;
+    font-size:.86rem; font-family:inherit; color:var(--gris-900); background:rgba(255,255,255,.04);
+    resize:vertical; margin-bottom:16px;
+  }
+  .modal-box .modal-actions{display:flex; gap:10px; justify-content:flex-end;}
+
+  /* ── Modal: fallas por zona (portado de dashboard_soporte.html) ── */
+  .stat-card.clickable{cursor:pointer; transition:.2s;}
+  .stat-card.clickable:hover{background:rgba(249,115,22,0.12); border-color:var(--rojo); transform:translateY(-2px);}
+
+  .badge-critica{background:rgba(220,38,38,.2); color:#fca5a5;}
+  .badge-alta2{background:rgba(234,88,12,.22); color:#fdba74;}
+  .badge-media2{background:rgba(249,115,22,.18); color:#fed7aa;}
+  .badge-baja{background:rgba(107,114,128,.25); color:#d1d5db;}
+
+  .zonas-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-top:10px;}
+  .zona-card{
+    background:rgba(255,255,255,0.03); border:1px solid var(--borde); border-radius:12px;
+    padding:16px; text-align:center;
+  }
+  .zona-card .z-nombre{font-size:.82rem; color:var(--gris-600); margin-bottom:8px; font-weight:600;}
+  .zona-card .z-total{font-size:1.8rem; font-weight:700; color:var(--amber);}
+  .zona-card .z-bar{height:4px; border-radius:2px; background:rgba(255,255,255,0.08); margin:8px 0 6px; overflow:hidden;}
+  .zona-card .z-bar-fill{height:100%; background:linear-gradient(90deg,var(--rojo),var(--amber2)); border-radius:2px; transition:width .4s;}
+  .zona-card .z-sub{font-size:.72rem; color:var(--gris-600);}
+  .zona-card .z-sub span{color:var(--amber2); font-weight:700;}
+  .zona-card.clickable{cursor:pointer; transition:.2s;}
+  .zona-card.clickable:hover{background:rgba(249,115,22,0.1); border-color:var(--rojo); transform:translateY(-2px);}
+
+  .zona-detalle-head{display:flex; align-items:center; gap:10px; margin-bottom:14px;}
+  .btn-volver{
+    background:transparent; border:1px solid var(--borde); color:var(--gris-900);
+    border-radius:20px; padding:5px 12px; font-size:.78rem; cursor:pointer; font-family:inherit;
+  }
+  .btn-volver:hover{background:rgba(249,115,22,0.1);}
+  .zona-detalle-lista{display:flex; flex-direction:column; gap:8px; max-height:360px; overflow-y:auto;}
+  .zd-item{
+    background:rgba(255,255,255,0.03); border:1px solid var(--borde); border-radius:10px;
+    padding:10px 12px; font-size:.82rem; display:flex; justify-content:space-between; align-items:center; gap:10px;
+  }
+  .zd-item .zd-left strong{display:block; color:var(--gris-900);}
+  .zd-item .zd-left small{color:var(--gris-600);}
+  .zd-hint{text-align:center; font-size:.72rem; color:var(--gris-600); padding:6px 0 0;}
+
+  .empty2{text-align:center; padding:30px; color:var(--gris-600);}
+
+  #modalFallasZona .modal-box{max-width:560px; max-height:90vh; overflow-y:auto;}
+  #modalFallasZona .modal-head{display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;}
+  #modalFallasZona h3{margin:0; font-size:1.05rem; color:var(--gris-900); display:flex; align-items:center; gap:8px;}
+  #modalFallasZona .modal-close{background:none; border:none; color:var(--gris-600); cursor:pointer; font-size:1.1rem; padding:0;}
+  #modalFallasZona .modal-close:hover{color:var(--gris-900);}
+
+  .bg-blob{position:fixed; border-radius:50%; z-index:0; pointer-events:none; filter:blur(50px);}
+  .bg-blob1{width:420px; height:420px; top:-130px; right:-110px; background:rgba(167,139,250,.16); animation:bgFloat1 18s ease-in-out infinite alternate;}
+  .bg-blob2{width:380px; height:380px; bottom:-110px; left:-90px; background:rgba(255,111,0,.14); animation:bgFloat2 23s ease-in-out infinite alternate;}
+  @keyframes bgFloat1{0%{transform:translate(0,0) scale(1);} 50%{transform:translate(-25px,35px) scale(1.1);} 100%{transform:translate(20px,-15px) scale(.95);}}
+  @keyframes bgFloat2{0%{transform:translate(0,0) scale(1);} 50%{transform:translate(25px,-25px) scale(1.08);} 100%{transform:translate(-15px,12px) scale(.92);}}
+</style>
+</head>
+<body>
+<div class="bg-blob bg-blob1"></div>
+<div class="bg-blob bg-blob2"></div>
+
+<header class="top">
+  <div class="left">
+    <div class="moon-icon">🌙</div>
+    <div>
+      <h1>Turno Planta Interna</h1>
+      <div class="sub">Atención nocturna · fines de semana · feriados</div>
+    </div>
+  </div>
+  <div class="right">
+    <span class="badge-turno" id="badgeHorarioActual">
+      <span id="puntoEstado" style="width:8px;height:8px;border-radius:50%;background:var(--verde);display:inline-block;"></span>
+      <span id="textoHorarioActual">Cargando horario…</span>
+    </span>
+    <span>{{ nombre_usuario }}</span>
+    <a href="{{ url_for('cerrar_sesion') }}">Cerrar sesión</a>
+  </div>
+</header>
+
+<main>
+
+  {% with mensajes = get_flashed_messages(with_categories=true) %}
+    {% if mensajes %}
+      {% for categoria, msg in mensajes %}
+        <div class="flash flash-{{ categoria }}">{{ msg }}</div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <div class="hint">
+    🌙 Este panel solo recibe reclamos que entran en horario nocturno (22:00–08:30), fines de semana o feriados.
+    Puedes resolver el reclamo directamente si lo solucionas, o enviarlo a Help Desk si necesita seguimiento adicional.
+  </div>
+
+  <div class="stats">
+    <div class="stat-card alerta">
+      <div class="num" id="statPendientes">{{ stats.pendientes if stats else 0 }}</div>
+      <div class="lbl">Pendientes ahora</div>
+    </div>
+    <div class="stat-card">
+      <div class="num" id="statResueltos">{{ stats.resueltos_turno if stats else 0 }}</div>
+      <div class="lbl">Resueltos este turno</div>
+    </div>
+    <div class="stat-card">
+      <div class="num" id="statEscalados">{{ stats.escalados_turno if stats else 0 }}</div>
+      <div class="lbl">Enviados a Help Desk</div>
+    </div>
+    <div class="stat-card clickable" onclick="abrirModalFallasZona()">
+      <div class="num"><i class="fas fa-map-location-dot" style="font-size:1.2rem;"></i></div>
+      <div class="lbl">Fallas por zona <span style="color:var(--amber);">· ver detalle</span></div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="pendientes" onclick="cambiarTab('pendientes')">
+      Pendientes <span class="count" id="countPendientes">0</span>
+    </div>
+    <div class="tab" data-tab="resueltos" onclick="cambiarTab('resueltos')">
+      Resueltos por mí <span class="count" id="countResueltos">0</span>
+    </div>
+    <div class="tab" data-tab="escalados" onclick="cambiarTab('escalados')">
+      Enviados a Help Desk <span class="count" id="countEscalados">0</span>
+    </div>
+  </div>
+
+  <div id="listaReclamos">
+    <div class="lista-vacia">
+      <i class="mono">···</i>
+      Cargando reclamos del turno…
+    </div>
+  </div>
+
+</main>
+
+<!-- Modal: Fallas por zona (portado de dashboard_soporte.html) -->
+<div class="modal-overlay" id="modalFallasZona" onclick="if(event.target===this) cerrarModalFallasZona()">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3><i class="fas fa-map-location-dot"></i> Fallas por zona</h3>
+      <button class="modal-close" onclick="cerrarModalFallasZona()"><i class="fas fa-xmark"></i></button>
+    </div>
+    <div class="sub" id="zonasSubPI" style="font-size:.8rem; color:var(--gris-600); margin-bottom:16px;">
+      Distribución del total de fallas registradas en el sistema. Haz clic en una zona para ver sus reclamos.
+    </div>
+
+    <!-- Vista 1: cuadrícula de zonas -->
+    <div class="zonas-grid" id="zonasGridPI">
+      <div class="empty2" style="grid-column:1/-1;">Cargando…</div>
+    </div>
+
+    <!-- Vista 2: detalle de una zona -->
+    <div id="zonaDetalleWrapPI" style="display:none;">
+      <div class="zona-detalle-head">
+        <button class="btn-volver" onclick="volverAZonasPI()"><i class="fas fa-arrow-left"></i> Volver a zonas</button>
+        <strong id="zonaDetalleTituloPI" style="font-size:.95rem; color:var(--gris-900);"></strong>
+      </div>
+      <div class="zona-detalle-lista" id="zonaDetalleListaPI"></div>
+      <div class="zd-hint">Para actuar sobre un reclamo, resuélvelo desde la pestaña "Pendientes".</div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Resolver -->
+<div class="modal-overlay" id="modalResolver">
+  <div class="modal-box">
+    <h3>Resolver y cerrar reclamo</h3>
+    <div class="sub" id="modalResolverRid">Reclamo #—</div>
+    <textarea id="solucionTexto" placeholder="Describe brevemente cómo se solucionó (obligatorio)"></textarea>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="cerrarModal('modalResolver')">Cancelar</button>
+      <button class="btn btn-resolver" id="btnConfirmarResolver" onclick="confirmarResolver()">
+        Confirmar resolución
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Escalar a Help Desk -->
+<div class="modal-overlay" id="modalEscalar">
+  <div class="modal-box">
+    <h3>Enviar a Help Desk</h3>
+    <div class="sub" id="modalEscalarRid">Reclamo #—</div>
+    <textarea id="motivoEscalar" placeholder="¿Por qué no se pudo resolver en el turno? (obligatorio)"></textarea>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="cerrarModal('modalEscalar')">Cancelar</button>
+      <button class="btn btn-escalar" id="btnConfirmarEscalar" onclick="confirmarEscalar()">
+        Confirmar envío
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ──────────────────────────────────────────────────────────────
+   NOTA: Los endpoints de abajo (/api/planta_interna/...) todavía
+   NO existen en el backend — son nombres propuestos a confirmar
+   cuando armemos las rutas Flask + la tabla de turnos.
+   ────────────────────────────────────────────────────────────── */
+
+/* ──────────────────────────────────────────────────────────────
+   Modal: fallas por zona — portado tal cual de dashboard_soporte.html.
+   Reutiliza los MISMOS endpoints que ya usa Help Desk:
+     /api/soporte/fallas_por_zona
+     /api/soporte/reclamos_por_zona/<zona>
+   OJO: hoy esas rutas seguramente solo autorizan rol 'help_desk'.
+   Falta ampliarlas para que también acepten 'turno_planta_interna'
+   cuando ese rol exista en el backend.
+   ────────────────────────────────────────────────────────────── */
+
+function abrirModalFallasZona(){
+  document.getElementById('modalFallasZona').classList.add('show');
+  volverAZonasPI(false);
+  cargarZonasGridPI();
+}
+
+function cerrarModalFallasZona(){
+  document.getElementById('modalFallasZona').classList.remove('show');
+}
+
+async function cargarZonasGridPI(){
+  const grid = document.getElementById('zonasGridPI');
+  grid.innerHTML = '<div class="empty2" style="grid-column:1/-1;">Cargando…</div>';
+  try {
+    const r = await fetch('/api/soporte/fallas_por_zona');
+    const data = await r.json();
+    if (!data.success){ grid.innerHTML = '<div class="empty2" style="grid-column:1/-1;">No se pudo cargar.</div>'; return; }
+    const orden = ['Gran Centro','Zona Sur','Sopocachi','El Alto','Miraflores','Sin zona'];
+    const maxVal = Math.max(1, ...orden.map(z => (data.zonas[z] || {}).total || 0));
+    grid.innerHTML = orden.map(z => {
+      const d = data.zonas[z] || {total:0, en_proceso:0};
+      const nombre = z === 'Sin zona' ? 'Sin zona asignada' : z;
+      const pct = Math.round((d.total / maxVal) * 100);
+      return `<div class="zona-card clickable" onclick="abrirDetalleZonaPI('${z}')">
+        <div class="z-nombre">${nombre}</div>
+        <div class="z-total">${d.total}</div>
+        <div class="z-bar"><div class="z-bar-fill" style="width:${pct}%"></div></div>
+        <div class="z-sub"><span>${d.en_proceso}</span> en proceso</div>
+      </div>`;
+    }).join('');
+  } catch(e){
+    grid.innerHTML = '<div class="empty2" style="grid-column:1/-1;">Error de conexión.</div>';
+  }
+}
+
+function volverAZonasPI(recargar = true){
+  document.getElementById('zonasGridPI').style.display = 'grid';
+  document.getElementById('zonaDetalleWrapPI').style.display = 'none';
+  document.getElementById('zonasSubPI').style.display = 'block';
+  if (recargar) cargarZonasGridPI();
+}
+
+const ESTADO_BADGE_PI = {
+  critica: 'badge-critica', alta: 'badge-alta2', media: 'badge-media2', baja: 'badge-baja'
+};
+
+async function abrirDetalleZonaPI(zona){
+  document.getElementById('zonasGridPI').style.display = 'none';
+  document.getElementById('zonasSubPI').style.display = 'none';
+  const wrap = document.getElementById('zonaDetalleWrapPI');
+  wrap.style.display = 'block';
+  const nombreMostrar = zona === 'Sin zona' ? 'Sin zona asignada' : zona;
+  document.getElementById('zonaDetalleTituloPI').textContent = nombreMostrar;
+  const lista = document.getElementById('zonaDetalleListaPI');
+  lista.innerHTML = '<div class="empty2">Cargando…</div>';
+  try {
+    const r = await fetch(`/api/soporte/reclamos_por_zona/${encodeURIComponent(zona)}`);
+    const data = await r.json();
+    if (!data.success || !data.reclamos.length){
+      lista.innerHTML = '<div class="empty2">No hay reclamos registrados en esta zona.</div>';
+      return;
+    }
+    lista.innerHTML = data.reclamos.map(rc => `
+      <div class="zd-item">
+        <div class="zd-left">
+          <strong>#${rc.id} — ${rc.cliente}</strong>
+          <small>${rc.titulo || rc.servicio} · ${rc.fecha_creacion}</small>
+        </div>
+        <span class="badge ${ESTADO_BADGE_PI[rc.prioridad] || 'badge-estado'}">${rc.estado.replace('_',' ')}</span>
+      </div>`).join('');
+  } catch(e){
+    lista.innerHTML = '<div class="empty2">Error de conexión.</div>';
+  }
+}
+
+let tabActual = 'pendientes';
+let reclamoSeleccionado = null;
+let dataReclamos = { pendientes: [], resueltos: [], escalados: [] };
+
+function cambiarTab(tab){
+  tabActual = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+  renderLista();
+}
+
+function formatHora(iso){
+  if(!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleString('es-BO', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
+}
+
+function renderLista(){
+  const cont = document.getElementById('listaReclamos');
+  const items = dataReclamos[tabActual] || [];
+
+  document.getElementById('countPendientes').textContent = dataReclamos.pendientes.length;
+  document.getElementById('countResueltos').textContent = dataReclamos.resueltos.length;
+  document.getElementById('countEscalados').textContent = dataReclamos.escalados.length;
+  document.getElementById('statPendientes').textContent = dataReclamos.pendientes.length;
+
+  if(!items.length){
+    const msgs = {
+      pendientes: 'No hay reclamos nocturnos pendientes en este momento.',
+      resueltos: 'Todavía no resolviste ningún reclamo en este turno.',
+      escalados: 'Todavía no enviaste ningún reclamo a Help Desk en este turno.'
+    };
+    cont.innerHTML = `<div class="lista-vacia"><i class="mono">◌</i>${msgs[tabActual]}</div>`;
+    return;
+  }
+
+  cont.innerHTML = items.map(r => `
+    <div class="reclamo-card ${r.prioridad === 'alta' ? 'prioridad-alta' : ''}">
+      <div class="top-row">
+        <div>
+          <div class="rid">#${r.id} — ${r.titulo || r.tipo_reclamo}</div>
+          <div class="cliente">${r.cliente_nombre || 'Cliente'} · Contrato ${r.numero_cliente || '—'}</div>
+        </div>
+        <div class="badges">
+          <span class="badge badge-nocturno">🌙 Nocturno</span>
+          ${r.prioridad === 'alta' ? '<span class="badge badge-prioridad-alta">Prioridad alta</span>' : '<span class="badge badge-prioridad-media">' + (r.prioridad || 'media') + '</span>'}
+          <span class="badge badge-hora">Entró ${formatHora(r.fecha_creacion)}</span>
+          ${tabActual !== 'pendientes' ? `<span class="badge badge-estado">${r.estado}</span>` : ''}
+        </div>
+      </div>
+      <div class="descripcion">${r.descripcion || r.problema_especifico || 'Sin descripción adicional.'}</div>
+      <div class="meta-row">
+        <span>📍 ${r.ubicacion_cliente || 'Sin dirección registrada'}</span>
+        <span>☎ ${r.telefono_referencia || 'Sin teléfono'}</span>
+      </div>
+      ${tabActual === 'pendientes' ? `
+      <div class="acciones">
+        <button class="btn btn-resolver" onclick="abrirModalResolver(${r.id})">
+          ✓ Resolver y cerrar
+        </button>
+        <button class="btn btn-escalar" onclick="abrirModalEscalar(${r.id})">
+          ↗ Enviar a Help Desk
+        </button>
+      </div>` : ''}
+    </div>
+  `).join('');
+}
+
+function cargarReclamos(){
+  fetch('/api/planta_interna/reclamos')
+    .then(r => r.json())
+    .then(d => {
+      if(d.success){
+        dataReclamos = {
+          pendientes: d.pendientes || [],
+          resueltos: d.resueltos || [],
+          escalados: d.escalados || []
+        };
+      }
+      renderLista();
+    })
+    .catch(() => {
+      document.getElementById('listaReclamos').innerHTML =
+        '<div class="lista-vacia">Error al cargar los reclamos. Intenta recargar la página.</div>';
+    });
+}
+
+function abrirModalResolver(id){
+  reclamoSeleccionado = id;
+  document.getElementById('modalResolverRid').textContent = `Reclamo #${id}`;
+  document.getElementById('solucionTexto').value = '';
+  document.getElementById('modalResolver').classList.add('show');
+}
+
+function abrirModalEscalar(id){
+  reclamoSeleccionado = id;
+  document.getElementById('modalEscalarRid').textContent = `Reclamo #${id}`;
+  document.getElementById('motivoEscalar').value = '';
+  document.getElementById('modalEscalar').classList.add('show');
+}
+
+function cerrarModal(idModal){
+  document.getElementById(idModal).classList.remove('show');
+  reclamoSeleccionado = null;
+}
+
+function confirmarResolver(){
+  const texto = document.getElementById('solucionTexto').value.trim();
+  if(!texto){ alert('Describe cómo se solucionó antes de confirmar.'); return; }
+
+  const btn = document.getElementById('btnConfirmarResolver');
+  btn.disabled = true; btn.textContent = 'Guardando…';
+
+  fetch(`/api/planta_interna/resolver/${reclamoSeleccionado}`, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ solucion: texto })
+  })
+  .then(r => r.json())
+  .then(d => {
+    btn.disabled = false; btn.textContent = 'Confirmar resolución';
+    if(d.success){
+      cerrarModal('modalResolver');
+      cargarReclamos();
+    } else {
+      alert(d.message || 'No se pudo resolver el reclamo');
+    }
+  })
+  .catch(() => {
+    btn.disabled = false; btn.textContent = 'Confirmar resolución';
+    alert('Error de conexión');
+  });
+}
+
+function confirmarEscalar(){
+  const texto = document.getElementById('motivoEscalar').value.trim();
+  if(!texto){ alert('Indica por qué se envía a Help Desk antes de confirmar.'); return; }
+
+  const btn = document.getElementById('btnConfirmarEscalar');
+  btn.disabled = true; btn.textContent = 'Enviando…';
+
+  fetch(`/api/planta_interna/enviar_helpdesk/${reclamoSeleccionado}`, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ motivo: texto })
+  })
+  .then(r => r.json())
+  .then(d => {
+    btn.disabled = false; btn.textContent = 'Confirmar envío';
+    if(d.success){
+      cerrarModal('modalEscalar');
+      cargarReclamos();
+    } else {
+      alert(d.message || 'No se pudo enviar el reclamo a Help Desk');
+    }
+  })
+  .catch(() => {
+    btn.disabled = false; btn.textContent = 'Confirmar envío';
+    alert('Error de conexión');
+  });
+}
+
+// Badge de horario actual (informativo, cliente-side; el backend
+// sigue siendo la fuente de verdad sobre qué cuenta como nocturno)
+function actualizarBadgeHorario(){
+  const ahora = new Date();
+  const hora = ahora.getHours() + ahora.getMinutes()/60;
+  const dia = ahora.getDay(); // 0=domingo, 6=sábado
+  const esFinDeSemana = (dia === 0 || dia === 6);
+  const esNocturno = (hora >= 22 || hora < 8.5);
+  const punto = document.getElementById('puntoEstado');
+  const texto = document.getElementById('textoHorarioActual');
+
+  if(esNocturno || esFinDeSemana){
+    punto.style.background = 'var(--morado)';
+    texto.textContent = esNocturno ? 'Turno nocturno activo' : 'Fin de semana';
+  } else {
+    punto.style.background = 'var(--gris-600)';
+    texto.textContent = 'Fuera de turno nocturno';
+  }
+}
+
+actualizarBadgeHorario();
+setInterval(actualizarBadgeHorario, 60000);
+cargarReclamos();
+setInterval(cargarReclamos, 30000);
+</script>
+
+</body>
+</html>

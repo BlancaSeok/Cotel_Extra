@@ -1,0 +1,227 @@
+
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--font-sans)}
+  .overlay{background:rgba(0,0,0,0.45);min-height:520px;display:flex;align-items:center;justify-content:center;padding:1rem;border-radius:var(--border-radius-lg)}
+  .modal{background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-lg);width:100%;max-width:620px;overflow:hidden}
+  .modal-head{padding:1rem 1.25rem;border-bottom:0.5px solid var(--color-border-tertiary);display:flex;align-items:center;justify-content:space-between}
+  .modal-head h2{font-size:16px;font-weight:500;color:var(--color-text-primary)}
+  .modal-head .tag{font-size:11px;background:var(--color-background-info);color:var(--color-text-info);padding:3px 10px;border-radius:var(--border-radius-md)}
+  .section{padding:1rem 1.25rem;border-bottom:0.5px solid var(--color-border-tertiary)}
+  .section-label{font-size:12px;font-weight:500;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.75rem}
+  .filters-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .field label{font-size:12px;color:var(--color-text-secondary);display:block;margin-bottom:5px}
+  .field select,.field input{width:100%;font-size:13px}
+  .chips{display:flex;gap:6px;flex-wrap:wrap}
+  .chip{font-size:12px;padding:5px 12px;border-radius:99px;border:0.5px solid var(--color-border-secondary);background:var(--color-background-secondary);color:var(--color-text-secondary);cursor:pointer;transition:all .15s;font-family:var(--font-sans)}
+  .chip.on{background:var(--color-background-info);border-color:var(--color-border-info);color:var(--color-text-info)}
+  .summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .stat-box{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:.75rem 1rem;text-align:center}
+  .stat-box .num{font-size:22px;font-weight:500;color:var(--color-text-primary)}
+  .stat-box .lbl{font-size:11px;color:var(--color-text-secondary);margin-top:3px}
+  .stat-box .num.success{color:#1D9E75}
+  .stat-box .num.warn{color:#BA7517}
+  .modal-foot{padding:.875rem 1.25rem;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+  .export-btns{display:flex;gap:8px}
+  .btn-export{display:inline-flex;align-items:center;gap:6px;font-size:13px;padding:7px 14px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:var(--color-background-secondary);color:var(--color-text-primary);cursor:pointer;font-family:var(--font-sans);transition:all .15s}
+  .btn-export:hover{background:var(--color-background-tertiary)}
+  .btn-export .ico{width:14px;height:14px;border-radius:3px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:500}
+  .pdf-ico{background:#fcebeb;color:#a32d2d}
+  .xls-ico{background:#eaf3de;color:#3b6d11}
+  .btn-cancel{font-size:13px;padding:7px 14px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:transparent;color:var(--color-text-secondary);cursor:pointer;font-family:var(--font-sans)}
+  .btn-cancel:hover{background:var(--color-background-secondary)}
+  .preview-bar{height:5px;background:var(--color-background-secondary);border-radius:99px;overflow:hidden;margin-top:.75rem}
+  .preview-bar .fill{height:100%;border-radius:99px;transition:width .5s ease}
+  .bar-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+  .bar-label{font-size:11px;color:var(--color-text-secondary);width:72px;flex-shrink:0}
+  .bar-val{font-size:11px;color:var(--color-text-secondary);width:28px;text-align:right}
+  .legend{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+  .leg{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--color-text-secondary)}
+  .leg-dot{width:8px;height:8px;border-radius:50%}
+  .toast-msg{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);padding:8px 16px;font-size:13px;color:var(--color-text-primary);opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.1)}
+  .toast-msg.show{opacity:1}
+</style>
+
+<h2 class="sr-only" style="position:absolute;left:-9999px">Panel de generación de reportes con filtros, resumen y opciones de exportación</h2>
+
+<div class="overlay">
+<div class="modal" id="reportModal">
+
+  <div class="modal-head">
+    <h2>Generar reporte</h2>
+    <span class="tag">Exportación</span>
+  </div>
+
+  <div class="section">
+    <div class="section-label">Filtros</div>
+    <div class="filters-grid">
+      <div class="field">
+        <label>Fecha inicio</label>
+        <input type="date" id="fechaInicio" value="2025-04-01" oninput="calcular()">
+      </div>
+      <div class="field">
+        <label>Fecha fin</label>
+        <input type="date" id="fechaFin" value="2025-04-29" oninput="calcular()">
+      </div>
+      <div class="field">
+        <label>Tipo de trámite</label>
+        <select id="tipoTramite" onchange="calcular()">
+          <option value="todos">Todos los tipos</option>
+          <option value="tecnico">Técnico</option>
+          <option value="facturacion">Facturación</option>
+          <option value="comercial">Comercial</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Estado</label>
+        <select id="estadoFiltro" onchange="calcular()">
+          <option value="todos">Todos</option>
+          <option value="completado">Completados</option>
+          <option value="pendiente">Pendientes</option>
+          <option value="en_proceso">En proceso</option>
+        </select>
+      </div>
+    </div>
+    <div style="margin-top:12px">
+      <div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:6px">Prioridad</div>
+      <div class="chips">
+        <button class="chip on" data-p="critica" onclick="toggleChip(this)">Crítica</button>
+        <button class="chip on" data-p="alta" onclick="toggleChip(this)">Alta</button>
+        <button class="chip on" data-p="media" onclick="toggleChip(this)">Media</button>
+        <button class="chip on" data-p="baja" onclick="toggleChip(this)">Baja</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">Resumen del período</div>
+    <div class="summary-grid">
+      <div class="stat-box">
+        <div class="num" id="sTotal">148</div>
+        <div class="lbl">Total trámites</div>
+      </div>
+      <div class="stat-box">
+        <div class="num success" id="sComp">112</div>
+        <div class="lbl">Completados</div>
+      </div>
+      <div class="stat-box">
+        <div class="num warn" id="sPend">36</div>
+        <div class="lbl">Pendientes</div>
+      </div>
+    </div>
+
+    <div style="margin-top:1rem">
+      <div class="legend">
+        <div class="leg"><div class="leg-dot" style="background:#1D9E75"></div>Completados</div>
+        <div class="leg"><div class="leg-dot" style="background:#BA7517"></div>Pendientes</div>
+        <div class="leg"><div class="leg-dot" style="background:#378ADD"></div>En proceso</div>
+      </div>
+      <div class="bar-row">
+        <span class="bar-label">Técnico</span>
+        <div class="preview-bar" style="flex:1"><div class="fill" id="bTec" style="width:62%;background:#378ADD"></div></div>
+        <span class="bar-val" id="vTec">62%</span>
+      </div>
+      <div class="bar-row">
+        <span class="bar-label">Facturación</span>
+        <div class="preview-bar" style="flex:1"><div class="fill" id="bFac" style="width:25%;background:#BA7517"></div></div>
+        <span class="bar-val" id="vFac">25%</span>
+      </div>
+      <div class="bar-row">
+        <span class="bar-label">Comercial</span>
+        <div class="preview-bar" style="flex:1"><div class="fill" id="bCom" style="width:13%;background:#1D9E75"></div></div>
+        <span class="bar-val" id="vCom">13%</span>
+      </div>
+      <div style="margin-top:10px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+          <span style="font-size:11px;color:var(--color-text-secondary)">Tasa de resolución</span>
+          <span style="font-size:11px;font-weight:500;color:var(--color-text-primary)" id="tasaLabel">76%</span>
+        </div>
+        <div class="preview-bar"><div class="fill" id="bTasa" style="width:76%;background:#1D9E75"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-foot">
+    <button class="btn-cancel" onclick="showToast('Ventana cerrada')">Cancelar</button>
+    <div class="export-btns">
+      <button class="btn-export" onclick="exportar('pdf')">
+        <span class="ico pdf-ico">P</span> Descargar PDF
+      </button>
+      <button class="btn-export" onclick="exportar('excel')">
+        <span class="ico xls-ico">X</span> Descargar Excel
+      </button>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="toast-msg" id="toast"></div>
+
+<script>
+const DATA = {
+  todos:{total:148,comp:112,pend:36,tec:62,fac:25,com:13},
+  tecnico:{total:92,comp:71,pend:21,tec:100,fac:0,com:0},
+  facturacion:{total:37,comp:28,pend:9,tec:0,fac:100,com:0},
+  comercial:{total:19,comp:13,pend:6,tec:0,fac:0,com:100},
+};
+const EST = {
+  todos:null,
+  completado:{factor:1,pendFactor:0},
+  pendiente:{factor:0,pendFactor:1},
+  en_proceso:{factor:.3,pendFactor:.5}
+};
+
+async function calcular() {
+    const tipo   = document.getElementById('tipoTramite').value;
+    const estado = document.getElementById('estadoFiltro').value;
+    const fi     = document.getElementById('fechaInicio').value;
+    const ff     = document.getElementById('fechaFin').value;
+
+    try {
+        const r = await fetch(
+            `/api/soporte/reporte/resumen?tipo=${tipo}&estado=${estado}&fecha_inicio=${fi}&fecha_fin=${ff}`
+        );
+        const d = await r.json();
+        if (!d.success) return;
+
+        document.getElementById('sTotal').textContent = d.total;
+        document.getElementById('sComp').textContent  = d.completados;
+        document.getElementById('sPend').textContent  = d.pendientes;
+        document.getElementById('tasaLabel').textContent = d.tasa + '%';
+        document.getElementById('bTasa').style.width = d.tasa + '%';
+
+        // Indicadores adicionales
+        document.getElementById('sAtrasados').textContent = d.atrasados;
+        document.getElementById('sFaltanDocs').textContent = d.faltan_docs;
+        document.getElementById('sMasLento').textContent = d.tipo_mas_lento;
+    } catch(e) { console.error(e); }
+}
+
+
+function toggleChip(el){
+  el.classList.toggle('on');
+  calcular();
+}
+
+let toastT;
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2200);
+}
+
+
+
+
+
+function exportar(formato) {
+    const tipo   = document.getElementById('tipoTramite').value;
+    const estado = document.getElementById('estadoFiltro').value;
+    const fi     = document.getElementById('fechaInicio').value;
+    const ff     = document.getElementById('fechaFin').value;
+    const params = `tipo=${tipo}&estado=${estado}&fecha_inicio=${fi}&fecha_fin=${ff}`;
+    window.location.href = `/api/soporte/reporte/exportar/${formato}?${params}`;
+}
+
+setTimeout(calcular,200);
+</script>
